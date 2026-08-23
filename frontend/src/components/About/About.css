@@ -1,0 +1,149 @@
+.about {
+  padding: 80px 0;
+  background-color: var(--white);
+  border-top-left-radius: 80px;
+}
+
+.about-content-wrapper {
+  display: flex;
+  gap: 60px;
+  align-items: center;
+  margin-top: 40px;
+}
+
+.about-text-content {
+  flex: 1;
+}
+
+.about-subtitle {
+  font-size: 26px;
+  color: var(--primary-color);
+  margin-bottom: 24px;
+  font-weight: 700;
+}
+
+.about-text {
+  font-size: 15px;
+  color: var(--text-dark);
+  margin-bottom: 20px;
+  line-height: 1.7;
+}
+
+.about-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-top: 40px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.stat-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: var(--background-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-color);
+}
+
+.stat-number {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.about-image-wrapper {
+  flex: 1;
+  position: relative;
+}
+
+.about-image {
+  width: 100%;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+}
+
+.experience-badge {
+  position: absolute;
+  bottom: 20px;
+  left: -30px;
+  width: 130px;
+  height: 130px;
+  background-color: var(--primary-color);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: var(--white);
+  box-shadow: 0 10px 20px rgba(63, 114, 175, 0.3);
+}
+
+.exp-years {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 5px;
+}
+
+.exp-text {
+  font-size: 12px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* Responsive Styles */
+@media (max-width: 992px) {
+  .about-content-wrapper {
+    flex-direction: column;
+    gap: 40px;
+  }
+  
+  .about-stats-grid {
+    gap: 20px;
+  }
+}
+
+@media (max-width: 576px) {
+  .about-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .about {
+    border-top-left-radius: 40px;
+    padding: 60px 0;
+  }
+  
+  .about-subtitle {
+    font-size: 22px;
+  }
+  
+  .experience-badge {
+    width: 100px;
+    height: 100px;
+    left: -10px;
+    bottom: -20px;
+  }
+  
+  .exp-years {
+    font-size: 20px;
+  }
+  
+  .exp-text {
+    font-size: 10px;
+  }
+}
+
