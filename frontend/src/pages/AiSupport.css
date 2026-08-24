@@ -13,16 +13,16 @@
 }
 
 /* ==========================================================================
-   HISTORY SIDEBAR
+   HISTORY SIDEBAR (Clean White Theme)
    ========================================================================== */
 
 .ai-history-sidebar {
   width: 280px;
   min-width: 280px;
-  background: #0f172a;
+  background: #ffffff;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid #1e293b;
+  border-right: 1px solid #e2e8f0;
   transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1),
               min-width 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
@@ -39,7 +39,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 14px;
-  border-bottom: 1px solid #1e293b;
+  border-bottom: 1px solid #e2e8f0;
   flex-shrink: 0;
 }
 
@@ -58,14 +58,14 @@
 .sidebar-logo-text {
   font-size: 15px;
   font-weight: 700;
-  color: #f1f5f9;
+  color: #1e293b;
   white-space: nowrap;
 }
 
 .sidebar-collapse-btn {
   background: none;
   border: none;
-  color: #64748b;
+  color: #94a3b8;
   cursor: pointer;
   padding: 4px;
   border-radius: 6px;
@@ -76,8 +76,8 @@
 }
 
 .sidebar-collapse-btn:hover {
-  color: #94a3b8;
-  background: #1e293b;
+  color: #475569;
+  background: #f1f5f9;
 }
 
 /* ── New Chat Button ────────────────────────────────────────────────────── */
@@ -87,7 +87,7 @@
   gap: 8px;
   margin: 12px 10px 8px;
   padding: 10px 14px;
-  background: linear-gradient(135deg, #3f72af 0%, #2563a8 100%);
+  background: #3f72af;
   color: #ffffff;
   border: none;
   border-radius: 10px;
@@ -99,9 +99,8 @@
 }
 
 .new-chat-btn:hover {
-  background: linear-gradient(135deg, #4f82bf 0%, #3573b8 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(63, 114, 175, 0.35);
+  background: #2563a8;
+  box-shadow: 0 4px 12px rgba(63, 114, 175, 0.2);
 }
 
 /* ── Session List ───────────────────────────────────────────────────────── */
@@ -110,11 +109,11 @@
   overflow-y: auto;
   padding: 4px 8px;
   scrollbar-width: thin;
-  scrollbar-color: #334155 transparent;
+  scrollbar-color: #cbd5e1 transparent;
 }
 
 .sidebar-session-list::-webkit-scrollbar { width: 4px; }
-.sidebar-session-list::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+.sidebar-session-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
 /* ── Empty / Login Prompt ───────────────────────────────────────────────── */
 .sidebar-login-prompt,
@@ -125,7 +124,7 @@
   gap: 10px;
   padding: 32px 16px;
   text-align: center;
-  color: #64748b;
+  color: #94a3b8;
   font-size: 13px;
 }
 
@@ -157,14 +156,15 @@
   margin-bottom: 2px;
   transition: background 0.15s;
   position: relative;
+  border: 1px solid transparent;
 }
 
 .session-item:hover {
-  background: #1e293b;
+  background: #f8fafc;
 }
 
 .session-item.active {
-  background: #1e3a5f;
+  background: #eff6ff;
   border-left: 3px solid #3f72af;
   padding-left: 7px;
 }
@@ -181,7 +181,7 @@
 .session-title {
   font-size: 13px;
   font-weight: 600;
-  color: #e2e8f0;
+  color: #334155;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -197,24 +197,24 @@
 
 .session-date {
   font-size: 11px;
-  color: #64748b;
+  color: #94a3b8;
 }
 
 .session-count {
   font-size: 10px;
-  color: #475569;
-  background: #1e293b;
+  color: #64748b;
+  background: #f1f5f9;
   padding: 1px 6px;
   border-radius: 10px;
 }
 
 .session-item.active .session-count {
-  background: #0f172a;
+  background: #e2e8f0;
 }
 
 .session-preview {
   font-size: 11.5px;
-  color: #475569;
+  color: #64748b;
   margin-top: 3px;
   white-space: nowrap;
   overflow: hidden;
@@ -225,7 +225,7 @@
 .session-delete-btn {
   background: none;
   border: none;
-  color: #475569;
+  color: #94a3b8;
   cursor: pointer;
   padding: 4px;
   border-radius: 6px;
@@ -244,13 +244,13 @@
 
 .session-delete-btn:hover {
   color: #ef4444;
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(239, 68, 68, 0.08);
 }
 
 .mini-spinner {
   width: 12px;
   height: 12px;
-  border: 2px solid #475569;
+  border: 2px solid #94a3b8;
   border-top-color: #ef4444;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
@@ -263,7 +263,7 @@
   align-items: center;
   gap: 10px;
   padding: 12px 14px;
-  border-top: 1px solid #1e293b;
+  border-top: 1px solid #e2e8f0;
   flex-shrink: 0;
 }
 
@@ -291,7 +291,7 @@
 .sidebar-user-name {
   font-size: 12.5px;
   font-weight: 600;
-  color: #e2e8f0;
+  color: #334155;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

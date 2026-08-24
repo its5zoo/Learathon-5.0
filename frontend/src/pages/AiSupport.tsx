@@ -294,8 +294,8 @@ const AiSupport: React.FC = () => {
         {/* Sidebar Header */}
         <div className="sidebar-header">
           <div className="sidebar-logo">
-            <span className="sidebar-logo-icon">🧠</span>
-            {isSidebarOpen && <span className="sidebar-logo-text">SoulSpace AI</span>}
+            <span className="sidebar-logo-icon">💬</span>
+            {isSidebarOpen && <span className="sidebar-logo-text">Chats</span>}
           </div>
           <button className="sidebar-collapse-btn" onClick={() => setIsSidebarOpen(!isSidebarOpen)} title="Toggle sidebar">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
