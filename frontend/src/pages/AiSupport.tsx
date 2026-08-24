@@ -444,7 +444,7 @@ const AiSupport: React.FC = () => {
           {/* Welcome screen when no session */}
           {!activeSessionId && !loadingSession && (
             <div className="chat-welcome-screen">
-              <div className="welcome-icon-ring">🧠</div>
+              <img src="/support_welcome.jpg" alt="Mindfulness" className="welcome-avatar-img" />
               <h2 className="welcome-title">
                 {isLoggedIn ? `Hello, ${user?.firstName}! 👋` : 'SoulSpace AI Companion'}
               </h2>
