@@ -1,83 +1,120 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './AiSupport.css';
 
+const API = 'http://localhost:5000/api';
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 interface Message {
-  id: string;
-  sender: 'ai' | 'user';
-  text: string;
-  time: string;
-  category?: string;
-  actionWidget?: 'breathing' | 'grounding' | 'cbt';
+  role: 'user' | 'assistant';
+  content: string;
+  emotion: string;
+  timestamp: string;
 }
 
-const initialMessages: Message[] = [
-  {
-    id: 'msg-1',
-    sender: 'ai',
-    text: `Hello, I'm your **SoulSpace AI Companion** 🌿\n\nI'm here in a safe, judgment-free space to listen and help you navigate your emotional wellbeing today.\n\n• **Share your feelings** openly and vent anytime\n• **Practice grounding & 4-4-4 breathing** in real time\n• **Explore CBT frameworks** to gently reframe stressful thoughts\n\nHow are you feeling right now?`,
-    time: 'Just now'
-  }
-];
+interface ChatSession {
+  _id: string;
+  title: string;
+  lastMessageAt: string;
+  createdAt: string;
+  messageCount: number;
+  preview: string;
+  isCrisisSession?: boolean;
+}
 
-const renderFormattedMessage = (text: string) => {
-  return text.split('\n').map((paragraph, pIdx) => {
-    if (!paragraph.trim()) return <div key={pIdx} className="msg-spacer" />;
-    
-    // Parse bold **text**
-    const parts = paragraph.split(/(\*\*.*?\*\*)/g);
-    return (
-      <p key={pIdx} className={paragraph.startsWith('•') ? 'msg-bullet-point' : ''}>
-        {parts.map((part, i) => {
-          if (part.startsWith('**') && part.endsWith('**')) {
-            return <strong key={i}>{part.slice(2, -2)}</strong>;
-          }
-          return part;
-        })}
-      </p>
+// ── Emotion config ────────────────────────────────────────────────────────────
+const EMOTION_META: Record<string, { emoji: string; label: string; color: string }> = {
+  anxious:  { emoji: '😰', label: 'Anxious',  color: '#f59e0b' },
+  sad:      { emoji: '😔', label: 'Sad',       color: '#6366f1' },
+  angry:    { emoji: '😤', label: 'Frustrated',color: '#ef4444' },
+  stressed: { emoji: '😓', label: 'Stressed',  color: '#f97316' },
+  happy:    { emoji: '😊', label: 'Positive',  color: '#10b981' },
+  hopeful:  { emoji: '🌱', label: 'Hopeful',   color: '#3f72af' },
+  crisis:   { emoji: '🆘', label: 'Crisis',    color: '#dc2626' },
+  neutral:  { emoji: '💬', label: 'Neutral',   color: '#64748b' },
+};
+
+// ── Markdown renderer ─────────────────────────────────────────────────────────
+const renderContent = (text: string) => {
+  return text.split('\n').map((line, i) => {
+    if (!line.trim()) return <div key={i} className="msg-spacer" />;
+    const parts = line.split(/(\*\*.*?\*\*)/g);
+    const content = parts.map((p, j) =>
+      p.startsWith('**') && p.endsWith('**')
+        ? <strong key={j}>{p.slice(2, -2)}</strong>
+        : p
     );
+    return <p key={i} className={line.startsWith('•') || line.startsWith('-') ? 'msg-bullet' : ''}>{content}</p>;
   });
 };
 
+// ── Date formatter ────────────────────────────────────────────────────────────
+const fmtDate = (d: string) => {
+  const date = new Date(d);
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return 'Today ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (days === 1) return 'Yesterday';
+  if (days < 7) return date.toLocaleDateString([], { weekday: 'short' });
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 const AiSupport: React.FC = () => {
   const navigate = useNavigate();
-  // Chat state
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const { user, token, isLoggedIn } = useAuth();
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [crisisActive, setCrisisActive] = useState(false);
+  const [loadingSession, setLoadingSession] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Authentication state
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  // Interactive Breathing Tool State
+  // Breathing tool
   const [isBreathingActive, setIsBreathingActive] = useState(false);
   const [breathingPhase, setBreathingPhase] = useState<'Inhale' | 'Hold' | 'Exhale' | 'Rest'>('Inhale');
-  const [breathingCountdown, setBreathingCountdown] = useState(4);
+  const [breathingCount, setBreathingCount] = useState(4);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  // ── Auth headers ───────────────────────────────────────────────────────────
+  const authHeaders = useCallback(() => ({
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`,
+  }), [token]);
 
+  // ── Scroll to bottom ───────────────────────────────────────────────────────
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  // Breathing tool timer effect
+  // ── Load sessions on login ─────────────────────────────────────────────────
   useEffect(() => {
-    let interval: any = null;
+    if (isLoggedIn && token) {
+      fetchSessions();
+    }
+  }, [isLoggedIn, token]);
+
+  // ── Breathing timer ────────────────────────────────────────────────────────
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | null = null;
     if (isBreathingActive) {
       interval = setInterval(() => {
-        setBreathingCountdown((prev) => {
+        setBreathingCount((prev) => {
           if (prev > 1) return prev - 1;
-          
-          // Switch Phase
-          setBreathingPhase((currentPhase) => {
-            if (currentPhase === 'Inhale') return 'Hold';
-            if (currentPhase === 'Hold') return 'Exhale';
-            if (currentPhase === 'Exhale') return 'Rest';
+          setBreathingPhase((p) => {
+            if (p === 'Inhale') return 'Hold';
+            if (p === 'Hold') return 'Exhale';
+            if (p === 'Exhale') return 'Rest';
             return 'Inhale';
           });
           return 4;
@@ -85,363 +122,527 @@ const AiSupport: React.FC = () => {
       }, 1000);
     } else {
       setBreathingPhase('Inhale');
-      setBreathingCountdown(4);
+      setBreathingCount(4);
     }
-    return () => clearInterval(interval);
+    return () => { if (interval) clearInterval(interval); };
   }, [isBreathingActive]);
 
-  const handleSendMessage = (textToSend?: string) => {
-    if (!isLoggedIn) {
-      navigate('/login');
-      return;
+  // ── API: fetch sessions ────────────────────────────────────────────────────
+  const fetchSessions = async () => {
+    try {
+      const res = await fetch(`${API}/chat/sessions`, { headers: authHeaders() });
+      const data = await res.json();
+      if (data.success) setSessions(data.sessions);
+    } catch (e) {
+      console.error('fetchSessions error', e);
     }
-    const text = textToSend || inputText.trim();
-    if (!text) return;
+  };
 
-    const userMsg: Message = {
-      id: `usr-${Date.now()}`,
-      sender: 'user',
-      text,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-
-    setMessages((prev) => [...prev, userMsg]);
-    if (!textToSend) setInputText('');
-    setIsTyping(true);
-
-    // Simulate smart AI response based on mood/prompt
-    setTimeout(() => {
-      let replyText = '';
-      let actionWidget: 'breathing' | 'grounding' | 'cbt' | undefined = undefined;
-
-      const lower = text.toLowerCase();
-      if (lower.includes('anxious') || lower.includes('anxiety') || lower.includes('panic') || lower.includes('overthink')) {
-        replyText = `I hear how overwhelming this feels, and I want to remind you that you are safe in this moment. 💙\n\nWhen anxiety peaks, our body triggers a fight-or-flight response. Let's signal your nervous system to down-regulate with the **4-4-4 Box Breathing** exercise right here:\n\n1. Inhale deeply through your nose for 4s\n2. Gently hold for 4s\n3. Release slowly through your mouth for 4s\n\nWould you like me to guide your rhythm, or would you like to explore what triggered this feeling?`;
-        actionWidget = 'breathing';
-      } else if (lower.includes('stress') || lower.includes('work') || lower.includes('burnout') || lower.includes('tired')) {
-        replyText = `It sounds like you've been carrying a heavy cognitive and emotional load lately. Stress is your mind's way of asking for boundary protection and recovery.\n\nLet's do a quick **CBT Check-in**:\n• What is the single biggest pressure demanding your energy right now?\n• Can we break it into what is strictly within your control vs what is outside it?`;
-        actionWidget = 'cbt';
-      } else if (lower.includes('sad') || lower.includes('lonely') || lower.includes('depress') || lower.includes('down')) {
-        replyText = `Thank you for sharing that with me. It takes courage to acknowledge sadness instead of bottling it up.\n\nYou don't have to carry this alone. Please take a gentle breath. What does your heart or mind need the most right now—quiet comfort, a gentle listening ear, or small steps to ease the weight?`;
-      } else if (lower.includes('sleep') || lower.includes('night') || lower.includes('insomnia')) {
-        replyText = `Trouble sleeping often happens when our subconscious tries to process the day's unresolved tension in bed. 🌙\n\nTry relaxing your jaw, dropping your shoulders away from your ears, and playing our **Evening Mind Release Audio** from the right panel. Let thoughts drift past like leaves on a river.`;
-      } else {
-        replyText = `Thank you for expressing that. I'm here to support you in whatever way you need.\n\nWhatever you are experiencing is valid. Would you like to delve deeper into these thoughts, or explore a quick soothing exercise together?`;
+  // ── API: load session messages ─────────────────────────────────────────────
+  const loadSession = async (sessionId: string) => {
+    setLoadingSession(true);
+    setActiveSessionId(sessionId);
+    setCrisisActive(false);
+    try {
+      const res = await fetch(`${API}/chat/session/${sessionId}`, { headers: authHeaders() });
+      const data = await res.json();
+      if (data.success) {
+        setMessages(data.session.messages);
+        if (data.session.isCrisisSession) setCrisisActive(true);
       }
+    } catch (e) {
+      console.error('loadSession error', e);
+    } finally {
+      setLoadingSession(false);
+    }
+  };
 
-      const aiMsg: Message = {
-        id: `ai-${Date.now()}`,
-        sender: 'ai',
-        text: replyText,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        actionWidget
-      };
+  // ── API: create new session ────────────────────────────────────────────────
+  const createNewSession = async () => {
+    try {
+      const res = await fetch(`${API}/chat/session`, {
+        method: 'POST',
+        headers: authHeaders(),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSessions((prev) => [data.session, ...prev]);
+        setActiveSessionId(data.session._id);
+        setMessages([]);
+        setCrisisActive(false);
+        inputRef.current?.focus();
+        return data.session._id;
+      }
+    } catch (e) {
+      console.error('createNewSession error', e);
+    }
+    return null;
+  };
 
+  // ── API: delete session ────────────────────────────────────────────────────
+  const deleteSession = async (sessionId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDeletingId(sessionId);
+    try {
+      const res = await fetch(`${API}/chat/session/${sessionId}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSessions((prev) => prev.filter((s) => s._id !== sessionId));
+        if (activeSessionId === sessionId) {
+          setActiveSessionId(null);
+          setMessages([]);
+        }
+      }
+    } catch (e) {
+      console.error('deleteSession error', e);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  // ── Send message ───────────────────────────────────────────────────────────
+  const handleSend = async (textOverride?: string) => {
+    if (!isLoggedIn) { navigate('/login'); return; }
+
+    const text = (textOverride || inputText).trim();
+    if (!text || isTyping) return;
+
+    // Ensure we have an active session
+    let sessionId = activeSessionId;
+    if (!sessionId) {
+      // Auto-create session
+      try {
+        const res = await fetch(`${API}/chat/session`, {
+          method: 'POST',
+          headers: authHeaders(),
+        });
+        const data = await res.json();
+        if (data.success) {
+          sessionId = data.session._id;
+          setActiveSessionId(sessionId);
+          setSessions((prev) => [data.session, ...prev]);
+        }
+      } catch (e) {
+        setErrorMsg('Could not start session. Please try again.');
+        return;
+      }
+    }
+
+    // Optimistic user message
+    const userMsg: Message = {
+      role: 'user',
+      content: text,
+      emotion: 'neutral',
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, userMsg]);
+    setInputText('');
+    setIsTyping(true);
+    setErrorMsg(null);
+
+    try {
+      const res = await fetch(`${API}/chat/session/${sessionId}/message`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ content: text }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setMessages((prev) => [...prev, {
+          role: data.message.role,
+          content: data.message.content,
+          emotion: data.message.emotion,
+          timestamp: data.message.timestamp,
+        }]);
+        if (data.crisisDetected) setCrisisActive(true);
+        // Update session title in sidebar
+        if (data.sessionTitle) {
+          setSessions((prev) => prev.map((s) =>
+            s._id === sessionId
+              ? { ...s, title: data.sessionTitle, lastMessageAt: new Date().toISOString(), messageCount: s.messageCount + 2 }
+              : s
+          ));
+        }
+      } else {
+        setErrorMsg(data.message || 'AI did not respond. Please try again.');
+      }
+    } catch (e) {
+      setErrorMsg('Connection error. Please check backend is running.');
+    } finally {
       setIsTyping(false);
-      setMessages((prev) => [...prev, aiMsg]);
-    }, 1100);
+    }
   };
 
-  const handleClearChat = () => {
-    setMessages(initialMessages);
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
   };
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-  };
-
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="ai-support-page">
-      {/* Main Split Layout */}
-      <div className="container ai-main-container">
-        <div className="ai-grid-workspace">
-          
-          {/* ================================================================
-              LEFT COLUMN: INTERACTIVE CHAT COMPANION
-              ================================================================ */}
-          <main className="ai-chat-card">
-            {/* Chat Top Header */}
-            <div className="chat-card-header">
-              <div className="chat-agent-info">
-                <div className="chat-avatar-ring">
-                  <div className="chat-avatar-icon">
-                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"></path>
-                      <path d="M9 21h6"></path>
-                    </svg>
-                  </div>
-                </div>
-                <div className="chat-title-group">
-                  <h3 className="chat-agent-title">SoulSpace AI Companion</h3>
-                  <span className="chat-subtitle">Private & Empathetic Mental Health Support</span>
-                </div>
-              </div>
+    <div className="ai-page-root">
+      {/* ════════════════════════════════════════════════════════════════════
+          HISTORY SIDEBAR
+          ════════════════════════════════════════════════════════════════════ */}
+      <aside className={`ai-history-sidebar ${isSidebarOpen ? 'open' : 'collapsed'}`}>
+        {/* Sidebar Header */}
+        <div className="sidebar-header">
+          <div className="sidebar-logo">
+            <span className="sidebar-logo-icon">🧠</span>
+            {isSidebarOpen && <span className="sidebar-logo-text">SoulSpace AI</span>}
+          </div>
+          <button className="sidebar-collapse-btn" onClick={() => setIsSidebarOpen(!isSidebarOpen)} title="Toggle sidebar">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+              {isSidebarOpen
+                ? <polyline points="15 18 9 12 15 6"></polyline>
+                : <polyline points="9 18 15 12 9 6"></polyline>}
+            </svg>
+          </button>
+        </div>
 
-              {/* Header Right Actions */}
-              <div className="chat-header-right">
-                <div className="chat-header-auth">
-                  {isLoggedIn ? (
-                    <div className="chat-logged-pill">
-                      <span className="dot-green"></span>
-                      <span>User</span>
-                      <button className="btn-chat-logout" onClick={handleLogout}>Log Out</button>
-                    </div>
-                  ) : (
-                    <button className="btn btn-primary btn-header-login" onClick={() => navigate('/login')}>
-                      🔒 Login to Chat
-                    </button>
-                  )}
-                </div>
+        {isSidebarOpen && (
+          <>
+            {/* New Chat Button */}
+            <button className="new-chat-btn" onClick={isLoggedIn ? createNewSession : () => navigate('/login')}>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              New Chat
+            </button>
 
-                <div className="header-divider-v"></div>
-
-                <div className="chat-header-actions">
-                  <button 
-                    className={`voice-toggle-btn ${isVoiceEnabled ? 'active' : ''}`}
-                    onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
-                    title={isVoiceEnabled ? 'Voice Active' : 'Voice Muted'}
-                  >
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                    </svg>
-                  </button>
-                  <button className="clear-chat-btn" onClick={handleClearChat} title="Clear Chat History">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polyline points="3 6 5 6 21 6"></polyline>
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Chat Messages Stream */}
-            <div className="chat-messages-body">
-              {messages.map((msg) => (
-                <div className={`chat-bubble-row ${msg.sender}`} key={msg.id}>
-                  {msg.sender === 'ai' && (
-                    <div className="msg-bot-avatar">
-                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"></path>
-                      </svg>
-                    </div>
-                  )}
-
-                  <div className="chat-bubble-content">
-                    <div className="msg-text-formatted">
-                      {renderFormattedMessage(msg.text)}
-                    </div>
-
-                    {/* Interactive inline widget if triggered */}
-                    {msg.actionWidget === 'breathing' && (
-                      <div className="inline-action-card">
-                        <div className="inline-action-header">
-                          <span>🧘 Guided 4-4-4 Box Breathing</span>
-                          <button 
-                            className="btn-tiny-action"
-                            onClick={() => setIsBreathingActive(!isBreathingActive)}
-                          >
-                            {isBreathingActive ? 'Stop Exercise' : 'Start Live Breathing'}
-                          </button>
-                        </div>
-                        {isBreathingActive && (
-                          <div className="inline-breathing-display">
-                            <div className={`breathing-circle-anim ${breathingPhase.toLowerCase()}`}>
-                              <span className="breathe-phase-text">{breathingPhase}</span>
-                              <span className="breathe-count-num">{breathingCountdown}s</span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    <span className="msg-timestamp">{msg.time}</span>
-                  </div>
-                </div>
-              ))}
-
-              {isTyping && (
-                <div className="chat-bubble-row ai">
-                  <div className="msg-bot-avatar">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#ffffff" strokeWidth="2">
-                      <rect x="3" y="11" width="18" height="10" rx="2"></rect>
-                      <circle cx="12" cy="5" r="2"></circle>
-                      <path d="M12 7v4"></path>
-                    </svg>
-                  </div>
-                  <div className="typing-indicator-box">
-                    <span className="typing-dot"></span>
-                    <span className="typing-dot"></span>
-                    <span className="typing-dot"></span>
-                  </div>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Quick Prompts Row */}
-            <div className="quick-prompts-bar">
-              <button 
-                className="prompt-pill" 
-                onClick={() => {
-                  if (!isLoggedIn) {
-                    navigate('/login');
-                    return;
-                  }
-                  handleSendMessage('I am feeling anxious and overthinking right now.');
-                }}
-              >
-                ⚡ Anxious & Overthinking
-              </button>
-              <button 
-                className="prompt-pill" 
-                onClick={() => {
-                  if (!isLoggedIn) {
-                    navigate('/login');
-                    return;
-                  }
-                  handleSendMessage('I feel exhausted and burned out with work.');
-                }}
-              >
-                💼 Work & Life Stress
-              </button>
-              <button 
-                className="prompt-pill" 
-                onClick={() => {
-                  if (!isLoggedIn) {
-                    navigate('/login');
-                    return;
-                  }
-                  handleSendMessage('Can you guide me through a 2-minute grounding exercise?');
-                }}
-              >
-                🌿 Quick Grounding
-              </button>
-              <button 
-                className="prompt-pill" 
-                onClick={() => {
-                  if (!isLoggedIn) {
-                    navigate('/login');
-                    return;
-                  }
-                  handleSendMessage('I am feeling low and need a safe place to vent.');
-                }}
-              >
-                💙 Need to Vent
-              </button>
-            </div>
-
-            {/* Input Bar */}
-            <div className="chat-input-wrapper">
+            {/* Session List */}
+            <div className="sidebar-session-list">
               {!isLoggedIn ? (
-                <div className="chat-locked-input-bar" onClick={() => navigate('/login')}>
-                  <div className="locked-input-content">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#3f72af" strokeWidth="2">
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                    </svg>
-                    <span>Please login to start a conversation with SoulSpace AI...</span>
-                  </div>
-                  <button className="btn btn-primary btn-locked-chat-login" onClick={(e) => {
-                    e.stopPropagation();
-                    navigate('/login');
-                  }}>
-                    🔒 Login to Chat
-                  </button>
+                <div className="sidebar-login-prompt">
+                  <span>🔒</span>
+                  <p>Login to see your chat history</p>
+                  <button className="btn-sidebar-login" onClick={() => navigate('/login')}>Login</button>
+                </div>
+              ) : sessions.length === 0 ? (
+                <div className="sidebar-empty">
+                  <span>💬</span>
+                  <p>No chats yet. Start a new conversation!</p>
                 </div>
               ) : (
-                <div className="chat-input-bar">
-                  <input 
-                    type="text" 
-                    className="chat-text-field"
-                    placeholder="Type what's on your mind... (e.g. 'I feel stressed about tomorrow')"
-                    value={inputText}
-                    maxLength={500}
-                    onChange={(e) => setInputText(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleSendMessage();
-                    }}
-                  />
-
-                  <div className="chat-bar-actions">
-                    <span className="char-count">{inputText.length}/500</span>
-
-                    {/* Mic / Voice Dictation Button */}
-                    <button 
-                      className="mic-input-btn" 
-                      title="Voice Input (Speech-to-Text)"
-                      onClick={() => setInputText('I am feeling anxious today.')}
+                sessions.map((session) => (
+                  <div
+                    key={session._id}
+                    className={`session-item ${activeSessionId === session._id ? 'active' : ''} ${session.isCrisisSession ? 'crisis' : ''}`}
+                    onClick={() => loadSession(session._id)}
+                  >
+                    <div className="session-item-content">
+                      <div className="session-title">{session.title}</div>
+                      <div className="session-meta">
+                        <span className="session-date">{fmtDate(session.lastMessageAt)}</span>
+                        <span className="session-count">{session.messageCount} msgs</span>
+                      </div>
+                      <div className="session-preview">{session.preview}</div>
+                    </div>
+                    <button
+                      className={`session-delete-btn ${deletingId === session._id ? 'deleting' : ''}`}
+                      onClick={(e) => deleteSession(session._id, e)}
+                      title="Delete chat"
                     >
-                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                        <line x1="12" y1="19" x2="12" y2="23"></line>
-                        <line x1="8" y1="23" x2="16" y2="23"></line>
-                      </svg>
+                      {deletingId === session._id ? (
+                        <span className="mini-spinner"></span>
+                      ) : (
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="3 6 5 6 21 6"></polyline>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                      )}
                     </button>
+                  </div>
+                ))
+              )}
+            </div>
 
-                    {/* Send Button */}
-                    <button 
-                      className="send-msg-btn"
-                      disabled={!inputText.trim()}
-                      onClick={() => handleSendMessage()}
-                    >
-                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-                        <line x1="22" y1="2" x2="11" y2="13"></line>
-                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                      </svg>
-                    </button>
+            {/* User info at bottom */}
+            {isLoggedIn && user && (
+              <div className="sidebar-user-footer">
+                <div className="sidebar-user-avatar">
+                  {user.firstName[0]}{user.lastName[0]}
+                </div>
+                <div className="sidebar-user-info">
+                  <div className="sidebar-user-name">{user.firstName} {user.lastName}</div>
+                  {user.isDemo && <span className="sidebar-demo-tag">Demo</span>}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </aside>
+
+      {/* ════════════════════════════════════════════════════════════════════
+          MAIN CHAT AREA
+          ════════════════════════════════════════════════════════════════════ */}
+      <main className="ai-chat-main">
+        {/* Top bar */}
+        <div className="chat-topbar">
+          <div className="chat-topbar-left">
+            <div className="chat-agent-avatar">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" strokeWidth="2">
+                <path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"></path>
+                <path d="M9 21h6"></path>
+              </svg>
+            </div>
+            <div>
+              <div className="chat-topbar-title">SoulSpace AI Companion</div>
+              <div className="chat-topbar-sub">
+                <span className="online-dot"></span> Mental Health Support · Empathetic · Private
+              </div>
+            </div>
+          </div>
+          <div className="chat-topbar-right">
+            {isLoggedIn ? (
+              <div className="topbar-session-actions">
+                <button className="topbar-btn" onClick={createNewSession} title="New Chat">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  New Chat
+                </button>
+              </div>
+            ) : (
+              <button className="topbar-login-btn" onClick={() => navigate('/login')}>
+                🔒 Login to Chat
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Crisis Banner */}
+        {crisisActive && (
+          <div className="crisis-banner">
+            <div className="crisis-banner-icon">🆘</div>
+            <div className="crisis-banner-text">
+              <strong>You are not alone.</strong> Please reach out to a helpline right now:
+              <span className="crisis-numbers"> iCall: 9152987821 · Vandrevala: 1860-2662-345 · AASRA: 9820466627</span>
+            </div>
+            <button className="crisis-dismiss" onClick={() => setCrisisActive(false)}>✕</button>
+          </div>
+        )}
+
+        {/* Error message */}
+        {errorMsg && (
+          <div className="chat-error-bar">
+            ⚠️ {errorMsg}
+            <button onClick={() => setErrorMsg(null)}>✕</button>
+          </div>
+        )}
+
+        {/* Messages Area */}
+        <div className="chat-messages-area">
+          {/* Welcome screen when no session */}
+          {!activeSessionId && !loadingSession && (
+            <div className="chat-welcome-screen">
+              <div className="welcome-icon-ring">🧠</div>
+              <h2 className="welcome-title">
+                {isLoggedIn ? `Hello, ${user?.firstName}! 👋` : 'SoulSpace AI Companion'}
+              </h2>
+              <p className="welcome-sub">
+                {isLoggedIn
+                  ? 'A safe, private space for your mental wellness. Start a new conversation or pick one from history.'
+                  : 'Login to start a private, AI-powered mental health conversation.'}
+              </p>
+              {isLoggedIn ? (
+                <button className="welcome-start-btn" onClick={createNewSession}>
+                  ✨ Start New Conversation
+                </button>
+              ) : (
+                <button className="welcome-start-btn" onClick={() => navigate('/login')}>
+                  🔒 Login to Get Started
+                </button>
+              )}
+              {/* Quick prompts on welcome screen */}
+              {isLoggedIn && (
+                <div className="welcome-prompts">
+                  <p className="welcome-prompts-label">Try asking:</p>
+                  <div className="welcome-prompt-pills">
+                    {[
+                      { icon: '😰', text: "I'm feeling anxious and overwhelmed" },
+                      { icon: '😔', text: "I've been feeling really low lately" },
+                      { icon: '😓', text: 'Work stress is getting to me' },
+                      { icon: '🧘', text: 'Guide me through a breathing exercise' },
+                    ].map((p, i) => (
+                      <button key={i} className="welcome-prompt-pill" onClick={async () => {
+                        await createNewSession();
+                        setTimeout(() => handleSend(p.text), 150);
+                      }}>
+                        {p.icon} {p.text}
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
             </div>
-          </main>
+          )}
 
-          {/* ================================================================
-              RIGHT COLUMN: WELLNESS TOOLKIT & CRISIS CARE
-              ================================================================ */}
-          <aside className="ai-toolkit-sidebar">
-            
-            {/* Profile & Auth Status Card */}
-            <div className="toolkit-card auth-profile-card">
-              <div className="card-header-flex">
-                <div className="profile-badge-icon">
-                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#3f72af" strokeWidth="2.5">
-                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                  </svg>
-                </div>
-                <div>
-                  <h4 className="toolkit-card-title">Therapy Intelligence</h4>
-                  <p className="toolkit-card-sub">CBT & Mindfulness Neural Core</p>
-                </div>
-              </div>
+          {/* Loading skeleton */}
+          {loadingSession && (
+            <div className="chat-loading-state">
+              <div className="loading-spinner-large"></div>
+              <p>Loading conversation…</p>
+            </div>
+          )}
 
-              <div className="auth-action-box">
-                {isLoggedIn ? (
-                  <div className="auth-logged-banner">
-                    <div className="logged-info">
-                      <span className="dot-green"></span>
-                      <span>Session Saved (User)</span>
-                    </div>
-                    <button className="btn-logout-small" onClick={handleLogout}>Log Out</button>
+          {/* Messages */}
+          {!loadingSession && messages.map((msg, idx) => {
+            const emotionMeta = EMOTION_META[msg.emotion] || EMOTION_META.neutral;
+            return (
+              <div key={idx} className={`msg-row ${msg.role}`}>
+                {msg.role === 'assistant' && (
+                  <div className="msg-avatar ai-avatar">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" strokeWidth="2">
+                      <path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"></path>
+                    </svg>
                   </div>
-                ) : (
-                  <div className="auth-prompt-banner">
-                    <p className="auth-prompt-text">
-                      🔒 Log in to preserve encrypted session history & sync CBT reports with doctors.
-                    </p>
-                    <button className="btn btn-primary btn-auth-unlock" onClick={() => navigate('/login')}>
-                      Login to Save History
-                    </button>
+                )}
+                <div className="msg-bubble-wrap">
+                  <div className={`msg-bubble ${msg.role}`}>
+                    <div className="msg-text">{renderContent(msg.content)}</div>
+                  </div>
+                  <div className="msg-meta">
+                    <span className="msg-time">
+                      {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                    {msg.role === 'assistant' && msg.emotion !== 'neutral' && (
+                      <span
+                        className="msg-emotion-tag"
+                        style={{ '--emotion-color': emotionMeta.color } as React.CSSProperties}
+                      >
+                        {emotionMeta.emoji} {emotionMeta.label}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Inline breathing widget */}
+                  {msg.role === 'assistant' && (msg.emotion === 'anxious' || msg.content.toLowerCase().includes('breath')) && idx === messages.length - 1 && (
+                    <div className="inline-breathing-card">
+                      <div className="breathing-card-header">
+                        <span>🧘 4-4-4 Box Breathing</span>
+                        <button className="btn-start-breathing" onClick={() => setIsBreathingActive(!isBreathingActive)}>
+                          {isBreathingActive ? '⏹ Stop' : '▶ Start'}
+                        </button>
+                      </div>
+                      {isBreathingActive && (
+                        <div className="breathing-display">
+                          <div className={`breath-circle ${breathingPhase.toLowerCase()}`}>
+                            <span className="breath-phase">{breathingPhase}</span>
+                            <span className="breath-count">{breathingCount}s</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                {msg.role === 'user' && (
+                  <div className="msg-avatar user-avatar">
+                    {user ? `${user.firstName[0]}${user.lastName[0]}` : 'U'}
                   </div>
                 )}
               </div>
-            </div>
+            );
+          })}
 
-          </aside>
+          {/* Typing indicator */}
+          {isTyping && (
+            <div className="msg-row assistant">
+              <div className="msg-avatar ai-avatar">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" strokeWidth="2">
+                  <path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"></path>
+                </svg>
+              </div>
+              <div className="msg-bubble-wrap">
+                <div className="msg-bubble assistant typing-bubble">
+                  <span className="typing-dot"></span>
+                  <span className="typing-dot"></span>
+                  <span className="typing-dot"></span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
         </div>
-      </div>
+
+        {/* Quick Prompts (when session active) */}
+        {activeSessionId && !isTyping && (
+          <div className="quick-prompts-row">
+            {[
+              { icon: '⚡', text: 'Anxious & overthinking', full: "I'm feeling very anxious and can't stop overthinking." },
+              { icon: '💼', text: 'Work stress', full: "I'm burned out from work stress and feel exhausted." },
+              { icon: '🌿', text: 'Grounding exercise', full: 'Can you guide me through a quick grounding exercise?' },
+              { icon: '💙', text: 'Need to vent', full: "I'm feeling really low and need someone to listen." },
+            ].map((p, i) => (
+              <button key={i} className="quick-prompt-pill" onClick={() => handleSend(p.full)}>
+                {p.icon} {p.text}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Input Bar */}
+        <div className="chat-input-section">
+          {!isLoggedIn ? (
+            <div className="input-locked-bar" onClick={() => navigate('/login')}>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#3f72af" strokeWidth="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              <span>Login to start chatting with SoulSpace AI…</span>
+              <button className="locked-login-btn" onClick={(e) => { e.stopPropagation(); navigate('/login'); }}>
+                Login →
+              </button>
+            </div>
+          ) : (
+            <div className="input-bar">
+              <div className="input-bar-inner">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  className="chat-input-field"
+                  placeholder={activeSessionId ? "Share what's on your mind…" : "Click 'New Chat' or type to start…"}
+                  value={inputText}
+                  maxLength={1000}
+                  onChange={(e) => setInputText(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  disabled={isTyping}
+                />
+                <div className="input-actions">
+                  <span className="char-counter">{inputText.length}/1000</span>
+                  <button
+                    className={`send-btn ${inputText.trim() && !isTyping ? 'active' : ''}`}
+                    onClick={() => handleSend()}
+                    disabled={!inputText.trim() || isTyping}
+                    title="Send message"
+                  >
+                    {isTyping ? (
+                      <span className="send-spinner"></span>
+                    ) : (
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+              <p className="input-disclaimer">
+                SoulSpace AI is a mental wellness companion and not a substitute for professional therapy.
+              </p>
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   );
 };

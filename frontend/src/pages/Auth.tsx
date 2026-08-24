@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './Auth.css';
 
 type AuthMode = 'login' | 'signup' | 'forgot';
@@ -7,8 +8,14 @@ type AuthMode = 'login' | 'signup' | 'forgot';
 const Auth: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { login, register, demoLogin, isLoggedIn } = useAuth();
 
-  // Determine initial mode based on URL route
+  // If already logged in, redirect away
+  useEffect(() => {
+    if (isLoggedIn) navigate('/', { replace: true });
+  }, [isLoggedIn, navigate]);
+
+  // Determine initial mode from URL
   const getModeFromPath = (): AuthMode => {
     if (location.pathname === '/register' || location.search.includes('mode=signup')) return 'signup';
     if (location.pathname === '/forgot-password' || location.search.includes('mode=forgot')) return 'forgot';
@@ -17,13 +24,13 @@ const Auth: React.FC = () => {
 
   const [mode, setMode] = useState<AuthMode>(getModeFromPath());
 
-  // Form states - Login
+  // Login form
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showLoginPassword, setShowLoginPassword] = useState(false);
 
-  // Form states - Signup
+  // Signup form
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
@@ -35,11 +42,11 @@ const Auth: React.FC = () => {
   const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Form states - Forgot Password
+  // Forgot password form
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSubmitted, setForgotSubmitted] = useState(false);
 
-  // Status/Toast feedback
+  // Status
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -49,6 +56,11 @@ const Auth: React.FC = () => {
     setErrorMessage(null);
   }, [location.pathname, location.search]);
 
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 4000);
+  };
+
   const switchMode = (newMode: AuthMode) => {
     setMode(newMode);
     setErrorMessage(null);
@@ -57,95 +69,98 @@ const Auth: React.FC = () => {
     else if (newMode === 'forgot') navigate('/forgot-password');
   };
 
-  // Handle Login Submit
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  // ── Login Submit ─────────────────────────────────────────────────────────────
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
     setIsLoading(true);
 
-    setTimeout(() => {
-      setIsLoading(false);
-      setToastMessage('Signed in successfully! Redirecting to Dashboard...');
-      setTimeout(() => {
-        navigate('/');
-      }, 1200);
-    }, 800);
+    const result = await login(loginEmail, loginPassword);
+    setIsLoading(false);
+
+    if (result.success) {
+      showToast(`✨ ${result.message}`);
+      setTimeout(() => navigate('/'), 800);
+    } else {
+      setErrorMessage(result.message);
+    }
   };
 
-  // Quick 1-Click Demo Login
-  const handleQuickDemoLogin = () => {
-    setLoginEmail('demo.user@soulspace.ai');
-    setLoginPassword('DemoPassword123!');
+  // ── Demo Login ────────────────────────────────────────────────────────────────
+  const handleDemoLogin = async () => {
+    setErrorMessage(null);
     setIsLoading(true);
+    const result = await demoLogin();
+    setIsLoading(false);
 
-    setTimeout(() => {
-      setIsLoading(false);
-      setToastMessage('Demo Account Authenticated! Welcome to SoulSpace.');
-      setTimeout(() => {
-        navigate('/');
-      }, 1000);
-    }, 600);
+    if (result.success) {
+      showToast(`${result.message}`);
+      setTimeout(() => navigate('/'), 800);
+    } else {
+      setErrorMessage(result.message);
+    }
   };
 
-  // Handle Signup Submit
-  const handleSignupSubmit = (e: React.FormEvent) => {
+  // ── Signup Submit ─────────────────────────────────────────────────────────────
+  const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
-    // Validation
     if (!firstName.trim() || !lastName.trim()) {
       setErrorMessage('Please provide both your First Name and Last Name.');
       return;
     }
-
     if (!signupEmail.trim()) {
       setErrorMessage('Email address is required.');
       return;
     }
-
     if (!phoneNumber.trim() || phoneNumber.length < 8) {
       setErrorMessage('Please provide a valid phone number (at least 8 digits).');
       return;
     }
-
     if (signupPassword.length < 6) {
       setErrorMessage('Password must be at least 6 characters.');
       return;
     }
-
     if (signupPassword !== confirmPassword) {
       setErrorMessage('Passwords do not match. Please verify your confirm password.');
       return;
     }
-
     if (!agreeTerms) {
       setErrorMessage('You must accept the Terms of Service & Privacy Policy to create an account.');
       return;
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      setToastMessage(`Account created successfully for ${firstName}! You can now sign in.`);
-      setTimeout(() => {
-        switchMode('login');
-      }, 1500);
-    }, 1000);
+    const result = await register({
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: signupEmail.trim(),
+      phone: `${countryCode} ${phoneNumber.trim()}`,
+      password: signupPassword,
+    });
+    setIsLoading(false);
+
+    if (result.success) {
+      showToast(`✨ ${result.message}`);
+      setTimeout(() => navigate('/'), 800);
+    } else {
+      setErrorMessage(result.message);
+    }
   };
 
-  // Handle Forgot Password Submit
+  // ── Forgot Password ───────────────────────────────────────────────────────────
   const handleForgotSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!forgotEmail.trim()) {
       setErrorMessage('Please enter your registered email address.');
       return;
     }
-
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
       setForgotSubmitted(true);
-      setToastMessage(`Password recovery link sent to ${forgotEmail}`);
+      showToast(`Password recovery link sent to ${forgotEmail}`);
     }, 900);
   };
 
@@ -160,41 +175,32 @@ const Auth: React.FC = () => {
       )}
 
       <div className="auth-split-wrapper">
-        
-        {/* ====================================================================
-            LEFT SIDE: ARTWORK & MENTAL WELLNESS BRANDING
-            ==================================================================== */}
+
+        {/* LEFT SIDE: ARTWORK */}
         <div className="auth-side-showcase">
           <div className="auth-showcase-bg-img" style={{ backgroundImage: `url('/auth_side_art.jpg')` }}></div>
           <div className="auth-showcase-overlay"></div>
-
           <div className="auth-showcase-content">
-            {/* Clean, Bold, Short Content (No Boxes, No Icons, Clean Paragraph) */}
             <div className="auth-clean-hero-text">
               <h2 className="auth-bold-headline">
                 Empower Your Mind.<br />
                 <span className="headline-highlight">Heal Your Life.</span>
               </h2>
-
               <p className="auth-showcase-paragraph">
                 SoulSpace AI is your safe, confidential sanctuary for mental wellness and inner peace. Connect with empathetic AI therapy companions, consult licensed clinical psychologists, and understand your emotional trends in a safe, judgment-free space.
               </p>
             </div>
-
-            {/* Bottom Clean Reassurance */}
             <div className="auth-clean-footer-note">
-              <p>Safe, private & always here for you.</p>
+              <p>Safe, private &amp; always here for you.</p>
             </div>
           </div>
         </div>
 
-        {/* ====================================================================
-            RIGHT SIDE: INTERACTIVE FORM WORKSPACE
-            ==================================================================== */}
+        {/* RIGHT SIDE: FORM */}
         <div className="auth-side-form">
           <div className="auth-form-container">
 
-            {/* Top Mode Header / Switcher */}
+            {/* Header */}
             <div className="auth-form-header">
               {mode === 'login' && (
                 <>
@@ -204,7 +210,6 @@ const Auth: React.FC = () => {
                   </p>
                 </>
               )}
-
               {mode === 'signup' && (
                 <>
                   <h1 className="auth-header-title">Create an Account</h1>
@@ -213,7 +218,6 @@ const Auth: React.FC = () => {
                   </p>
                 </>
               )}
-
               {mode === 'forgot' && (
                 <>
                   <h1 className="auth-header-title">Reset Password</h1>
@@ -236,34 +240,31 @@ const Auth: React.FC = () => {
               </div>
             )}
 
-            {/* ================================================================
-                FORM: LOGIN (SIGN IN)
-                ================================================================ */}
+            {/* ── LOGIN FORM ─────────────────────────────────────────── */}
             {mode === 'login' && (
               <form onSubmit={handleLoginSubmit} className="auth-main-form">
-                
-                {/* Email Field */}
+
                 <div className="form-group-block">
                   <label className="form-label-text">Email Address</label>
                   <div className="input-with-icon-wrapper">
                     <span className="input-field-icon">✉️</span>
-                    <input 
-                      type="email" 
-                      className="auth-input-field" 
+                    <input
+                      type="email"
+                      className="auth-input-field"
                       placeholder="name@example.com"
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
                       required
+                      autoComplete="email"
                     />
                   </div>
                 </div>
 
-                {/* Password Field */}
                 <div className="form-group-block">
                   <div className="label-with-link-row">
                     <label className="form-label-text">Password</label>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       className="forgot-pass-link-btn"
                       onClick={() => switchMode('forgot')}
                     >
@@ -272,16 +273,17 @@ const Auth: React.FC = () => {
                   </div>
                   <div className="input-with-icon-wrapper">
                     <span className="input-field-icon">🔒</span>
-                    <input 
-                      type={showLoginPassword ? 'text' : 'password'} 
-                      className="auth-input-field" 
+                    <input
+                      type={showLoginPassword ? 'text' : 'password'}
+                      className="auth-input-field"
                       placeholder="Enter your password"
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
                       required
+                      autoComplete="current-password"
                     />
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       className="password-toggle-btn"
                       onClick={() => setShowLoginPassword(!showLoginPassword)}
                       title={showLoginPassword ? 'Hide Password' : 'Show Password'}
@@ -291,11 +293,10 @@ const Auth: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Remember Me */}
                 <div className="remember-me-row">
                   <label className="checkbox-custom-label">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       checked={rememberMe}
                       onChange={(e) => setRememberMe(e.target.checked)}
                     />
@@ -303,66 +304,64 @@ const Auth: React.FC = () => {
                   </label>
                 </div>
 
-                {/* Submit Button */}
                 <button type="submit" className="btn-auth-submit" disabled={isLoading}>
-                  {isLoading ? 'Authenticating...' : 'Sign In'}
+                  {isLoading ? (
+                    <span className="auth-spinner-row">
+                      <span className="auth-btn-spinner"></span>
+                      Authenticating...
+                    </span>
+                  ) : 'Sign In →'}
                 </button>
 
                 {/* Divider */}
                 <div className="auth-divider-line">
-                  <span>or explore with demo</span>
+                  <span>or explore instantly</span>
                 </div>
 
-                {/* Quick 1-Click Demo Login */}
-                <button 
-                  type="button" 
+                {/* Demo Login */}
+                <button
+                  type="button"
                   className="btn-demo-quick-login"
-                  onClick={handleQuickDemoLogin}
+                  onClick={handleDemoLogin}
                   disabled={isLoading}
                 >
-                  ⚡ Quick 1-Click Demo Login
+                  <span className="demo-btn-icon">⚡</span>
+                  <span className="demo-btn-text">
+                    <span className="demo-btn-title">Continue as Demo User</span>
+                    <span className="demo-btn-sub">Instant access · No signup needed</span>
+                  </span>
                 </button>
 
-                {/* Toggle to Sign Up */}
                 <div className="auth-switch-mode-prompt">
                   <span>Don't have an account yet?</span>
-                  <button 
-                    type="button" 
-                    className="auth-switch-btn"
-                    onClick={() => switchMode('signup')}
-                  >
+                  <button type="button" className="auth-switch-btn" onClick={() => switchMode('signup')}>
                     Sign Up
                   </button>
                 </div>
-
               </form>
             )}
 
-            {/* ================================================================
-                FORM: SIGN UP (REGISTRATION)
-                ================================================================ */}
+            {/* ── SIGNUP FORM ────────────────────────────────────────── */}
             {mode === 'signup' && (
               <form onSubmit={handleSignupSubmit} className="auth-main-form">
-                
-                {/* First Name & Last Name (2 Column) */}
+
                 <div className="form-two-col-row">
                   <div className="form-group-block">
                     <label className="form-label-text">First Name <span className="req-star">*</span></label>
-                    <input 
-                      type="text" 
-                      className="auth-input-field" 
+                    <input
+                      type="text"
+                      className="auth-input-field"
                       placeholder="e.g. Rahul"
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
                       required
                     />
                   </div>
-
                   <div className="form-group-block">
                     <label className="form-label-text">Last Name <span className="req-star">*</span></label>
-                    <input 
-                      type="text" 
-                      className="auth-input-field" 
+                    <input
+                      type="text"
+                      className="auth-input-field"
                       placeholder="e.g. Sharma"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
@@ -371,27 +370,26 @@ const Auth: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Email Address */}
                 <div className="form-group-block">
                   <label className="form-label-text">Email Address <span className="req-star">*</span></label>
                   <div className="input-with-icon-wrapper">
                     <span className="input-field-icon">✉️</span>
-                    <input 
-                      type="email" 
-                      className="auth-input-field" 
+                    <input
+                      type="email"
+                      className="auth-input-field"
                       placeholder="rahul.sharma@example.com"
                       value={signupEmail}
                       onChange={(e) => setSignupEmail(e.target.value)}
                       required
+                      autoComplete="email"
                     />
                   </div>
                 </div>
 
-                {/* Phone Number with Country Code */}
                 <div className="form-group-block">
                   <label className="form-label-text">Phone Number <span className="req-star">*</span></label>
                   <div className="phone-input-combined">
-                    <select 
+                    <select
                       className="country-code-select"
                       value={countryCode}
                       onChange={(e) => setCountryCode(e.target.value)}
@@ -403,9 +401,9 @@ const Auth: React.FC = () => {
                       <option value="+61">🇦🇺 +61 (Aus)</option>
                       <option value="+65">🇸🇬 +65 (SGP)</option>
                     </select>
-                    <input 
-                      type="tel" 
-                      className="auth-input-field phone-field" 
+                    <input
+                      type="tel"
+                      className="auth-input-field phone-field"
                       placeholder="98765 43210"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
@@ -414,21 +412,21 @@ const Auth: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Password & Confirm Password (2 Column) */}
                 <div className="form-two-col-row">
                   <div className="form-group-block">
                     <label className="form-label-text">Password <span className="req-star">*</span></label>
                     <div className="input-with-icon-wrapper">
-                      <input 
-                        type={showSignupPassword ? 'text' : 'password'} 
-                        className="auth-input-field" 
+                      <input
+                        type={showSignupPassword ? 'text' : 'password'}
+                        className="auth-input-field"
                         placeholder="••••••••"
                         value={signupPassword}
                         onChange={(e) => setSignupPassword(e.target.value)}
                         required
+                        autoComplete="new-password"
                       />
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         className="password-toggle-btn"
                         onClick={() => setShowSignupPassword(!showSignupPassword)}
                       >
@@ -436,20 +434,20 @@ const Auth: React.FC = () => {
                       </button>
                     </div>
                   </div>
-
                   <div className="form-group-block">
                     <label className="form-label-text">Confirm Password <span className="req-star">*</span></label>
                     <div className="input-with-icon-wrapper">
-                      <input 
-                        type={showConfirmPassword ? 'text' : 'password'} 
-                        className="auth-input-field" 
+                      <input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        className="auth-input-field"
                         placeholder="••••••••"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         required
+                        autoComplete="new-password"
                       />
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         className="password-toggle-btn"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       >
@@ -459,11 +457,10 @@ const Auth: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Terms and Conditions Checkbox */}
                 <div className="terms-checkbox-row">
                   <label className="checkbox-custom-label">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       checked={agreeTerms}
                       onChange={(e) => setAgreeTerms(e.target.checked)}
                       required
@@ -474,29 +471,25 @@ const Auth: React.FC = () => {
                   </label>
                 </div>
 
-                {/* Submit Button */}
                 <button type="submit" className="btn-auth-submit" disabled={isLoading}>
-                  {isLoading ? 'Creating Account...' : 'Create Account'}
+                  {isLoading ? (
+                    <span className="auth-spinner-row">
+                      <span className="auth-btn-spinner"></span>
+                      Creating Account...
+                    </span>
+                  ) : 'Create Account →'}
                 </button>
 
-                {/* Toggle to Sign In */}
                 <div className="auth-switch-mode-prompt">
                   <span>Already have an account?</span>
-                  <button 
-                    type="button" 
-                    className="auth-switch-btn"
-                    onClick={() => switchMode('login')}
-                  >
+                  <button type="button" className="auth-switch-btn" onClick={() => switchMode('login')}>
                     Sign In
                   </button>
                 </div>
-
               </form>
             )}
 
-            {/* ================================================================
-                FORM: FORGOT PASSWORD
-                ================================================================ */}
+            {/* ── FORGOT PASSWORD FORM ───────────────────────────────── */}
             {mode === 'forgot' && (
               <div className="auth-forgot-wrapper">
                 {forgotSubmitted ? (
@@ -506,13 +499,10 @@ const Auth: React.FC = () => {
                     <p className="forgot-success-text">
                       We have sent password reset instructions to <strong>{forgotEmail}</strong>. Please check your inbox and spam folder.
                     </p>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       className="btn-auth-submit"
-                      onClick={() => {
-                        setForgotSubmitted(false);
-                        switchMode('login');
-                      }}
+                      onClick={() => { setForgotSubmitted(false); switchMode('login'); }}
                     >
                       Back to Sign In
                     </button>
@@ -523,9 +513,9 @@ const Auth: React.FC = () => {
                       <label className="form-label-text">Registered Email Address</label>
                       <div className="input-with-icon-wrapper">
                         <span className="input-field-icon">✉️</span>
-                        <input 
-                          type="email" 
-                          className="auth-input-field" 
+                        <input
+                          type="email"
+                          className="auth-input-field"
                           placeholder="name@example.com"
                           value={forgotEmail}
                           onChange={(e) => setForgotEmail(e.target.value)}
@@ -533,18 +523,12 @@ const Auth: React.FC = () => {
                         />
                       </div>
                     </div>
-
                     <button type="submit" className="btn-auth-submit" disabled={isLoading}>
                       {isLoading ? 'Sending Link...' : 'Send Recovery Link'}
                     </button>
-
                     <div className="auth-switch-mode-prompt">
                       <span>Remembered your password?</span>
-                      <button 
-                        type="button" 
-                        className="auth-switch-btn"
-                        onClick={() => switchMode('login')}
-                      >
+                      <button type="button" className="auth-switch-btn" onClick={() => switchMode('login')}>
                         Back to Login
                       </button>
                     </div>
@@ -555,7 +539,6 @@ const Auth: React.FC = () => {
 
           </div>
         </div>
-
       </div>
     </div>
   );
