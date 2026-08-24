@@ -39,6 +39,16 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    assessmentResults: [
+      {
+        assessmentId: { type: String },
+        code: { type: String },
+        title: { type: String },
+        score: { type: Number },
+        severity: { type: String },
+        completedAt: { type: String },
+      },
+    ],
   },
   {
     timestamps: true,
