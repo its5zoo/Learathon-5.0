@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './MoodTracker.css';
 
 interface MoodEntry {
@@ -9,6 +10,7 @@ interface MoodEntry {
   date: string;
   time: string;
   type: 'AI Facial Scan' | 'Manual Selection';
+  confidence?: string;
   note?: string;
 }
 
@@ -98,11 +100,9 @@ const initialSampleEntries: MoodEntry[] = [
 const past7Days = ['18 Aug', '19 Aug', '20 Aug', '21 Aug', '22 Aug', '23 Aug', 'Today'];
 
 const MoodTracker: React.FC = () => {
+  const navigate = useNavigate();
   // Authentication state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authEmail, setAuthEmail] = useState('');
-  const [authPassword, setAuthPassword] = useState('');
 
   // AI Facial Scanning state
   const [isScanning, setIsScanning] = useState(false);
@@ -122,7 +122,7 @@ const MoodTracker: React.FC = () => {
   // Trigger AI Facial Scan
   const handleStartScan = () => {
     if (!isLoggedIn) {
-      setShowAuthModal(true);
+      navigate('/login');
       return;
     }
 
@@ -138,12 +138,14 @@ const MoodTracker: React.FC = () => {
         // Scan completed
         const detectedMoods = ['Happy', 'Neutral', 'Surprise'] as const;
         const resultMood = detectedMoods[Math.floor(Math.random() * detectedMoods.length)];
-        const confidence = Math.floor(Math.random() * 10) + 90; // 90-99%
+        const confidenceScore = Math.floor(Math.random() * 15) + 85; // 85-99%
 
-        setDetectedScanResult({ mood: resultMood, confidence });
-        setIsScanning(false);
+        setDetectedScanResult({
+          mood: resultMood,
+          confidence: confidenceScore
+        });
 
-        // Add to history
+        // Add to entries
         const newEntry: MoodEntry = {
           id: `entry-${Date.now()}`,
           mood: resultMood,
@@ -152,15 +154,15 @@ const MoodTracker: React.FC = () => {
           date: 'Today',
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           type: 'AI Facial Scan',
-          note: `AI detected ${resultMood} expression with ${confidence}% confidence.`
+          confidence: `${confidenceScore}%`
         };
 
-        setMoodEntries((current) => [...current, newEntry]);
-        setToastMessage(`AI Scan Complete: Recorded ${resultMood} (${confidence}%)!`);
+        setMoodEntries((prev) => [...prev, newEntry]);
+        setIsScanning(false);
+        setToastMessage(`AI Detected: ${resultMood} (${confidenceScore}% confidence)`);
         setShowSuccessToast(true);
         setTimeout(() => setShowSuccessToast(false), 4000);
-
-        return 0;
+        return 5;
       });
     }, 1000);
   };
@@ -168,7 +170,7 @@ const MoodTracker: React.FC = () => {
   // Save Manual Mood Entry
   const handleSaveManualMood = () => {
     if (!isLoggedIn) {
-      setShowAuthModal(true);
+      navigate('/login');
       return;
     }
 
@@ -188,12 +190,6 @@ const MoodTracker: React.FC = () => {
     setToastMessage(`Saved your ${selectedMood} mood entry successfully!`);
     setShowSuccessToast(true);
     setTimeout(() => setShowSuccessToast(false), 4000);
-  };
-
-  const handleLogin = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    setIsLoggedIn(true);
-    setShowAuthModal(false);
   };
 
   const handleLogout = () => {
@@ -242,7 +238,7 @@ const MoodTracker: React.FC = () => {
                 {!isLoggedIn ? (
                   <button 
                     className="btn-hero-login-link"
-                    onClick={() => setShowAuthModal(true)}
+                    onClick={() => navigate('/login')}
                   >
                     🔒 Login to Sync History
                   </button>
@@ -291,7 +287,7 @@ const MoodTracker: React.FC = () => {
                 {/* Scanner Card Footer Status */}
                 <div className="scanner-card-footer">
                   {!isLoggedIn ? (
-                    <div className="scanner-login-notice" onClick={() => setShowAuthModal(true)}>
+                    <div className="scanner-login-notice" onClick={() => navigate('/login')}>
                       <span>Login to capture and save your mood entries.</span>
                     </div>
                   ) : detectedScanResult ? (
@@ -354,7 +350,7 @@ const MoodTracker: React.FC = () => {
                       <div className="lock-icon-circle">🔒</div>
                       <h4>Login to View Mood History</h4>
                       <p>Sign in to record your daily emotions and view your 7-day psychological trajectory.</p>
-                      <button className="btn btn-primary" onClick={() => setShowAuthModal(true)}>
+                      <button className="btn btn-primary" onClick={() => navigate('/login')}>
                         Login to View Activity
                       </button>
                     </div>
@@ -442,7 +438,7 @@ const MoodTracker: React.FC = () => {
                 {!isLoggedIn ? (
                   <div className="entries-locked-state">
                     <p className="login-req-italic">Login to view your mood history.</p>
-                    <button className="btn btn-outline btn-unlock-entries" onClick={() => setShowAuthModal(true)}>
+                    <button className="btn btn-outline btn-unlock-entries" onClick={() => navigate('/login')}>
                       🔒 Login to View Entries
                     </button>
                   </div>
@@ -595,65 +591,6 @@ const MoodTracker: React.FC = () => {
           </div>
         </div>
       </section>
-
-      {/* ====================================================================
-          AUTH / LOGIN MODAL
-          ==================================================================== */}
-      {showAuthModal && (
-        <div className="modal-backdrop" onClick={() => setShowAuthModal(false)}>
-          <div className="assessment-modal auth-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <div>
-                <span className="modal-code-tag">Authentication</span>
-                <h3 className="modal-title">Login to SoulSpace</h3>
-              </div>
-              <button className="modal-close-btn" onClick={() => setShowAuthModal(false)}>✕</button>
-            </div>
-
-            <div className="auth-modal-body">
-              <p className="auth-modal-subtitle">
-                Log in to record AI facial scans, sync daily emotional logs, and view your 7-day mental health trends.
-              </p>
-
-              <form onSubmit={handleLogin} className="auth-form">
-                <div className="auth-field">
-                  <label>Email Address</label>
-                  <input 
-                    type="email" 
-                    placeholder="name@example.com" 
-                    value={authEmail}
-                    onChange={(e) => setAuthEmail(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="auth-field">
-                  <label>Password</label>
-                  <input 
-                    type="password" 
-                    placeholder="••••••••" 
-                    value={authPassword}
-                    onChange={(e) => setAuthPassword(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <button type="submit" className="btn btn-primary auth-submit-btn">
-                  Sign In & Sync Mood Tracker
-                </button>
-              </form>
-
-              <div className="auth-divider-row">
-                <span>or</span>
-              </div>
-
-              <button className="btn btn-outline quick-demo-btn" onClick={() => handleLogin()}>
-                ⚡ Quick 1-Click Demo Login
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

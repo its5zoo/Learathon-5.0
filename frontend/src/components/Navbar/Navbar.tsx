@@ -58,7 +58,7 @@ const Navbar: React.FC = () => {
             <li>
               <NavLink 
                 to="/ai-support" 
-                className={({ isActive }) => (isActive ? 'active' : '')} 
+                className={({ isActive }) => `nav-ai-highlight ${isActive ? 'active' : ''}`} 
                 onClick={() => handleNavClick('/ai-support')}
               >
                 AI-Support
@@ -92,18 +92,19 @@ const Navbar: React.FC = () => {
               </NavLink>
             </li>
             <li>
-              <button 
-                className="nav-link-btn" 
-                onClick={() => handleNavClick('/', 'resources')}
+              <NavLink 
+                to="/resources" 
+                className={({ isActive }) => (isActive ? 'active' : '')} 
+                onClick={() => handleNavClick('/resources')}
               >
                 Resources
-              </button>
+              </NavLink>
             </li>
           </ul>
           
           <div className="nav-actions">
-            <button className="btn btn-outline">Login</button>
-            <button className="btn btn-primary">Register</button>
+            <button className="btn btn-outline" onClick={() => handleNavClick('/login')}>Login</button>
+            <button className="btn btn-primary" onClick={() => handleNavClick('/register')}>Register</button>
           </div>
         </div>
       </div>

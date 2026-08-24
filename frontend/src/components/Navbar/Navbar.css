@@ -69,7 +69,7 @@
   color: var(--primary-color);
 }
 
-.nav-links a.active::after {
+.nav-links a.active:not(.nav-ai-highlight)::after {
   content: '';
   position: absolute;
   bottom: -4px;
@@ -78,6 +78,17 @@
   height: 2px;
   background-color: var(--primary-color);
   border-radius: 2px;
+}
+
+/* AI-Support Special Highlight Text */
+.nav-links a.nav-ai-highlight {
+  color: var(--primary-color);
+  font-weight: 800;
+}
+
+.nav-links a.nav-ai-highlight:hover,
+.nav-links a.nav-ai-highlight.active {
+  color: #112d4e;
 }
 
 .nav-actions {

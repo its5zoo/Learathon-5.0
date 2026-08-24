@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './MentalHealth.css';
 
 interface Assessment {
@@ -171,11 +172,9 @@ const assessmentsData: Assessment[] = [
 ];
 
 const MentalHealth: React.FC = () => {
+  const navigate = useNavigate();
   // Authentication state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authEmail, setAuthEmail] = useState('');
-  const [authPassword, setAuthPassword] = useState('');
 
   // Prerequisite checks state
   const [prereqs, setPrereqs] = useState({
@@ -194,19 +193,13 @@ const MentalHealth: React.FC = () => {
 
   const handleStartAssessment = (assessment: Assessment) => {
     if (!isLoggedIn) {
-      setShowAuthModal(true);
+      navigate('/login');
       return;
     }
     setActiveAssessment(assessment);
     setCurrentQuestionIdx(0);
     setAnswers({});
     setIsCompleted(false);
-  };
-
-  const handleLogin = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    setIsLoggedIn(true);
-    setShowAuthModal(false);
   };
 
   const handleLogout = () => {
@@ -331,7 +324,7 @@ const MentalHealth: React.FC = () => {
                     <button className="auth-logout-btn" onClick={handleLogout}>Log Out</button>
                   </div>
                 ) : (
-                  <button className="btn btn-primary auth-login-pill-btn" onClick={() => setShowAuthModal(true)}>
+                  <button className="btn btn-primary auth-login-pill-btn" onClick={() => navigate('/login')}>
                     🔒 Login to Unlock
                   </button>
                 )}
@@ -348,7 +341,7 @@ const MentalHealth: React.FC = () => {
                 <div className="locked-banner-text">
                   <strong>Login Required:</strong> Please log in to complete your prerequisites and unlock clinical assessments.
                 </div>
-                <button className="btn btn-outline banner-login-btn" onClick={() => setShowAuthModal(true)}>
+                <button className="btn btn-outline banner-login-btn" onClick={() => navigate('/login')}>
                   Login Now →
                 </button>
               </div>
@@ -545,63 +538,6 @@ const MentalHealth: React.FC = () => {
                 </div>
               </div>
             )}
-          </div>
-        </div>
-      )}
-
-      {/* Login / Auth Modal */}
-      {showAuthModal && (
-        <div className="modal-backdrop" onClick={() => setShowAuthModal(false)}>
-          <div className="assessment-modal auth-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <div>
-                <span className="modal-code-tag">Authentication</span>
-                <h3 className="modal-title">Login to SoulSpace AI</h3>
-              </div>
-              <button className="modal-close-btn" onClick={() => setShowAuthModal(false)}>✕</button>
-            </div>
-
-            <div className="auth-modal-body">
-              <p className="auth-modal-subtitle">
-                Sign in to save your clinical assessment results and get personalized wellness guidance.
-              </p>
-
-              <form onSubmit={handleLogin} className="auth-form">
-                <div className="auth-field">
-                  <label>Email Address</label>
-                  <input 
-                    type="email" 
-                    placeholder="name@example.com" 
-                    value={authEmail}
-                    onChange={(e) => setAuthEmail(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="auth-field">
-                  <label>Password</label>
-                  <input 
-                    type="password" 
-                    placeholder="••••••••" 
-                    value={authPassword}
-                    onChange={(e) => setAuthPassword(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <button type="submit" className="btn btn-primary auth-submit-btn">
-                  Sign In & Unlock
-                </button>
-              </form>
-
-              <div className="auth-divider-row">
-                <span>or</span>
-              </div>
-
-              <button className="btn btn-outline quick-demo-btn" onClick={() => handleLogin()}>
-                ⚡ Quick 1-Click Demo Login
-              </button>
-            </div>
           </div>
         </div>
       )}
