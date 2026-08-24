@@ -1,0 +1,961 @@
+/* ==========================================================================
+   MOOD TRACKER PAGE STYLES - SoulSpace Clinical Platform
+   ========================================================================== */
+
+.mood-tracker-page {
+  background-color: #f8fafc;
+  min-height: 100vh;
+  padding-bottom: 80px;
+}
+
+/* Toast Success Notification */
+.toast-notification-success {
+  position: fixed;
+  top: 90px;
+  right: 24px;
+  background: #0f172a;
+  color: #ffffff;
+  padding: 12px 20px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2);
+  z-index: 9999;
+  border: 1px solid #3f72af;
+  animation: slideInToast 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideInToast {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ==========================================================================
+   HERO SECTION: AI-POWERED MOOD DETECTION
+   ========================================================================== */
+
+.mood-hero-banner {
+  background: linear-gradient(135deg, #090e17 0%, #111d2e 50%, #1a2b42 100%);
+  color: #ffffff;
+  padding: 60px 0 70px;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(63, 114, 175, 0.2);
+}
+
+.mood-hero-banner::before {
+  content: '';
+  position: absolute;
+  top: -20%;
+  right: -10%;
+  width: 550px;
+  height: 550px;
+  background: radial-gradient(circle, rgba(63, 114, 175, 0.2) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.mood-hero-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 40px;
+  align-items: center;
+}
+
+.hero-eyebrow-tag {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #60a5fa;
+  background: rgba(96, 165, 250, 0.12);
+  padding: 6px 14px;
+  border-radius: 50px;
+  border: 1px solid rgba(96, 165, 250, 0.25);
+  margin-bottom: 16px;
+}
+
+.mood-hero-title {
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+  color: #ffffff;
+  margin-bottom: 18px;
+}
+
+.mood-hero-desc {
+  font-size: 16px;
+  line-height: 1.65;
+  color: #cbd5e1;
+  max-width: 540px;
+  margin-bottom: 28px;
+}
+
+.mood-hero-action-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.btn-hero-check-mood {
+  background: linear-gradient(135deg, #3f72af 0%, #2563eb 100%);
+  color: #ffffff;
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
+  transition: all 0.25s ease;
+}
+
+.btn-hero-check-mood:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.45);
+}
+
+.btn-hero-check-mood.scanning {
+  background: #0284c7;
+  animation: pulseScanBtn 1s infinite alternate;
+}
+
+@keyframes pulseScanBtn {
+  from { opacity: 0.85; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1.02); }
+}
+
+.btn-hero-login-link {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #e2e8f0;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-hero-login-link:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+.hero-logged-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  padding: 8px 14px;
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6ee7b7;
+}
+
+.btn-hero-logout {
+  background: none;
+  border: none;
+  color: #f87171;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  padding-left: 6px;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  transition: color 0.2s ease;
+}
+
+.btn-hero-logout:hover {
+  color: #ef4444;
+}
+
+/* AI Biometric Camera Scanner Card */
+.face-scan-camera-card {
+  background: #0b1320;
+  border-radius: 20px;
+  border: 1px solid rgba(63, 114, 175, 0.35);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.scanner-img-wrapper {
+  position: relative;
+  width: 100%;
+  height: 240px;
+  background: #020617;
+  overflow: hidden;
+}
+
+.scanner-live-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Laser Scan Animation */
+.scanning-laser-beam {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #38bdf8, #ffffff, #38bdf8, transparent);
+  box-shadow: 0 0 15px #38bdf8, 0 0 25px #0284c7;
+  animation: scanLaser 2s linear infinite;
+  z-index: 10;
+}
+
+@keyframes scanLaser {
+  0% { top: 0%; opacity: 0.8; }
+  50% { top: 96%; opacity: 1; }
+  100% { top: 0%; opacity: 0.8; }
+}
+
+.biometric-hud-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.hud-corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid #38bdf8;
+}
+
+.hud-corner.top-left { top: 12px; left: 12px; border-right: none; border-bottom: none; }
+.hud-corner.top-right { top: 12px; right: 12px; border-left: none; border-bottom: none; }
+.hud-corner.bottom-left { bottom: 12px; left: 12px; border-right: none; border-top: none; }
+.hud-corner.bottom-right { bottom: 12px; right: 12px; border-left: none; border-top: none; }
+
+.scan-countdown-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(11, 19, 32, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid #38bdf8;
+  padding: 12px 24px;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+
+.countdown-num {
+  font-size: 28px;
+  font-weight: 800;
+  color: #38bdf8;
+}
+
+.countdown-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #cbd5e1;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.scanner-card-footer {
+  padding: 14px 18px;
+  background: #090f1a;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.scanner-login-notice {
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.15) 0%, rgba(96, 165, 250, 0.15) 100%);
+  border: 1px solid rgba(244, 114, 182, 0.35);
+  border-radius: 10px;
+  padding: 10px 14px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fbcfe8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.scanner-login-notice:hover {
+  border-color: #f472b6;
+  background: rgba(244, 114, 182, 0.25);
+}
+
+.scanner-ready-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.scanner-result-notice {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.detected-badge {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #34d399;
+}
+
+.detected-sub {
+  font-size: 11.5px;
+  color: #94a3b8;
+}
+
+/* ==========================================================================
+   SECTION 2: MOOD HISTORY & RECENT ENTRIES
+   ========================================================================== */
+
+.mood-analytics-section {
+  padding: 50px 0;
+}
+
+.mood-analytics-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 0.65fr;
+  gap: 28px;
+  align-items: stretch;
+}
+
+.analytics-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  box-shadow: 0 6px 25px rgba(15, 23, 42, 0.04);
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.analytics-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.chart-main-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 6px;
+}
+
+.chart-date-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.date-input-field {
+  padding: 4px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 12.5px;
+  color: #1e293b;
+  background: #ffffff;
+  font-family: inherit;
+}
+
+.date-hint-tag {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.chart-sub-desc {
+  font-size: 13.5px;
+  color: #64748b;
+}
+
+.chart-legend-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #3f72af;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 4px 10px;
+  border-radius: 50px;
+}
+
+.legend-indicator {
+  width: 12px;
+  height: 4px;
+  background: #3f72af;
+  border-radius: 2px;
+}
+
+/* Mood Chart Area */
+.mood-chart-wrapper {
+  position: relative;
+  min-height: 280px;
+  margin-top: 10px;
+}
+
+.mood-chart-grid-container {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 12px;
+  transition: filter 0.3s ease;
+}
+
+.mood-chart-grid-container.blurred {
+  filter: blur(4px);
+  user-select: none;
+  pointer-events: none;
+}
+
+.chart-locked-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(3px);
+  z-index: 10;
+  border-radius: 12px;
+}
+
+.locked-card-prompt {
+  text-align: center;
+  max-width: 320px;
+  padding: 20px;
+}
+
+.lock-icon-circle {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.locked-card-prompt h4 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 6px;
+}
+
+.locked-card-prompt p {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+/* Y-Axis */
+.chart-y-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 240px;
+  padding: 5px 0;
+}
+
+.y-axis-label-row {
+  display: flex;
+  align-items: center;
+}
+
+.y-mood-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* Plot Area */
+.chart-plot-area {
+  position: relative;
+  height: 240px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.chart-grid-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.grid-horizontal-line {
+  width: 100%;
+  height: 1px;
+  background: #f1f5f9;
+}
+
+.mood-line-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 240px;
+  overflow: visible;
+}
+
+.chart-node-circle {
+  fill: #3f72af;
+  stroke: #ffffff;
+  stroke-width: 2.5;
+  transition: transform 0.2s ease;
+  cursor: pointer;
+}
+
+.chart-point-group:hover .chart-node-circle {
+  transform: scale(1.4);
+  transform-origin: center;
+  fill: #1e3a8a;
+}
+
+/* X-Axis */
+.chart-x-axis {
+  position: absolute;
+  bottom: -30px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+}
+
+.x-axis-day {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+/* Recent Entries Right Card */
+.entry-count-pill {
+  font-size: 11px;
+  font-weight: 700;
+  color: #10b981;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 3px 8px;
+  border-radius: 50px;
+}
+
+.recent-entries-body {
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+}
+
+.entries-locked-state {
+  margin: auto;
+  text-align: center;
+  padding: 20px;
+}
+
+.login-req-italic {
+  font-size: 14px;
+  font-style: italic;
+  color: #64748b;
+  margin-bottom: 12px;
+}
+
+.btn-unlock-entries {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+.no-entries-placeholder {
+  margin: auto;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13.5px;
+}
+
+.entries-scroll-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.entry-item-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.entry-item-row:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.03);
+}
+
+.entry-emoji-box {
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  background: #ffffff;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.entry-details {
+  flex: 1;
+}
+
+.entry-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.entry-mood-name {
+  font-size: 14px;
+  color: #1e293b;
+}
+
+.entry-type-tag {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #3f72af;
+  background: #eff6ff;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.entry-note-snippet {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 2px;
+  font-style: italic;
+}
+
+.entry-time-stamp {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.btn-delete-entry {
+  background: none;
+  border: none;
+  color: #cbd5e1;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s ease;
+}
+
+.btn-delete-entry:hover {
+  color: #ef4444;
+}
+
+/* ==========================================================================
+   SECTION 3: MANUAL MOOD SELECTION
+   ========================================================================== */
+
+.manual-mood-section {
+  padding: 20px 0 50px;
+}
+
+.manual-mood-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  box-shadow: 0 6px 25px rgba(15, 23, 42, 0.04);
+  padding: 40px;
+  text-align: center;
+}
+
+.section-center-heading {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 6px;
+}
+
+.section-center-sub {
+  font-size: 14.5px;
+  color: #64748b;
+  margin-bottom: 30px;
+}
+
+.mood-emojis-row {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 26px;
+}
+
+.mood-select-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 100px;
+  font-family: inherit;
+}
+
+.mood-select-pill:hover {
+  transform: translateY(-3px);
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+.mood-select-pill.selected {
+  background: #eff6ff;
+  border-color: #3f72af;
+  box-shadow: 0 6px 20px rgba(63, 114, 175, 0.2);
+  transform: translateY(-4px);
+}
+
+.mood-emoji-large {
+  font-size: 32px;
+}
+
+.mood-label-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.mood-select-pill.selected .mood-label-name {
+  color: #1e3a8a;
+}
+
+.mood-notes-box {
+  position: relative;
+  max-width: 800px;
+  margin: 0 auto 24px;
+}
+
+.mood-textarea {
+  width: 100%;
+  padding: 14px 18px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #1e293b;
+  background: #fcfdfe;
+  resize: vertical;
+  transition: border-color 0.2s ease;
+}
+
+.mood-textarea:focus {
+  outline: none;
+  border-color: #3f72af;
+  background: #ffffff;
+}
+
+.char-limit {
+  position: absolute;
+  bottom: 12px;
+  right: 16px;
+  font-size: 11.5px;
+  color: #94a3b8;
+}
+
+.btn-save-manual-mood {
+  background: linear-gradient(135deg, #3f72af 0%, #2563eb 100%);
+  color: #ffffff;
+  padding: 13px 36px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+  transition: all 0.25s ease;
+}
+
+.btn-save-manual-mood:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
+}
+
+/* ==========================================================================
+   SECTION 4: HOW TO USE AI MOOD DETECTION
+   ========================================================================== */
+
+.how-to-ai-section {
+  padding-bottom: 20px;
+}
+
+.how-to-ai-card {
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f0fa 100%);
+  border: 1.5px solid #bfdbfe;
+  border-radius: 24px;
+  padding: 40px 48px;
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 40px;
+  align-items: center;
+  box-shadow: 0 10px 30px rgba(63, 114, 175, 0.08);
+}
+
+.how-to-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.biometric-icon-wrapper {
+  width: 170px;
+  height: 170px;
+  background: #ffffff;
+  border-radius: 32px;
+  border: 2px solid #bfdbfe;
+  box-shadow: 0 14px 40px rgba(63, 114, 175, 0.18), inset 0 2px 6px rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.biometric-icon-wrapper:hover {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 20px 50px rgba(63, 114, 175, 0.28);
+  border-color: #3f72af;
+}
+
+.biometric-main-svg {
+  width: 120px;
+  height: 120px;
+}
+
+.how-to-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #1e3a8a;
+  margin-bottom: 16px;
+}
+
+.how-to-steps-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+}
+
+.how-to-steps-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14.5px;
+  color: #334155;
+}
+
+.step-num {
+  width: 26px;
+  height: 26px;
+  background: #3f72af;
+  color: #ffffff;
+  border-radius: 50%;
+  font-size: 12.5px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   RESPONSIVE MEDIA QUERIES
+   ========================================================================== */
+
+@media (max-width: 992px) {
+  .mood-hero-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mood-analytics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .how-to-ai-card {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .how-to-icon-box {
+    margin: 0 auto;
+  }
+
+  .how-to-steps-list li {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .mood-hero-title {
+    font-size: 28px;
+  }
+
+  .manual-mood-card {
+    padding: 24px 16px;
+  }
+
+  .mood-select-pill {
+    min-width: 76px;
+    padding: 12px 10px;
+  }
+
+  .mood-emoji-large {
+    font-size: 24px;
+  }
+}
