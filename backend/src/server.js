@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
+import assessmentRoutes from './routes/assessmentRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -25,6 +26,7 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/assessments', assessmentRoutes);
 
 // Basic health check route
 app.get('/', (req, res) => {

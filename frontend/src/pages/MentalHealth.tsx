@@ -1,6 +1,20 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './MentalHealth.css';
+
+const API_URL = 'http://localhost:5000/api';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+interface QuestionOption {
+  text: string;
+  score: number;
+}
+
+interface Question {
+  text: string;
+  options: QuestionOption[];
+}
 
 interface Assessment {
   id: string;
@@ -10,13 +24,14 @@ interface Assessment {
   questionsCount: number;
   timeEstimate: string;
   badge: string;
+  color: string;
+  icon: string;
   description: string;
-  questions: {
-    text: string;
-    options: { text: string; score: number }[];
-  }[];
+  questions: Question[];
+  getResult: (score: number) => { level: string; color: string; advice: string; emoji: string };
 }
 
+// ─── Assessment Data (4 real clinical screeners) ──────────────────────────────
 const assessmentsData: Assessment[] = [
   {
     id: 'phq9',
@@ -26,7 +41,10 @@ const assessmentsData: Assessment[] = [
     questionsCount: 9,
     timeEstimate: '5 mins',
     badge: 'Clinical Gold Standard',
-    description: 'Assesses the presence and severity of depressive symptoms and emotional well-being over the past two weeks.',
+    color: '#6366f1',
+    icon: '🌧️',
+    description:
+      'Assesses the presence and severity of depressive symptoms over the past two weeks. Widely used by psychiatrists and GPs globally.',
     questions: [
       {
         text: 'Little interest or pleasure in doing things?',
@@ -34,8 +52,8 @@ const assessmentsData: Assessment[] = [
           { text: 'Not at all', score: 0 },
           { text: 'Several days', score: 1 },
           { text: 'More than half the days', score: 2 },
-          { text: 'Nearly every day', score: 3 }
-        ]
+          { text: 'Nearly every day', score: 3 },
+        ],
       },
       {
         text: 'Feeling down, depressed, or hopeless?',
@@ -43,8 +61,8 @@ const assessmentsData: Assessment[] = [
           { text: 'Not at all', score: 0 },
           { text: 'Several days', score: 1 },
           { text: 'More than half the days', score: 2 },
-          { text: 'Nearly every day', score: 3 }
-        ]
+          { text: 'Nearly every day', score: 3 },
+        ],
       },
       {
         text: 'Trouble falling or staying asleep, or sleeping too much?',
@@ -52,8 +70,8 @@ const assessmentsData: Assessment[] = [
           { text: 'Not at all', score: 0 },
           { text: 'Several days', score: 1 },
           { text: 'More than half the days', score: 2 },
-          { text: 'Nearly every day', score: 3 }
-        ]
+          { text: 'Nearly every day', score: 3 },
+        ],
       },
       {
         text: 'Feeling tired or having little energy?',
@@ -61,10 +79,66 @@ const assessmentsData: Assessment[] = [
           { text: 'Not at all', score: 0 },
           { text: 'Several days', score: 1 },
           { text: 'More than half the days', score: 2 },
-          { text: 'Nearly every day', score: 3 }
-        ]
-      }
-    ]
+          { text: 'Nearly every day', score: 3 },
+        ],
+      },
+      {
+        text: 'Poor appetite or overeating?',
+        options: [
+          { text: 'Not at all', score: 0 },
+          { text: 'Several days', score: 1 },
+          { text: 'More than half the days', score: 2 },
+          { text: 'Nearly every day', score: 3 },
+        ],
+      },
+      {
+        text: 'Feeling bad about yourself — or that you are a failure or have let yourself or your family down?',
+        options: [
+          { text: 'Not at all', score: 0 },
+          { text: 'Several days', score: 1 },
+          { text: 'More than half the days', score: 2 },
+          { text: 'Nearly every day', score: 3 },
+        ],
+      },
+      {
+        text: 'Trouble concentrating on things, such as reading or watching television?',
+        options: [
+          { text: 'Not at all', score: 0 },
+          { text: 'Several days', score: 1 },
+          { text: 'More than half the days', score: 2 },
+          { text: 'Nearly every day', score: 3 },
+        ],
+      },
+      {
+        text: 'Moving or speaking so slowly that others noticed? Or the opposite — fidgety or restless?',
+        options: [
+          { text: 'Not at all', score: 0 },
+          { text: 'Several days', score: 1 },
+          { text: 'More than half the days', score: 2 },
+          { text: 'Nearly every day', score: 3 },
+        ],
+      },
+      {
+        text: 'Thoughts that you would be better off dead, or of hurting yourself in some way?',
+        options: [
+          { text: 'Not at all', score: 0 },
+          { text: 'Several days', score: 1 },
+          { text: 'More than half the days', score: 2 },
+          { text: 'Nearly every day', score: 3 },
+        ],
+      },
+    ],
+    getResult: (score) => {
+      if (score <= 4)
+        return { level: 'Minimal Depression', color: '#10b981', emoji: '😊', advice: 'Your responses suggest minimal depressive symptoms. Keep investing in your well-being through regular exercise, social connection, and mindful routines.' };
+      if (score <= 9)
+        return { level: 'Mild Depression', color: '#f59e0b', emoji: '😐', advice: 'Mild depressive symptoms detected. Consider journaling, guided meditation, or talking to a trusted friend. Monitoring your mood over time can be helpful.' };
+      if (score <= 14)
+        return { level: 'Moderate Depression', color: '#f97316', emoji: '😔', advice: 'Your results indicate moderate depression. We recommend connecting with a counselor or therapist for a personalized care plan.' };
+      if (score <= 19)
+        return { level: 'Moderately Severe Depression', color: '#ef4444', emoji: '😞', advice: 'Moderately severe symptoms detected. Please consider reaching out to a mental health professional soon. You are not alone in this.' };
+      return { level: 'Severe Depression', color: '#dc2626', emoji: '🆘', advice: 'Severe depressive symptoms. Please reach out immediately — contact Tele-MANAS (14416) or speak with a licensed mental health professional today.' };
+    },
   },
   {
     id: 'gad7',
@@ -74,7 +148,10 @@ const assessmentsData: Assessment[] = [
     questionsCount: 7,
     timeEstimate: '4 mins',
     badge: 'High Precision',
-    description: 'Measures the severity of generalized anxiety, restlessness, and excessive worrying in daily situations.',
+    color: '#8b5cf6',
+    icon: '⚡',
+    description:
+      'Measures the severity of generalized anxiety, restlessness, and excessive worrying in daily life. Standard tool used in clinical settings worldwide.',
     questions: [
       {
         text: 'Feeling nervous, anxious, or on edge?',
@@ -82,8 +159,8 @@ const assessmentsData: Assessment[] = [
           { text: 'Not at all', score: 0 },
           { text: 'Several days', score: 1 },
           { text: 'More than half the days', score: 2 },
-          { text: 'Nearly every day', score: 3 }
-        ]
+          { text: 'Nearly every day', score: 3 },
+        ],
       },
       {
         text: 'Not being able to stop or control worrying?',
@@ -91,8 +168,8 @@ const assessmentsData: Assessment[] = [
           { text: 'Not at all', score: 0 },
           { text: 'Several days', score: 1 },
           { text: 'More than half the days', score: 2 },
-          { text: 'Nearly every day', score: 3 }
-        ]
+          { text: 'Nearly every day', score: 3 },
+        ],
       },
       {
         text: 'Worrying too much about different things?',
@@ -100,154 +177,433 @@ const assessmentsData: Assessment[] = [
           { text: 'Not at all', score: 0 },
           { text: 'Several days', score: 1 },
           { text: 'More than half the days', score: 2 },
-          { text: 'Nearly every day', score: 3 }
-        ]
-      }
-    ]
+          { text: 'Nearly every day', score: 3 },
+        ],
+      },
+      {
+        text: 'Trouble relaxing?',
+        options: [
+          { text: 'Not at all', score: 0 },
+          { text: 'Several days', score: 1 },
+          { text: 'More than half the days', score: 2 },
+          { text: 'Nearly every day', score: 3 },
+        ],
+      },
+      {
+        text: 'Being so restless that it is hard to sit still?',
+        options: [
+          { text: 'Not at all', score: 0 },
+          { text: 'Several days', score: 1 },
+          { text: 'More than half the days', score: 2 },
+          { text: 'Nearly every day', score: 3 },
+        ],
+      },
+      {
+        text: 'Becoming easily annoyed or irritable?',
+        options: [
+          { text: 'Not at all', score: 0 },
+          { text: 'Several days', score: 1 },
+          { text: 'More than half the days', score: 2 },
+          { text: 'Nearly every day', score: 3 },
+        ],
+      },
+      {
+        text: 'Feeling afraid, as if something awful might happen?',
+        options: [
+          { text: 'Not at all', score: 0 },
+          { text: 'Several days', score: 1 },
+          { text: 'More than half the days', score: 2 },
+          { text: 'Nearly every day', score: 3 },
+        ],
+      },
+    ],
+    getResult: (score) => {
+      if (score <= 4)
+        return { level: 'Minimal Anxiety', color: '#10b981', emoji: '😌', advice: 'Very low anxiety levels. Great job maintaining your emotional balance. Continue healthy habits and stress-management practices.' };
+      if (score <= 9)
+        return { level: 'Mild Anxiety', color: '#f59e0b', emoji: '😟', advice: 'Mild anxiety is present. Breathing exercises, physical activity, and limiting caffeine can help regulate your nervous system.' };
+      if (score <= 14)
+        return { level: 'Moderate Anxiety', color: '#f97316', emoji: '😰', advice: 'Moderate anxiety detected. Consider cognitive-behavioral techniques or speaking with a counselor for structured support.' };
+      return { level: 'Severe Anxiety', color: '#dc2626', emoji: '🆘', advice: 'Severe anxiety levels. Please consult a licensed therapist or psychiatrist. Call Tele-MANAS (14416) if you need immediate help.' };
+    },
   },
   {
     id: 'pss10',
     code: 'PSS-10',
-    title: 'Perceived Stress & Burnout',
-    category: 'Stress Level',
+    title: 'Perceived Stress Scale',
+    category: 'Stress Evaluation',
     questionsCount: 10,
     timeEstimate: '6 mins',
-    badge: 'Lifestyle & Work',
-    description: 'Evaluates the degree to which life events and daily pressures feel unpredictable, uncontrollable, and overwhelming.',
+    badge: 'Research Validated',
+    color: '#ec4899',
+    icon: '🌀',
+    description:
+      'The most widely used psychological instrument to measure how unpredictable, uncontrollable, and overloading you perceive your life over the past month.',
     questions: [
       {
-        text: 'How often have you felt upset because of something that happened unexpectedly?',
+        text: 'In the last month, how often have you been upset because of something that happened unexpectedly?',
         options: [
           { text: 'Never', score: 0 },
           { text: 'Almost Never', score: 1 },
           { text: 'Sometimes', score: 2 },
           { text: 'Fairly Often', score: 3 },
-          { text: 'Very Often', score: 4 }
-        ]
+          { text: 'Very Often', score: 4 },
+        ],
       },
       {
-        text: 'How often have you felt that you were unable to control the important things in your life?',
+        text: 'How often have you felt unable to control the important things in your life?',
         options: [
           { text: 'Never', score: 0 },
           { text: 'Almost Never', score: 1 },
           { text: 'Sometimes', score: 2 },
           { text: 'Fairly Often', score: 3 },
-          { text: 'Very Often', score: 4 }
-        ]
-      }
-    ]
+          { text: 'Very Often', score: 4 },
+        ],
+      },
+      {
+        text: 'How often have you felt nervous and stressed?',
+        options: [
+          { text: 'Never', score: 0 },
+          { text: 'Almost Never', score: 1 },
+          { text: 'Sometimes', score: 2 },
+          { text: 'Fairly Often', score: 3 },
+          { text: 'Very Often', score: 4 },
+        ],
+      },
+      {
+        text: 'How often have you felt confident in your ability to handle personal problems? (reverse)',
+        options: [
+          { text: 'Very Often', score: 0 },
+          { text: 'Fairly Often', score: 1 },
+          { text: 'Sometimes', score: 2 },
+          { text: 'Almost Never', score: 3 },
+          { text: 'Never', score: 4 },
+        ],
+      },
+      {
+        text: 'How often have you felt that things were going your way? (reverse)',
+        options: [
+          { text: 'Very Often', score: 0 },
+          { text: 'Fairly Often', score: 1 },
+          { text: 'Sometimes', score: 2 },
+          { text: 'Almost Never', score: 3 },
+          { text: 'Never', score: 4 },
+        ],
+      },
+      {
+        text: 'How often have you been unable to cope with all the things you had to do?',
+        options: [
+          { text: 'Never', score: 0 },
+          { text: 'Almost Never', score: 1 },
+          { text: 'Sometimes', score: 2 },
+          { text: 'Fairly Often', score: 3 },
+          { text: 'Very Often', score: 4 },
+        ],
+      },
+      {
+        text: 'How often have you been able to control irritations in your life? (reverse)',
+        options: [
+          { text: 'Very Often', score: 0 },
+          { text: 'Fairly Often', score: 1 },
+          { text: 'Sometimes', score: 2 },
+          { text: 'Almost Never', score: 3 },
+          { text: 'Never', score: 4 },
+        ],
+      },
+      {
+        text: 'How often have you felt that you were on top of things? (reverse)',
+        options: [
+          { text: 'Very Often', score: 0 },
+          { text: 'Fairly Often', score: 1 },
+          { text: 'Sometimes', score: 2 },
+          { text: 'Almost Never', score: 3 },
+          { text: 'Never', score: 4 },
+        ],
+      },
+      {
+        text: 'How often have you been angered because of things outside of your control?',
+        options: [
+          { text: 'Never', score: 0 },
+          { text: 'Almost Never', score: 1 },
+          { text: 'Sometimes', score: 2 },
+          { text: 'Fairly Often', score: 3 },
+          { text: 'Very Often', score: 4 },
+        ],
+      },
+      {
+        text: 'How often have you felt difficulties were piling up so high that you could not overcome them?',
+        options: [
+          { text: 'Never', score: 0 },
+          { text: 'Almost Never', score: 1 },
+          { text: 'Sometimes', score: 2 },
+          { text: 'Fairly Often', score: 3 },
+          { text: 'Very Often', score: 4 },
+        ],
+      },
+    ],
+    getResult: (score) => {
+      if (score <= 13)
+        return { level: 'Low Perceived Stress', color: '#10b981', emoji: '🧘', advice: 'You are managing life demands well. Your stress coping mechanisms appear healthy and effective.' };
+      if (score <= 26)
+        return { level: 'Moderate Perceived Stress', color: '#f59e0b', emoji: '😤', advice: 'Moderate stress is common but worth addressing. Try mindfulness, time-blocking, and setting boundaries to reduce cognitive overload.' };
+      return { level: 'High Perceived Stress', color: '#dc2626', emoji: '🆘', advice: 'High stress detected. Your body and mind need relief. Please connect with a professional and explore structured stress management programs.' };
+    },
   },
   {
-    id: 'isi',
-    code: 'ISI-7',
-    title: 'Sleep Quality & Well-being',
-    category: 'Sleep & Recovery',
-    questionsCount: 7,
-    timeEstimate: '5 mins',
-    badge: 'Rest & Recovery',
-    description: 'Assesses the nature, severity, and daytime impact of insomnia and inconsistent sleep patterns.',
+    id: 'wemwbs',
+    code: 'WEMWBS',
+    title: 'Wellbeing & Positivity Scale',
+    category: 'Wellbeing Index',
+    questionsCount: 14,
+    timeEstimate: '7 mins',
+    badge: 'WHO Endorsed',
+    color: '#06b6d4',
+    icon: '✨',
+    description:
+      'The Warwick–Edinburgh Mental Wellbeing Scale measures positive aspects of mental health including positive feelings and functioning — not just absence of illness.',
     questions: [
       {
-        text: 'Difficulty falling asleep at night?',
+        text: "I've been feeling optimistic about the future.",
         options: [
-          { text: 'None', score: 0 },
-          { text: 'Mild', score: 1 },
-          { text: 'Moderate', score: 2 },
-          { text: 'Severe', score: 3 },
-          { text: 'Very Severe', score: 4 }
-        ]
+          { text: 'None of the time', score: 1 },
+          { text: 'Rarely', score: 2 },
+          { text: 'Some of the time', score: 3 },
+          { text: 'Often', score: 4 },
+          { text: 'All of the time', score: 5 },
+        ],
       },
       {
-        text: 'How satisfied or dissatisfied are you with your current sleep pattern?',
+        text: "I've been feeling useful.",
         options: [
-          { text: 'Very Satisfied', score: 0 },
-          { text: 'Satisfied', score: 1 },
-          { text: 'Neutral', score: 2 },
-          { text: 'Dissatisfied', score: 3 },
-          { text: 'Very Dissatisfied', score: 4 }
-        ]
-      }
-    ]
-  }
+          { text: 'None of the time', score: 1 },
+          { text: 'Rarely', score: 2 },
+          { text: 'Some of the time', score: 3 },
+          { text: 'Often', score: 4 },
+          { text: 'All of the time', score: 5 },
+        ],
+      },
+      {
+        text: "I've been feeling relaxed.",
+        options: [
+          { text: 'None of the time', score: 1 },
+          { text: 'Rarely', score: 2 },
+          { text: 'Some of the time', score: 3 },
+          { text: 'Often', score: 4 },
+          { text: 'All of the time', score: 5 },
+        ],
+      },
+      {
+        text: "I've been feeling interested in other people.",
+        options: [
+          { text: 'None of the time', score: 1 },
+          { text: 'Rarely', score: 2 },
+          { text: 'Some of the time', score: 3 },
+          { text: 'Often', score: 4 },
+          { text: 'All of the time', score: 5 },
+        ],
+      },
+      {
+        text: "I've had energy to spare.",
+        options: [
+          { text: 'None of the time', score: 1 },
+          { text: 'Rarely', score: 2 },
+          { text: 'Some of the time', score: 3 },
+          { text: 'Often', score: 4 },
+          { text: 'All of the time', score: 5 },
+        ],
+      },
+      {
+        text: "I've been dealing with problems well.",
+        options: [
+          { text: 'None of the time', score: 1 },
+          { text: 'Rarely', score: 2 },
+          { text: 'Some of the time', score: 3 },
+          { text: 'Often', score: 4 },
+          { text: 'All of the time', score: 5 },
+        ],
+      },
+      {
+        text: "I've been thinking clearly.",
+        options: [
+          { text: 'None of the time', score: 1 },
+          { text: 'Rarely', score: 2 },
+          { text: 'Some of the time', score: 3 },
+          { text: 'Often', score: 4 },
+          { text: 'All of the time', score: 5 },
+        ],
+      },
+      {
+        text: "I've been feeling good about myself.",
+        options: [
+          { text: 'None of the time', score: 1 },
+          { text: 'Rarely', score: 2 },
+          { text: 'Some of the time', score: 3 },
+          { text: 'Often', score: 4 },
+          { text: 'All of the time', score: 5 },
+        ],
+      },
+      {
+        text: "I've been feeling close to other people.",
+        options: [
+          { text: 'None of the time', score: 1 },
+          { text: 'Rarely', score: 2 },
+          { text: 'Some of the time', score: 3 },
+          { text: 'Often', score: 4 },
+          { text: 'All of the time', score: 5 },
+        ],
+      },
+      {
+        text: "I've been feeling confident.",
+        options: [
+          { text: 'None of the time', score: 1 },
+          { text: 'Rarely', score: 2 },
+          { text: 'Some of the time', score: 3 },
+          { text: 'Often', score: 4 },
+          { text: 'All of the time', score: 5 },
+        ],
+      },
+      {
+        text: "I've been able to make up my own mind about things.",
+        options: [
+          { text: 'None of the time', score: 1 },
+          { text: 'Rarely', score: 2 },
+          { text: 'Some of the time', score: 3 },
+          { text: 'Often', score: 4 },
+          { text: 'All of the time', score: 5 },
+        ],
+      },
+      {
+        text: "I've been feeling loved.",
+        options: [
+          { text: 'None of the time', score: 1 },
+          { text: 'Rarely', score: 2 },
+          { text: 'Some of the time', score: 3 },
+          { text: 'Often', score: 4 },
+          { text: 'All of the time', score: 5 },
+        ],
+      },
+      {
+        text: "I've been interested in new things.",
+        options: [
+          { text: 'None of the time', score: 1 },
+          { text: 'Rarely', score: 2 },
+          { text: 'Some of the time', score: 3 },
+          { text: 'Often', score: 4 },
+          { text: 'All of the time', score: 5 },
+        ],
+      },
+      {
+        text: "I've been feeling cheerful.",
+        options: [
+          { text: 'None of the time', score: 1 },
+          { text: 'Rarely', score: 2 },
+          { text: 'Some of the time', score: 3 },
+          { text: 'Often', score: 4 },
+          { text: 'All of the time', score: 5 },
+        ],
+      },
+    ],
+    getResult: (score) => {
+      if (score <= 32)
+        return { level: 'Low Wellbeing', color: '#dc2626', emoji: '💙', advice: 'Your wellbeing score is below average. Focus on small daily joys — gratitude journaling, nature walks, and connecting with loved ones can help rebuild positivity.' };
+      if (score <= 40)
+        return { level: 'Below Average Wellbeing', color: '#f97316', emoji: '🌱', advice: 'Some positive mental health elements present, but there is meaningful room for growth. Try fostering new hobbies and purposeful social activities.' };
+      if (score <= 59)
+        return { level: 'Average Wellbeing', color: '#f59e0b', emoji: '😊', advice: 'You are in the healthy average range. Building intentional routines around self-care can push your wellbeing even higher.' };
+      return { level: 'High Wellbeing', color: '#10b981', emoji: '🌟', advice: 'Excellent wellbeing score! You demonstrate strong mental flourishing. Keep nurturing your social bonds, purpose, and self-compassion.' };
+    },
+  },
 ];
+
+// ─── Component ────────────────────────────────────────────────────────────────
+type ModalStep = 'consent' | 'questions' | 'results';
 
 const MentalHealth: React.FC = () => {
   const navigate = useNavigate();
-  // Authentication state
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { user, token, isLoggedIn, logout } = useAuth();
 
-  // Prerequisite checks state
+  // Prerequisite checks
   const [prereqs, setPrereqs] = useState({
     quietSpace: false,
     honestAnswers: false,
-    crisisAwareness: false
+    crisisAwareness: false,
   });
-
   const allPrereqsMet = isLoggedIn && prereqs.quietSpace && prereqs.honestAnswers && prereqs.crisisAwareness;
 
-  // Active Assessment Modal State
+  // Assessment modal state
   const [activeAssessment, setActiveAssessment] = useState<Assessment | null>(null);
+  const [modalStep, setModalStep] = useState<ModalStep>('consent');
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
-  const [isCompleted, setIsCompleted] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
+  // ── Handlers ──────────────────────────────────────────────────────────────
   const handleStartAssessment = (assessment: Assessment) => {
-    if (!isLoggedIn) {
-      navigate('/login');
-      return;
-    }
+    if (!isLoggedIn) { navigate('/login'); return; }
+    if (!allPrereqsMet) return;
     setActiveAssessment(assessment);
+    setModalStep('consent');
     setCurrentQuestionIdx(0);
     setAnswers({});
-    setIsCompleted(false);
+    setIsSaved(false);
   };
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setPrereqs({ quietSpace: false, honestAnswers: false, crisisAwareness: false });
-  };
+  const handleConsentAccept = () => setModalStep('questions');
 
   const handleAnswerSelect = (score: number) => {
     if (!activeAssessment) return;
     const newAnswers = { ...answers, [currentQuestionIdx]: score };
     setAnswers(newAnswers);
-
     if (currentQuestionIdx < activeAssessment.questions.length - 1) {
       setCurrentQuestionIdx(currentQuestionIdx + 1);
     } else {
-      setIsCompleted(true);
+      setModalStep('results');
     }
   };
 
-  const calculateTotalScore = () => {
-    return Object.values(answers).reduce((acc, curr) => acc + curr, 0);
+  const calculateTotalScore = () => Object.values(answers).reduce((a, b) => a + b, 0);
+
+  const handleSaveResult = async () => {
+    if (!activeAssessment || !token || isSaved) return;
+    setIsSaving(true);
+    const score = calculateTotalScore();
+    const result = activeAssessment.getResult(score);
+    try {
+      await fetch(`${API_URL}/assessments/save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          assessmentId: activeAssessment.id,
+          code: activeAssessment.code,
+          title: activeAssessment.title,
+          score,
+          severity: result.level,
+          completedAt: new Date().toISOString(),
+        }),
+      });
+      setIsSaved(true);
+    } catch { /* silent fail — local state still records it */ }
+    setIsSaving(false);
   };
 
-  const getScoreSummary = (score: number) => {
-    if (score <= 2) {
-      return {
-        level: 'Minimal / Normal Range',
-        color: '#10b981',
-        advice: 'Your responses indicate positive emotional equilibrium. Continue practicing mindful wellness and healthy lifestyle habits.'
-      };
-    } else if (score <= 5) {
-      return {
-        level: 'Mild Symptoms Detected',
-        color: '#f59e0b',
-        advice: 'You may be experiencing mild stress or tension. Engaging with calming audio or self-help guided exercises can provide immediate clarity.'
-      };
-    } else {
-      return {
-        level: 'Moderate to Elevated Symptoms',
-        color: '#ef4444',
-        advice: 'Your results suggest meaningful emotional strain. We strongly recommend speaking with one of our licensed counselors for personalized care.'
-      };
-    }
+  const handleCloseModal = () => {
+    setActiveAssessment(null);
+    setModalStep('consent');
+    setCurrentQuestionIdx(0);
+    setAnswers({});
+    setIsSaved(false);
   };
 
+  const handleLogout = () => {
+    logout();
+    setPrereqs({ quietSpace: false, honestAnswers: false, crisisAwareness: false });
+  };
+
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="mental-health-page">
-      {/* Hero Banner with Pink/Purple Gradient & Glowing Neural Asset */}
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section className="mh-hero">
         <div className="mh-hero-bg-overlay"></div>
         <div className="container mh-hero-container">
@@ -263,41 +619,29 @@ const MentalHealth: React.FC = () => {
                 Mental Health<br />Assessment Center
               </h1>
             </div>
-            
             <p className="mh-hero-description">
               Track your mental wellness journey with scientifically validated assessments and personalized insights designed specifically for your well-being.
             </p>
-
-
           </div>
         </div>
 
-        {/* Compact Frosted Glass Stats Pill */}
+        {/* Stats Pill */}
         <div className="container mh-horizontal-stats-container">
           <div className="mh-stats-pill">
-            <div className="mh-pill-stat">
-              <span className="mh-pill-val">50K+</span>
-              <span className="mh-pill-lbl">Individuals Helped</span>
-            </div>
+            <div className="mh-pill-stat"><span className="mh-pill-val">50K+</span><span className="mh-pill-lbl">Individuals Helped</span></div>
             <div className="mh-pill-divider"></div>
-            <div className="mh-pill-stat">
-              <span className="mh-pill-val">95%</span>
-              <span className="mh-pill-lbl">Accuracy Rate</span>
-            </div>
+            <div className="mh-pill-stat"><span className="mh-pill-val">95%</span><span className="mh-pill-lbl">Accuracy Rate</span></div>
             <div className="mh-pill-divider"></div>
-            <div className="mh-pill-stat">
-              <span className="mh-pill-val">24/7</span>
-              <span className="mh-pill-lbl">Support Available</span>
-            </div>
+            <div className="mh-pill-stat"><span className="mh-pill-val">24/7</span><span className="mh-pill-lbl">Support Available</span></div>
           </div>
         </div>
       </section>
 
-      {/* Main Content Body */}
+      {/* ── Main Content ─────────────────────────────────────────────────── */}
       <section className="mh-content-section" id="prereq-section">
         <div className="container">
-          
-          {/* Assessment Prerequisites Card */}
+
+          {/* Prerequisites Card */}
           <div className="prereq-card">
             <div className="prereq-header-row">
               <div className="prereq-header">
@@ -308,19 +652,18 @@ const MentalHealth: React.FC = () => {
                   </svg>
                 </div>
                 <div>
-                  <h2 className="prereq-title">Assessment Prerequisites</h2>
+                  <h2 className="prereq-title">Before You Begin</h2>
                   <p className="prereq-desc">
-                    To start a new mental health assessment, please review the requirements below to ensure accurate and personalized results.
+                    Please confirm these three things to help us deliver the most accurate and meaningful assessment results for you.
                   </p>
                 </div>
               </div>
 
-              {/* Login State Toggle / Status */}
               <div className="auth-status-container">
                 {isLoggedIn ? (
                   <div className="auth-logged-in-pill">
                     <span className="auth-user-dot"></span>
-                    <span>Logged In (User)</span>
+                    <span>{user?.firstName} {user?.lastName}</span>
                     <button className="auth-logout-btn" onClick={handleLogout}>Log Out</button>
                   </div>
                 ) : (
@@ -331,7 +674,7 @@ const MentalHealth: React.FC = () => {
               </div>
             </div>
 
-            {/* Warning / Advisory Notice */}
+            {/* Login gate banner */}
             {!isLoggedIn ? (
               <div className="prereq-alert-banner locked-banner">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#b45309" strokeWidth="2">
@@ -339,66 +682,83 @@ const MentalHealth: React.FC = () => {
                   <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                 </svg>
                 <div className="locked-banner-text">
-                  <strong>Login Required:</strong> Please log in to complete your prerequisites and unlock clinical assessments.
+                  <strong>Login Required:</strong> Please log in to complete prerequisites and unlock clinical assessments.
                 </div>
-                <button className="btn btn-outline banner-login-btn" onClick={() => navigate('/login')}>
-                  Login Now →
-                </button>
+                <button className="btn btn-outline banner-login-btn" onClick={() => navigate('/login')}>Login Now →</button>
               </div>
             ) : (
-              <div className="prereq-alert-banner">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#e11d48" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="12" y1="8" x2="12" y2="12"></line>
-                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              <div className="prereq-alert-banner success-banner">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#059669" strokeWidth="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
                 </svg>
-                <span>
-                  Please complete all prerequisite checkboxes below before initiating an assessment.
-                </span>
+                <span>You are logged in. Complete the checklist below to unlock your assessments.</span>
               </div>
             )}
 
-            {/* Interactive Checklist */}
+            {/* Checklist */}
             <div className={`prereq-checklist ${!isLoggedIn ? 'checklist-disabled' : ''}`}>
-              <label className={`prereq-item ${prereqs.quietSpace ? 'checked' : ''} ${!isLoggedIn ? 'item-disabled' : ''}`}>
-                <input 
-                  type="checkbox" 
-                  checked={prereqs.quietSpace} 
-                  disabled={!isLoggedIn}
-                  onChange={(e) => setPrereqs({...prereqs, quietSpace: e.target.checked})}
-                />
-                <div className="prereq-text">
-                  <strong>Quiet & Private Environment</strong>
-                  <span>Ensure you are in a quiet, comfortable space where you won't be interrupted for 5–10 minutes.</span>
-                </div>
-              </label>
-
-              <label className={`prereq-item ${prereqs.honestAnswers ? 'checked' : ''} ${!isLoggedIn ? 'item-disabled' : ''}`}>
-                <input 
-                  type="checkbox" 
-                  checked={prereqs.honestAnswers} 
-                  disabled={!isLoggedIn}
-                  onChange={(e) => setPrereqs({...prereqs, honestAnswers: e.target.checked})}
-                />
-                <div className="prereq-text">
-                  <strong>Authentic & Honest Reflection</strong>
-                  <span>Answer based on your actual feelings over the last 2 weeks rather than what you feel you "should" answer.</span>
-                </div>
-              </label>
-
-              <label className={`prereq-item ${prereqs.crisisAwareness ? 'checked' : ''} ${!isLoggedIn ? 'item-disabled' : ''}`}>
-                <input 
-                  type="checkbox" 
-                  checked={prereqs.crisisAwareness} 
-                  disabled={!isLoggedIn}
-                  onChange={(e) => setPrereqs({...prereqs, crisisAwareness: e.target.checked})}
-                />
-                <div className="prereq-text">
-                  <strong>Emergency Support Awareness</strong>
-                  <span>I acknowledge that if I am in immediate crisis, I can reach out to national helpline Tele-MANAS (14416) anytime.</span>
-                </div>
-              </label>
+              {[
+                {
+                  key: 'quietSpace' as const,
+                  title: 'Quiet & Private Environment',
+                  desc: 'Ensure you are in a quiet, comfortable space where you won\'t be interrupted for 5–10 minutes.',
+                  icon: '🏠',
+                },
+                {
+                  key: 'honestAnswers' as const,
+                  title: 'Authentic & Honest Reflection',
+                  desc: 'Answer based on your actual feelings over the last 2 weeks rather than what you feel you "should" answer.',
+                  icon: '💬',
+                },
+                {
+                  key: 'crisisAwareness' as const,
+                  title: 'Emergency Support Awareness',
+                  desc: 'I acknowledge that if I am in immediate crisis, I can reach out to national helpline Tele-MANAS (14416) anytime.',
+                  icon: '🛡️',
+                },
+              ].map(({ key, title, desc, icon }) => (
+                <label
+                  key={key}
+                  className={`prereq-item ${prereqs[key] ? 'checked' : ''} ${!isLoggedIn ? 'item-disabled' : ''}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={prereqs[key]}
+                    disabled={!isLoggedIn}
+                    onChange={(e) => setPrereqs({ ...prereqs, [key]: e.target.checked })}
+                  />
+                  <div className="prereq-item-icon">{icon}</div>
+                  <div className="prereq-text">
+                    <strong>{title}</strong>
+                    <span>{desc}</span>
+                  </div>
+                  <div className={`prereq-check-indicator ${prereqs[key] ? 'indicator-done' : ''}`}>
+                    {prereqs[key] && (
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" strokeWidth="3">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    )}
+                  </div>
+                </label>
+              ))}
             </div>
+
+            {/* All-met progress row */}
+            {isLoggedIn && (
+              <div className="prereq-progress-row">
+                <div className="prereq-progress-track">
+                  <div
+                    className="prereq-progress-fill"
+                    style={{ width: `${(Object.values(prereqs).filter(Boolean).length / 3) * 100}%` }}
+                  ></div>
+                </div>
+                <span className="prereq-progress-label">
+                  {Object.values(prereqs).filter(Boolean).length}/3 completed
+                  {allPrereqsMet && ' — Ready! ✓'}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Assessment Cards Grid */}
@@ -415,7 +775,7 @@ const MentalHealth: React.FC = () => {
               {!isLoggedIn ? (
                 <span className="status-locked">🔒 Login to Unlock</span>
               ) : allPrereqsMet ? (
-                <span className="status-ready">✓ Prerequisites Ready</span>
+                <span className="status-ready">✓ All Set — Assessments Unlocked</span>
               ) : (
                 <span className="status-pending">⚠️ Complete Prerequisites First</span>
               )}
@@ -424,10 +784,21 @@ const MentalHealth: React.FC = () => {
 
           <div className="assessments-grid">
             {assessmentsData.map((item) => (
-              <div className={`assessment-card ${!isLoggedIn ? 'card-locked' : ''}`} key={item.id}>
+              <div
+                className={`assessment-card ${!isLoggedIn || !allPrereqsMet ? 'card-locked' : 'card-unlocked'}`}
+                key={item.id}
+                style={{ '--card-accent': item.color } as React.CSSProperties}
+              >
                 <div className="card-top-tags">
-                  <span className="tag-code">{item.code}</span>
+                  <span className="tag-code" style={{ color: item.color, borderColor: item.color + '33', background: item.color + '11' }}>
+                    {item.code}
+                  </span>
                   <span className="tag-badge">{item.badge}</span>
+                </div>
+
+                <div className="card-icon-row">
+                  <span className="card-emoji">{item.icon}</span>
+                  <span className="card-category">{item.category}</span>
                 </div>
 
                 <h3 className="card-title">{item.title}</h3>
@@ -435,109 +806,189 @@ const MentalHealth: React.FC = () => {
 
                 <div className="card-meta-row">
                   <div className="meta-item">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2">
                       <circle cx="12" cy="12" r="10"></circle>
                       <polyline points="12 6 12 12 16 14"></polyline>
                     </svg>
                     <span>{item.timeEstimate}</span>
                   </div>
                   <div className="meta-item">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                       <polyline points="14 2 14 8 20 8"></polyline>
-                      <line x1="16" y1="13" x2="8" y2="13"></line>
-                      <line x1="16" y1="17" x2="8" y2="17"></line>
-                      <polyline points="10 9 9 9 8 9"></polyline>
                     </svg>
                     <span>{item.questionsCount} Questions</span>
                   </div>
                 </div>
 
-                <button 
-                  className={`btn card-start-btn ${!isLoggedIn ? 'btn-login-unlock' : allPrereqsMet ? 'btn-primary' : 'btn-disabled'}`}
+                <button
+                  className={`btn card-start-btn ${!isLoggedIn ? 'btn-login-unlock' : allPrereqsMet ? 'btn-accent' : 'btn-disabled'}`}
+                  style={allPrereqsMet ? { background: item.color } : {}}
                   disabled={isLoggedIn && !allPrereqsMet}
                   onClick={() => handleStartAssessment(item)}
                 >
-                  {!isLoggedIn ? '🔒 Login to Unlock Assessment' : allPrereqsMet ? 'Start Assessment →' : 'Complete Prerequisites'}
+                  {!isLoggedIn
+                    ? '🔒 Login to Unlock'
+                    : allPrereqsMet
+                    ? 'Begin Assessment →'
+                    : 'Complete Prerequisites First'}
                 </button>
               </div>
             ))}
           </div>
-
         </div>
       </section>
 
-      {/* Interactive Assessment Modal */}
+      {/* ── Assessment Modal ──────────────────────────────────────────────── */}
       {activeAssessment && (
-        <div className="modal-backdrop">
-          <div className="assessment-modal">
-            <div className="modal-header">
-              <div>
-                <span className="modal-code-tag">{activeAssessment.code}</span>
-                <h3 className="modal-title">{activeAssessment.title}</h3>
+        <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && handleCloseModal()}>
+          <div className="assessment-modal" style={{ '--modal-accent': activeAssessment.color } as React.CSSProperties}>
+
+            {/* Modal Header */}
+            <div className="modal-header" style={{ borderBottom: `3px solid ${activeAssessment.color}22` }}>
+              <div className="modal-header-left">
+                <span className="modal-emoji">{activeAssessment.icon}</span>
+                <div>
+                  <span className="modal-code-tag" style={{ color: activeAssessment.color, background: activeAssessment.color + '15' }}>
+                    {activeAssessment.code}
+                  </span>
+                  <h3 className="modal-title">{activeAssessment.title}</h3>
+                </div>
               </div>
-              <button className="modal-close-btn" onClick={() => setActiveAssessment(null)}>✕</button>
+              <button className="modal-close-btn" onClick={handleCloseModal}>✕</button>
             </div>
 
-            {!isCompleted ? (
+            {/* Step: Consent */}
+            {modalStep === 'consent' && (
+              <div className="consent-body">
+                <div className="consent-illustration">
+                  <div className="consent-icon-wrap" style={{ background: activeAssessment.color + '18' }}>
+                    <svg viewBox="0 0 64 64" width="56" height="56" fill="none">
+                      <circle cx="32" cy="32" r="30" stroke={activeAssessment.color} strokeWidth="2.5" fill={activeAssessment.color + '10'}/>
+                      <path d="M20 34l8 8 16-18" stroke={activeAssessment.color} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                </div>
+                <h4 className="consent-title">Track Your Progress</h4>
+                <p className="consent-body-text">
+                  This assessment will be <strong>securely saved to your SoulSpace profile</strong> so you can track your mental wellness journey over time.
+                </p>
+                <ul className="consent-bullets">
+                  <li>
+                    <svg viewBox="0 0 20 20" width="16" height="16" fill={activeAssessment.color}><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg>
+                    Results saved securely in your profile
+                  </li>
+                  <li>
+                    <svg viewBox="0 0 20 20" width="16" height="16" fill={activeAssessment.color}><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg>
+                    Track changes across multiple sessions
+                  </li>
+                  <li>
+                    <svg viewBox="0 0 20 20" width="16" height="16" fill={activeAssessment.color}><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg>
+                    Data is private and only visible to you
+                  </li>
+                </ul>
+                <div className="consent-actions">
+                  <button className="btn btn-outline" onClick={handleCloseModal}>Maybe Later</button>
+                  <button
+                    className="btn consent-accept-btn"
+                    style={{ background: activeAssessment.color }}
+                    onClick={handleConsentAccept}
+                  >
+                    Yes, Track My Progress →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step: Questions */}
+            {modalStep === 'questions' && (
               <div className="modal-body">
-                {/* Progress indicator */}
                 <div className="progress-container">
                   <div className="progress-label-row">
                     <span>Question {currentQuestionIdx + 1} of {activeAssessment.questions.length}</span>
-                    <span>{Math.round(((currentQuestionIdx + 1) / activeAssessment.questions.length) * 100)}%</span>
+                    <span>{Math.round(((currentQuestionIdx) / activeAssessment.questions.length) * 100)}% done</span>
                   </div>
                   <div className="progress-bar-bg">
-                    <div 
-                      className="progress-bar-fill" 
-                      style={{ width: `${((currentQuestionIdx + 1) / activeAssessment.questions.length) * 100}%` }}
+                    <div
+                      className="progress-bar-fill"
+                      style={{
+                        width: `${((currentQuestionIdx) / activeAssessment.questions.length) * 100}%`,
+                        background: activeAssessment.color,
+                      }}
                     ></div>
                   </div>
                 </div>
 
                 <div className="question-box">
-                  <p className="question-instruction">Over the last 2 weeks, how often have you been bothered by:</p>
+                  <p className="question-instruction">Over the past 2 weeks / month, how often have you experienced:</p>
                   <h4 className="question-text">{activeAssessment.questions[currentQuestionIdx].text}</h4>
 
                   <div className="options-grid">
                     {activeAssessment.questions[currentQuestionIdx].options.map((opt, idx) => (
-                      <button 
+                      <button
                         key={idx}
                         className="option-btn"
                         onClick={() => handleAnswerSelect(opt.score)}
                       >
-                        <span className="option-bullet"></span>
+                        <span className="option-bullet" style={{ borderColor: activeAssessment.color }}></span>
                         <span className="option-label">{opt.text}</span>
                       </button>
                     ))}
                   </div>
                 </div>
               </div>
-            ) : (
-              <div className="modal-results-body">
-                <div className="result-score-circle" style={{ borderColor: getScoreSummary(calculateTotalScore()).color }}>
-                  <span className="score-number">{calculateTotalScore()}</span>
-                  <span className="score-label">Total Score</span>
-                </div>
-
-                <h4 className="result-severity" style={{ color: getScoreSummary(calculateTotalScore()).color }}>
-                  {getScoreSummary(calculateTotalScore()).level}
-                </h4>
-
-                <p className="result-advice">
-                  {getScoreSummary(calculateTotalScore()).advice}
-                </p>
-
-                <div className="result-actions">
-                  <button className="btn btn-outline" onClick={() => handleStartAssessment(activeAssessment)}>
-                    Retake Assessment
-                  </button>
-                  <button className="btn btn-primary" onClick={() => setActiveAssessment(null)}>
-                    Done & Save Result
-                  </button>
-                </div>
-              </div>
             )}
+
+            {/* Step: Results */}
+            {modalStep === 'results' && (() => {
+              const score = calculateTotalScore();
+              const result = activeAssessment.getResult(score);
+              return (
+                <div className="modal-results-body">
+                  <div className="result-score-circle" style={{ borderColor: result.color, boxShadow: `0 0 0 8px ${result.color}15` }}>
+                    <span className="score-emoji">{result.emoji}</span>
+                    <span className="score-number">{score}</span>
+                    <span className="score-label">Score</span>
+                  </div>
+
+                  <h4 className="result-severity" style={{ color: result.color }}>{result.level}</h4>
+                  <p className="result-advice">{result.advice}</p>
+
+                  <div className="result-meta">
+                    <span className="result-meta-item">📋 {activeAssessment.code}</span>
+                    <span className="result-meta-item">📅 {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                    <span className="result-meta-item">👤 {user?.firstName}</span>
+                  </div>
+
+                  {isSaved && (
+                    <div className="saved-banner">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#059669" strokeWidth="2.5">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                      </svg>
+                      Result saved to your profile!
+                    </div>
+                  )}
+
+                  <div className="result-actions">
+                    <button className="btn btn-outline" onClick={() => handleStartAssessment(activeAssessment)}>
+                      Retake
+                    </button>
+                    {!isSaved && (
+                      <button
+                        className="btn save-btn"
+                        style={{ background: activeAssessment.color }}
+                        onClick={handleSaveResult}
+                        disabled={isSaving}
+                      >
+                        {isSaving ? 'Saving…' : '💾 Save to My Profile'}
+                      </button>
+                    )}
+                    <button className="btn btn-outline" onClick={handleCloseModal}>Done</button>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
