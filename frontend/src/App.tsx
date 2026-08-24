@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar/Navbar';
 import Footer from './components/Footer/Footer';
 import ChatbotWidget from './components/ChatbotWidget/ChatbotWidget';
@@ -7,24 +7,39 @@ import MentalHealth from './pages/MentalHealth';
 import Appointment from './pages/Appointment';
 import AiSupport from './pages/AiSupport';
 import MoodTracker from './pages/MoodTracker';
+import Auth from './pages/Auth';
+import ResourcesPage from './pages/ResourcesPage';
+
+function AppContent() {
+  const location = useLocation();
+  const isAuthPage = ['/login', '/register', '/forgot-password'].includes(location.pathname);
+
+  return (
+    <div className="app">
+      <Navbar />
+      <main>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/mental-health" element={<MentalHealth />} />
+          <Route path="/appointment" element={<Appointment />} />
+          <Route path="/ai-support" element={<AiSupport />} />
+          <Route path="/mood-tracker" element={<MoodTracker />} />
+          <Route path="/resources" element={<ResourcesPage />} />
+          <Route path="/login" element={<Auth />} />
+          <Route path="/register" element={<Auth />} />
+          <Route path="/forgot-password" element={<Auth />} />
+        </Routes>
+      </main>
+      {!isAuthPage && <Footer />}
+      <ChatbotWidget />
+    </div>
+  );
+}
 
 function App() {
   return (
     <BrowserRouter>
-      <div className="app">
-        <Navbar />
-        <main>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/mental-health" element={<MentalHealth />} />
-            <Route path="/appointment" element={<Appointment />} />
-            <Route path="/ai-support" element={<AiSupport />} />
-            <Route path="/mood-tracker" element={<MoodTracker />} />
-          </Routes>
-        </main>
-        <Footer />
-        <ChatbotWidget />
-      </div>
+      <AppContent />
     </BrowserRouter>
   );
 }

@@ -12,7 +12,7 @@
 }
 
 .about-text-content {
-  flex: 1;
+  flex: 1.25;
 }
 
 .about-subtitle {
@@ -66,22 +66,26 @@
 }
 
 .about-image-wrapper {
-  flex: 1;
+  flex: 0.85;
+  max-width: 440px;
   position: relative;
+  margin: 0 auto;
 }
 
 .about-image {
   width: 100%;
+  max-height: 380px;
+  object-fit: cover;
   border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.08);
 }
 
 .experience-badge {
   position: absolute;
-  bottom: 20px;
-  left: -30px;
-  width: 130px;
-  height: 130px;
+  bottom: 15px;
+  left: -20px;
+  width: 110px;
+  height: 110px;
   background-color: var(--primary-color);
   border-radius: 50%;
   display: flex;
@@ -93,14 +97,14 @@
 }
 
 .exp-years {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
   line-height: 1;
-  margin-bottom: 5px;
+  margin-bottom: 3px;
 }
 
 .exp-text {
-  font-size: 12px;
+  font-size: 11px;
   text-align: center;
   line-height: 1.2;
 }

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Appointment.css';
 
 interface Doctor {
@@ -95,11 +96,9 @@ const timeSlots = [
 ];
 
 const Appointment: React.FC = () => {
+  const navigate = useNavigate();
   // Authentication state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authEmail, setAuthEmail] = useState('');
-  const [authPassword, setAuthPassword] = useState('');
 
   // Stepper state (1: Select, 2: Schedule, 3: Details, 4: Confirmed)
   const [currentStep, setCurrentStep] = useState(1);
@@ -146,7 +145,7 @@ const Appointment: React.FC = () => {
 
   const handleSelectDoctor = (doctor: Doctor) => {
     if (!isLoggedIn) {
-      setShowAuthModal(true);
+      navigate('/login');
       return;
     }
     setSelectedDoctor(doctor);
@@ -156,7 +155,7 @@ const Appointment: React.FC = () => {
 
   const handleAiAutoBook = () => {
     if (!isLoggedIn) {
-      setShowAuthModal(true);
+      navigate('/login');
       return;
     }
     setIsAiMatching(true);
@@ -173,12 +172,6 @@ const Appointment: React.FC = () => {
   const handleConfirmBooking = (e: React.FormEvent) => {
     e.preventDefault();
     setBookingConfirmed(true);
-  };
-
-  const handleLogin = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    setIsLoggedIn(true);
-    setShowAuthModal(false);
   };
 
   const handleLogout = () => {
@@ -337,7 +330,7 @@ const Appointment: React.FC = () => {
                         <button className="logout-link" onClick={handleLogout}>Log Out</button>
                       </div>
                     ) : (
-                      <button className="btn btn-primary auth-btn-compact" onClick={() => setShowAuthModal(true)}>
+                      <button className="btn btn-primary auth-btn-compact" onClick={() => navigate('/login')}>
                         🔒 Login to Book
                       </button>
                     )}
@@ -357,7 +350,7 @@ const Appointment: React.FC = () => {
                     <p className="locked-desc">
                       Please login to your SoulSpace AI account to view doctor profiles, check live clinic slots, and schedule consultations.
                     </p>
-                    <button className="btn btn-primary locked-login-btn" onClick={() => setShowAuthModal(true)}>
+                    <button className="btn btn-primary locked-login-btn" onClick={() => navigate('/login')}>
                       🔒 Login to Unlock Specialists
                     </button>
                   </div>
@@ -641,63 +634,6 @@ const Appointment: React.FC = () => {
 
         </div>
       </section>
-
-      {/* Auth / Login Modal */}
-      {showAuthModal && (
-        <div className="modal-backdrop" onClick={() => setShowAuthModal(false)}>
-          <div className="assessment-modal auth-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <div>
-                <span className="modal-code-tag">Authentication</span>
-                <h3 className="modal-title">Login to SoulSpace AI</h3>
-              </div>
-              <button className="modal-close-btn" onClick={() => setShowAuthModal(false)}>✕</button>
-            </div>
-
-            <div className="auth-modal-body">
-              <p className="auth-modal-subtitle">
-                Log in to view available expert therapists, access 1-Click AI scheduling, and reserve appointments.
-              </p>
-
-              <form onSubmit={handleLogin} className="auth-form">
-                <div className="auth-field">
-                  <label>Email Address</label>
-                  <input 
-                    type="email" 
-                    placeholder="name@example.com" 
-                    value={authEmail}
-                    onChange={(e) => setAuthEmail(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="auth-field">
-                  <label>Password</label>
-                  <input 
-                    type="password" 
-                    placeholder="••••••••" 
-                    value={authPassword}
-                    onChange={(e) => setAuthPassword(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <button type="submit" className="btn btn-primary auth-submit-btn">
-                  Sign In & Unlock Booking
-                </button>
-              </form>
-
-              <div className="auth-divider-row">
-                <span>or</span>
-              </div>
-
-              <button className="btn btn-outline quick-demo-btn" onClick={() => handleLogin()}>
-                ⚡ Quick 1-Click Demo Login
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './AiSupport.css';
 
 interface Message {
@@ -39,6 +40,7 @@ const renderFormattedMessage = (text: string) => {
 };
 
 const AiSupport: React.FC = () => {
+  const navigate = useNavigate();
   // Chat state
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [inputText, setInputText] = useState('');
@@ -47,9 +49,6 @@ const AiSupport: React.FC = () => {
 
   // Authentication state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authEmail, setAuthEmail] = useState('');
-  const [authPassword, setAuthPassword] = useState('');
 
   // Interactive Breathing Tool State
   const [isBreathingActive, setIsBreathingActive] = useState(false);
@@ -93,7 +92,7 @@ const AiSupport: React.FC = () => {
 
   const handleSendMessage = (textToSend?: string) => {
     if (!isLoggedIn) {
-      setShowAuthModal(true);
+      navigate('/login');
       return;
     }
     const text = textToSend || inputText.trim();
@@ -147,12 +146,6 @@ const AiSupport: React.FC = () => {
     setMessages(initialMessages);
   };
 
-  const handleLogin = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    setIsLoggedIn(true);
-    setShowAuthModal(false);
-  };
-
   const handleLogout = () => {
     setIsLoggedIn(false);
   };
@@ -194,7 +187,7 @@ const AiSupport: React.FC = () => {
                       <button className="btn-chat-logout" onClick={handleLogout}>Log Out</button>
                     </div>
                   ) : (
-                    <button className="btn btn-primary btn-header-login" onClick={() => setShowAuthModal(true)}>
+                    <button className="btn btn-primary btn-header-login" onClick={() => navigate('/login')}>
                       🔒 Login to Chat
                     </button>
                   )}
@@ -293,7 +286,7 @@ const AiSupport: React.FC = () => {
                 className="prompt-pill" 
                 onClick={() => {
                   if (!isLoggedIn) {
-                    setShowAuthModal(true);
+                    navigate('/login');
                     return;
                   }
                   handleSendMessage('I am feeling anxious and overthinking right now.');
@@ -305,7 +298,7 @@ const AiSupport: React.FC = () => {
                 className="prompt-pill" 
                 onClick={() => {
                   if (!isLoggedIn) {
-                    setShowAuthModal(true);
+                    navigate('/login');
                     return;
                   }
                   handleSendMessage('I feel exhausted and burned out with work.');
@@ -317,7 +310,7 @@ const AiSupport: React.FC = () => {
                 className="prompt-pill" 
                 onClick={() => {
                   if (!isLoggedIn) {
-                    setShowAuthModal(true);
+                    navigate('/login');
                     return;
                   }
                   handleSendMessage('Can you guide me through a 2-minute grounding exercise?');
@@ -329,7 +322,7 @@ const AiSupport: React.FC = () => {
                 className="prompt-pill" 
                 onClick={() => {
                   if (!isLoggedIn) {
-                    setShowAuthModal(true);
+                    navigate('/login');
                     return;
                   }
                   handleSendMessage('I am feeling low and need a safe place to vent.');
@@ -342,7 +335,7 @@ const AiSupport: React.FC = () => {
             {/* Input Bar */}
             <div className="chat-input-wrapper">
               {!isLoggedIn ? (
-                <div className="chat-locked-input-bar" onClick={() => setShowAuthModal(true)}>
+                <div className="chat-locked-input-bar" onClick={() => navigate('/login')}>
                   <div className="locked-input-content">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#3f72af" strokeWidth="2">
                       <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
@@ -352,7 +345,7 @@ const AiSupport: React.FC = () => {
                   </div>
                   <button className="btn btn-primary btn-locked-chat-login" onClick={(e) => {
                     e.stopPropagation();
-                    setShowAuthModal(true);
+                    navigate('/login');
                   }}>
                     🔒 Login to Chat
                   </button>
@@ -438,7 +431,7 @@ const AiSupport: React.FC = () => {
                     <p className="auth-prompt-text">
                       🔒 Log in to preserve encrypted session history & sync CBT reports with doctors.
                     </p>
-                    <button className="btn btn-primary btn-auth-unlock" onClick={() => setShowAuthModal(true)}>
+                    <button className="btn btn-primary btn-auth-unlock" onClick={() => navigate('/login')}>
                       Login to Save History
                     </button>
                   </div>
@@ -449,63 +442,6 @@ const AiSupport: React.FC = () => {
           </aside>
         </div>
       </div>
-
-      {/* Auth / Login Modal */}
-      {showAuthModal && (
-        <div className="modal-backdrop" onClick={() => setShowAuthModal(false)}>
-          <div className="assessment-modal auth-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <div>
-                <span className="modal-code-tag">Authentication</span>
-                <h3 className="modal-title">Login to SoulSpace AI</h3>
-              </div>
-              <button className="modal-close-btn" onClick={() => setShowAuthModal(false)}>✕</button>
-            </div>
-
-            <div className="auth-modal-body">
-              <p className="auth-modal-subtitle">
-                Log in to preserve your clinical conversation history and sync assessments with your therapist.
-              </p>
-
-              <form onSubmit={handleLogin} className="auth-form">
-                <div className="auth-field">
-                  <label>Email Address</label>
-                  <input 
-                    type="email" 
-                    placeholder="name@example.com" 
-                    value={authEmail}
-                    onChange={(e) => setAuthEmail(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="auth-field">
-                  <label>Password</label>
-                  <input 
-                    type="password" 
-                    placeholder="••••••••" 
-                    value={authPassword}
-                    onChange={(e) => setAuthPassword(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <button type="submit" className="btn btn-primary auth-submit-btn">
-                  Sign In & Sync Session
-                </button>
-              </form>
-
-              <div className="auth-divider-row">
-                <span>or</span>
-              </div>
-
-              <button className="btn btn-outline quick-demo-btn" onClick={() => handleLogin()}>
-                ⚡ Quick 1-Click Demo Login
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
