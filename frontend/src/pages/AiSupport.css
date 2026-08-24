@@ -513,16 +513,14 @@
   gap: 16px;
 }
 
-.welcome-icon-ring {
-  font-size: 52px;
-  width: 90px;
-  height: 90px;
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+.welcome-avatar-img {
+  width: 140px;
+  height: 140px;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid #dbeafe;
+  object-fit: cover;
+  border: 4px solid #eff6ff;
+  box-shadow: 0 10px 25px rgba(63, 114, 175, 0.12);
+  margin-bottom: 8px;
 }
 
 .welcome-title {
