@@ -83,6 +83,15 @@ const Navbar: React.FC = () => {
               </NavLink>
             </li>
             <li>
+              <NavLink 
+                to="/mood-tracker" 
+                className={({ isActive }) => (isActive ? 'active' : '')} 
+                onClick={() => handleNavClick('/mood-tracker')}
+              >
+                Mood Tracker
+              </NavLink>
+            </li>
+            <li>
               <button 
                 className="nav-link-btn" 
                 onClick={() => handleNavClick('/', 'resources')}

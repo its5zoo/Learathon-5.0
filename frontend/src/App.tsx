@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import MentalHealth from './pages/MentalHealth';
 import Appointment from './pages/Appointment';
 import AiSupport from './pages/AiSupport';
+import MoodTracker from './pages/MoodTracker';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
             <Route path="/mental-health" element={<MentalHealth />} />
             <Route path="/appointment" element={<Appointment />} />
             <Route path="/ai-support" element={<AiSupport />} />
+            <Route path="/mood-tracker" element={<MoodTracker />} />
           </Routes>
         </main>
         <Footer />
