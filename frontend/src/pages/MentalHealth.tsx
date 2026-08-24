@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './MentalHealth.css';
@@ -537,6 +537,17 @@ const MentalHealth: React.FC = () => {
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  // Prevent background page scroll when modal is active
+  useEffect(() => {
+    if (activeAssessment) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [activeAssessment]);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
   const handleStartAssessment = (assessment: Assessment) => {
