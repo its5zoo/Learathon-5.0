@@ -14,6 +14,7 @@ import ResourcesPage from './pages/ResourcesPage';
 function AppContent() {
   const location = useLocation();
   const isAuthPage = ['/login', '/register', '/forgot-password'].includes(location.pathname);
+  const showFooter = !isAuthPage && location.pathname !== '/ai-support';
 
   return (
     <div className="app">
@@ -31,7 +32,7 @@ function AppContent() {
           <Route path="/forgot-password" element={<Auth />} />
         </Routes>
       </main>
-      {!isAuthPage && <Footer />}
+      {showFooter && <Footer />}
       <ChatbotWidget />
     </div>
   );
