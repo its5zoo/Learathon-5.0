@@ -59,9 +59,26 @@
   overflow: hidden;
 }
 
+.sidebar-logo-img {
+  width: 28px;
+  height: 24px;
+  object-fit: contain;
+  flex-shrink: 0;
+  display: block;
+  filter: drop-shadow(0 2px 5px rgba(147, 51, 234, 0.18));
+}
+
 .sidebar-logo-icon {
   font-size: 20px;
   flex-shrink: 0;
+}
+
+.sidebar-empty-cloud-img {
+  width: 56px;
+  height: 46px;
+  object-fit: contain;
+  margin-bottom: 6px;
+  filter: drop-shadow(0 4px 10px rgba(147, 51, 234, 0.15));
 }
 
 .sidebar-logo-text {
