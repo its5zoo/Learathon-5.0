@@ -1105,3 +1105,641 @@
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* ==========================================================================
+   NEW: Concerns Input
+   ========================================================================== */
+.concerns-input-wrapper {
+  margin-bottom: 16px;
+}
+.concerns-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 14px;
+  color: #334155;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.concerns-input:focus {
+  border-color: #3f72af;
+}
+
+/* ==========================================================================
+   NEW: 4-Step Stepper (4th step = Email Tracker)
+   ========================================================================== */
+.booking-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 32px 0 20px;
+  overflow-x: auto;
+}
+.step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 80px;
+}
+.step-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  background: #fff;
+  color: #94a3b8;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+.step-item.active .step-circle {
+  background: #3f72af;
+  border-color: #3f72af;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(63, 114, 175, 0.3);
+}
+.step-item.completed .step-circle {
+  background: #22c55e;
+  border-color: #22c55e;
+  color: #fff;
+}
+.step-label {
+  font-size: 11px;
+  color: #94a3b8;
+  text-align: center;
+  white-space: nowrap;
+}
+.step-item.active .step-label { color: #3f72af; font-weight: 600; }
+.step-item.completed .step-label { color: #22c55e; }
+.step-line {
+  flex: 1;
+  height: 2px;
+  background: #e2e8f0;
+  margin-bottom: 22px;
+  min-width: 24px;
+}
+
+/* ==========================================================================
+   NEW: AI Top Pick Banner (Step 2)
+   ========================================================================== */
+.ai-top-pick-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border: 1.5px solid #93c5fd;
+  border-radius: 12px;
+  padding: 12px 20px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e40af;
+  flex-wrap: wrap;
+}
+.ai-match-pill {
+  background: #3f72af;
+  color: #fff;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+}
+.ai-match-reason-small {
+  font-size: 12px;
+  color: #3f72af;
+  font-weight: 400;
+  flex: 1;
+}
+
+/* ==========================================================================
+   NEW: AI Email Disclosure Box (Step 3)
+   ========================================================================== */
+.ai-email-disclosure {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  background: #f0f9ff;
+  border: 1.5px solid #bae6fd;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 20px 0;
+}
+.ai-email-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.ai-email-disclosure strong {
+  display: block;
+  color: #0369a1;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+.ai-email-disclosure p {
+  color: #0284c7;
+  font-size: 13px;
+  margin: 0;
+  line-height: 1.5;
+}
+.readonly-input {
+  background: #f8fafc !important;
+  color: #94a3b8 !important;
+  cursor: not-allowed !important;
+}
+.booking-error-msg {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #b91c1c;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  margin: 12px 0;
+}
+.confirm-submit-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.summary-ai-match-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-top: 1px solid #e9ecef;
+  margin-top: 8px;
+}
+.summary-ai-match-badge span:first-child {
+  color: #64748b;
+  font-size: 13px;
+}
+.match-score-pill {
+  background: #3f72af;
+  color: #fff;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   NEW: Spinner for buttons
+   ========================================================================== */
+.btn-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ==========================================================================
+   NEW: Email Timeline Tracker (Step 4)
+   ========================================================================== */
+.email-timeline {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px;
+  margin: 24px 0;
+  text-align: left;
+}
+.email-timeline-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 20px;
+}
+.timeline-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.t-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+.t-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  background: #fff;
+  flex-shrink: 0;
+  margin-top: 2px;
+  transition: all 0.3s;
+}
+.t-dot.done {
+  background: #22c55e;
+  border-color: #22c55e;
+}
+.t-dot.pending {
+  background: #fff;
+  border-color: #93c5fd;
+  animation: pulse-ring 1.5s infinite;
+}
+@keyframes pulse-ring {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.3); }
+  50% { box-shadow: 0 0 0 6px rgba(59,130,246,0); }
+}
+.t-line {
+  width: 2px;
+  height: 28px;
+  background: #e2e8f0;
+  margin-left: 9px;
+}
+.t-content {
+  padding-bottom: 20px;
+}
+.t-content strong {
+  display: block;
+  font-size: 14px;
+  color: #1e293b;
+}
+.t-content span {
+  font-size: 12px;
+  color: #64748b;
+}
+.email-preview-link {
+  margin-top: 16px;
+  font-size: 13px;
+  color: #64748b;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+.email-preview-link a {
+  color: #3f72af;
+  font-weight: 600;
+  text-decoration: underline;
+}
+.simulate-reply-btn {
+  margin: 8px auto 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+/* ==========================================================================
+   NEW: Clinic Reply Card (AI Summarized)
+   ========================================================================== */
+.clinic-reply-card {
+  border-radius: 16px;
+  padding: 24px;
+  margin: 20px 0;
+  text-align: left;
+  animation: slide-up 0.4s ease;
+}
+.clinic-reply-card.confirmed {
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  border: 1.5px solid #86efac;
+}
+.clinic-reply-card.rescheduled {
+  background: linear-gradient(135deg, #fffbeb, #fef9c3);
+  border: 1.5px solid #fde047;
+}
+.clinic-reply-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.clinic-reply-icon {
+  font-size: 24px;
+  width: 44px;
+  height: 44px;
+  background: rgba(255,255,255,0.7);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.clinic-reply-header strong {
+  display: block;
+  font-size: 15px;
+  color: #1e293b;
+}
+.reply-status-pill {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.6);
+  color: #166534;
+}
+.clinic-reply-card.rescheduled .reply-status-pill { color: #92400e; }
+.clinic-reply-summary-text p {
+  color: #1e293b;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 4px 0;
+}
+.show-raw-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 8px 0 0;
+  text-decoration: underline;
+}
+.raw-reply-text {
+  background: rgba(0,0,0,0.05);
+  border-radius: 8px;
+  padding: 14px;
+  font-size: 12px;
+  color: #475569;
+  white-space: pre-wrap;
+  line-height: 1.6;
+  margin-top: 8px;
+  font-family: monospace;
+}
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================================
+   NEW: AI Concierge Modal
+   ========================================================================== */
+.ai-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fade-in 0.2s ease;
+}
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+.ai-modal {
+  background: #fff;
+  border-radius: 24px;
+  padding: 32px;
+  width: 100%;
+  max-width: 700px;
+  max-height: 88vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.2);
+  animation: modal-slide-in 0.3s ease;
+}
+@keyframes modal-slide-in {
+  from { opacity: 0; transform: translateY(30px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.ai-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  background: #f1f5f9;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 14px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.ai-modal-close:hover { background: #e2e8f0; }
+
+.ai-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.ai-modal-brain-icon {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.ai-modal-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0;
+}
+.ai-modal-subtitle {
+  color: #64748b;
+  font-size: 14px;
+  margin: 4px 0 0;
+}
+
+/* Loading animation */
+.ai-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  padding: 20px 0;
+}
+.ai-loading-orb {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ai-orb-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #3f72af;
+  opacity: 0.15;
+  animation: orb-pulse 1.5s ease-in-out infinite;
+}
+@keyframes orb-pulse {
+  0%, 100% { transform: scale(0.8); opacity: 0.15; }
+  50%       { transform: scale(1.2); opacity: 0.08; }
+}
+.ai-orb-inner {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3f72af, #6c9fd8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  z-index: 1;
+  animation: orb-spin 3s linear infinite;
+}
+@keyframes orb-spin { to { filter: hue-rotate(30deg); } }
+
+.ai-loading-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 340px;
+}
+.ai-loading-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #94a3b8;
+  transition: all 0.3s;
+}
+.ai-loading-step.active { color: #3f72af; font-weight: 600; }
+.ai-loading-step.done   { color: #22c55e; }
+.ai-step-dot { font-size: 16px; }
+
+/* Recommendations list */
+.ai-recs-subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 20px;
+}
+.ai-recommendations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.ai-rec-card {
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px;
+  position: relative;
+  transition: all 0.2s;
+  background: #fff;
+}
+.ai-rec-card:hover { border-color: #93c5fd; box-shadow: 0 8px 24px rgba(63,114,175,0.1); }
+.ai-rec-card.top-pick {
+  border-color: #3f72af;
+  background: linear-gradient(135deg, #fafcff, #eff6ff);
+  box-shadow: 0 8px 24px rgba(63,114,175,0.15);
+}
+.top-pick-badge {
+  position: absolute;
+  top: -1px;
+  left: 20px;
+  background: linear-gradient(135deg, #3f72af, #6c9fd8);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 0 0 10px 10px;
+  letter-spacing: 0.3px;
+}
+.ai-rec-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 14px;
+  margin-top: 8px;
+}
+.ai-rec-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid #e2e8f0;
+}
+.ai-rec-info { flex: 1; }
+.ai-rec-info h3 { font-size: 16px; font-weight: 700; color: #1e293b; margin: 0 0 3px; }
+.ai-rec-info p { font-size: 13px; color: #64748b; margin: 0; }
+.ai-rec-clinic { margin-top: 4px !important; }
+
+/* Donut chart for match score */
+.ai-match-score-circle { position: relative; width: 56px; height: 56px; flex-shrink: 0; }
+.match-donut { width: 56px; height: 56px; transform: rotate(-90deg); }
+.donut-ring   { stroke: #e2e8f0; }
+.donut-segment { stroke: #3f72af; stroke-linecap: round; transition: stroke-dasharray 1s ease; }
+.ai-rec-card.top-pick .donut-segment { stroke: #22c55e; }
+.match-score-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.ai-rec-reason {
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+.reason-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 6px;
+}
+.ai-rec-reason p { font-size: 13px; color: #334155; line-height: 1.5; margin: 0; }
+
+.ai-rec-specialty-highlight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 14px;
+}
+.specialty-chip {
+  background: #dbeafe;
+  color: #1e40af;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ai-rec-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.ai-rec-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: #64748b;
+  flex-wrap: wrap;
+}
+.ai-select-btn { font-size: 13px; padding: 8px 16px; white-space: nowrap; }
+
+.ai-error-box {
+  text-align: center;
+  padding: 24px;
+  color: #b91c1c;
+  background: #fef2f2;
+  border-radius: 12px;
+}
+.ai-error-box p { margin-bottom: 16px; }
+
