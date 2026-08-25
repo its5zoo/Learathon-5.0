@@ -16,8 +16,7 @@ const Hero: React.FC = () => {
           </div>
         </div>
         <div className="hero-image">
-          {/* We use the generated brain image */}
-          <img src="/hero_brain_1787470111252.jpg" alt="Neural Brain" className="brain-img" />
+          <img src="/hero_page_brain.png" alt="Neural Brain" className="brain-img" />
         </div>
       </div>
     </section>
