@@ -5,14 +5,14 @@ const About: React.FC = () => {
   return (
     <section className="about" id="about">
       <div className="container">
-        <h2 className="section-title">About SoulSpace AI</h2>
+        <h2 className="section-title">About SoulSpace</h2>
         
         <div className="about-content-wrapper">
           <div className="about-text-content">
             <h3 className="about-subtitle">Empowering Mental Wellness</h3>
             
             <p className="about-text">
-              SoulSpace AI is a comprehensive mental health platform dedicated to supporting individuals across India. Founded in 2021, we bridge the gap between people facing mental health challenges and professional support systems.
+              SoulSpace is a comprehensive mental health platform dedicated to supporting individuals across India. Founded in 2021, we bridge the gap between people facing mental health challenges and professional support systems.
             </p>
             
             <p className="about-text">

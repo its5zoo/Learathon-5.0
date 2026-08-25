@@ -869,7 +869,7 @@ const Appointment: React.FC = () => {
             {!aiLoading && !aiError && aiRecommendations.length > 0 && (
               <div className="ai-recommendations-list">
                 <p className="ai-recs-subtitle">Based on your profile &amp; assessment history, here are your top matches:</p>
-                {aiRecommendations.map((rec, i) => (
+                {aiRecommendations.map((rec) => (
                   <div key={rec.id} className={`ai-rec-card ${rec.isTopPick ? 'top-pick' : ''}`}>
                     {rec.isTopPick && <div className="top-pick-badge">⭐ Best Match</div>}
 
