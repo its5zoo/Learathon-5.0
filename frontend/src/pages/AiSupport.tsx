@@ -294,7 +294,7 @@ const AiSupport: React.FC = () => {
         {/* Sidebar Header */}
         <div className="sidebar-header">
           <div className="sidebar-logo">
-            <span className="sidebar-logo-icon">💬</span>
+            <img src="/cloud_box.png" alt="Chats" className="sidebar-logo-img" />
             {isSidebarOpen && <span className="sidebar-logo-text">Chats</span>}
           </div>
           <button className="sidebar-collapse-btn" onClick={() => setIsSidebarOpen(!isSidebarOpen)} title="Toggle sidebar">
@@ -327,7 +327,7 @@ const AiSupport: React.FC = () => {
                 </div>
               ) : sessions.length === 0 ? (
                 <div className="sidebar-empty">
-                  <span>💬</span>
+                  <img src="/cloud_box.png" alt="No chats" className="sidebar-empty-cloud-img" />
                   <p>No chats yet. Start a new conversation!</p>
                 </div>
               ) : (
@@ -380,7 +380,7 @@ const AiSupport: React.FC = () => {
             <div>
               <div className="chat-topbar-title">SoulSpace Companion</div>
               <div className="chat-topbar-sub">
-                <span className="online-dot"></span> Mental Health Support · Empathetic · Private
+                Mental Health Support · Empathetic · Private
               </div>
             </div>
           </div>
