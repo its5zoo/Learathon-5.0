@@ -363,19 +363,6 @@ const AiSupport: React.FC = () => {
                 ))
               )}
             </div>
-
-            {/* User info at bottom */}
-            {isLoggedIn && user && (
-              <div className="sidebar-user-footer">
-                <div className="sidebar-user-avatar">
-                  {user.firstName[0]}{user.lastName[0]}
-                </div>
-                <div className="sidebar-user-info">
-                  <div className="sidebar-user-name">{user.firstName} {user.lastName}</div>
-                  {user.isDemo && <span className="sidebar-demo-tag">Demo</span>}
-                </div>
-              </div>
-            )}
           </>
         )}
       </aside>
@@ -398,17 +385,7 @@ const AiSupport: React.FC = () => {
             </div>
           </div>
           <div className="chat-topbar-right">
-            {isLoggedIn ? (
-              <div className="topbar-session-actions">
-                <button className="topbar-btn" onClick={createNewSession} title="New Chat">
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                  </svg>
-                  New Chat
-                </button>
-              </div>
-            ) : (
+            {!isLoggedIn && (
               <button className="topbar-login-btn" onClick={() => navigate('/login')}>
                 🔒 Login to Chat
               </button>
@@ -605,7 +582,7 @@ const AiSupport: React.FC = () => {
                   ref={inputRef}
                   type="text"
                   className="chat-input-field"
-                  placeholder={activeSessionId ? "Share what's on your mind…" : "Click 'New Chat' or type to start…"}
+                  placeholder={activeSessionId ? "Share what's on your mind…" : "Type your message to start chatting…"}
                   value={inputText}
                   maxLength={1000}
                   onChange={(e) => setInputText(e.target.value)}
