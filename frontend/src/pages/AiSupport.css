@@ -38,9 +38,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 14px;
+  height: 68px;
+  min-height: 68px;
+  max-height: 68px;
+  padding: 0 14px;
   border-bottom: 1px solid #e2e8f0;
   flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.ai-history-sidebar.collapsed .sidebar-header {
+  padding: 0;
+  justify-content: center;
 }
 
 .sidebar-logo {
@@ -324,11 +333,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 24px;
+  height: 68px;
+  min-height: 68px;
+  max-height: 68px;
+  padding: 0 24px;
   border-bottom: 1px solid #e2e8f0;
   background: #ffffff;
   flex-shrink: 0;
   gap: 12px;
+  box-sizing: border-box;
 }
 
 .chat-topbar-left {
@@ -338,14 +351,20 @@
 }
 
 .chat-agent-avatar {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #3f72af 0%, #112d4e 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+
+.chat-avatar-logo-img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(63, 114, 175, 0.2));
 }
 
 .chat-topbar-title {
@@ -658,7 +677,16 @@
 }
 
 .ai-avatar {
-  background: linear-gradient(135deg, #3f72af 0%, #112d4e 100%);
+  background: #f0f4f8;
+  border: 1px solid #dbe2ef;
+  overflow: hidden;
+  padding: 3px;
+}
+
+.msg-avatar-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .user-avatar {
@@ -857,75 +885,89 @@
 }
 
 /* ── Input Section ──────────────────────────────────────────────────────── */
+/* ── Input Section ──────────────────────────────────────────────────────── */
 .chat-input-section {
-  padding: 12px 24px 16px;
+  padding: 16px 28px 20px;
   border-top: 1px solid #f1f5f9;
   flex-shrink: 0;
-  background: #ffffff;
+  background: #f8fafc;
 }
 
-/* ── Locked Bar ─────────────────────────────────────────────────────────── */
+/* ── Locked Bar (Pill Shape with Soft Shadow) ────────────────────────────── */
 .input-locked-bar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 18px;
-  background: #f8fafc;
-  border: 1.5px dashed #cbd5e1;
-  border-radius: 14px;
+  gap: 14px;
+  padding: 12px 14px 12px 24px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 9999px;
   cursor: pointer;
-  transition: all 0.2s;
-  font-size: 14px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.14), 0 4px 10px rgba(0, 0, 0, 0.06);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  font-size: 14.5px;
   color: #64748b;
 }
 
 .input-locked-bar:hover {
-  background: #eff6ff;
-  border-color: #3f72af;
+  background: #ffffff;
+  border-color: rgba(63, 114, 175, 0.3);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18), 0 6px 14px rgba(63, 114, 175, 0.12);
+  transform: translateY(-2px);
   color: #3f72af;
 }
 
 .locked-login-btn {
   margin-left: auto;
-  padding: 7px 16px;
+  padding: 9px 22px;
   background: linear-gradient(135deg, #3f72af, #2563a8);
   color: #fff;
   border: none;
-  border-radius: 8px;
-  font-size: 13px;
+  border-radius: 9999px;
+  font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
   white-space: nowrap;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 10px rgba(63, 114, 175, 0.3);
 }
 
-/* ── Active Input Bar ───────────────────────────────────────────────────── */
+.locked-login-btn:hover {
+  background: linear-gradient(135deg, #2e62a3, #1d4ed8);
+  box-shadow: 0 5px 16px rgba(63, 114, 175, 0.45);
+  transform: translateY(-1px);
+}
+
+/* ── Active Input Bar (Pill Shape with Soft Shadow) ───────────────────────── */
 .input-bar-inner {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: #f8fafc;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 6px 6px 6px 16px;
-  transition: border-color 0.2s;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 9999px;
+  padding: 8px 10px 8px 24px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.14), 0 4px 10px rgba(0, 0, 0, 0.06);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .input-bar-inner:focus-within {
-  border-color: #3f72af;
   background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(63, 114, 175, 0.1);
+  border-color: rgba(63, 114, 175, 0.35);
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.18), 0 0 0 3px rgba(63, 114, 175, 0.12);
+  transform: translateY(-1px);
 }
 
 .chat-input-field {
   flex: 1;
   border: none;
   background: transparent;
-  font-size: 14.5px;
+  font-size: 15px;
   color: #0f172a;
   outline: none;
   font-family: inherit;
-  padding: 6px 0;
+  padding: 8px 0;
 }
 
 .chat-input-field::placeholder { color: #94a3b8; }
@@ -934,7 +976,7 @@
 .input-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-shrink: 0;
 }
 
@@ -944,17 +986,17 @@
 }
 
 .send-btn {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: #e2e8f0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #f1f5f9;
   border: none;
   color: #94a3b8;
   cursor: not-allowed;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   flex-shrink: 0;
 }
 
@@ -962,12 +1004,12 @@
   background: linear-gradient(135deg, #3f72af 0%, #2563a8 100%);
   color: #ffffff;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(63, 114, 175, 0.35);
+  box-shadow: 0 3px 10px rgba(63, 114, 175, 0.35);
 }
 
 .send-btn.active:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 14px rgba(63, 114, 175, 0.45);
+  transform: scale(1.06);
+  box-shadow: 0 5px 16px rgba(63, 114, 175, 0.45);
 }
 
 .send-spinner {

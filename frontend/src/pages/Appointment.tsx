@@ -348,7 +348,7 @@ const Appointment: React.FC = () => {
                     </div>
                     <h3 className="locked-title">Login Required to View & Book Specialists</h3>
                     <p className="locked-desc">
-                      Please login to your SoulSpace AI account to view doctor profiles, check live clinic slots, and schedule consultations.
+                      Please login to your SoulSpace account to view doctor profiles, check live clinic slots, and schedule consultations.
                     </p>
                     <button className="btn btn-primary locked-login-btn" onClick={() => navigate('/login')}>
                       🔒 Login to Unlock Specialists
@@ -539,7 +539,7 @@ const Appointment: React.FC = () => {
                         onChange={(e) => setAttachReport(e.target.checked)} 
                       />
                       <div>
-                        <strong>Attach SoulSpace AI Assessment Summary</strong>
+                        <strong>Attach SoulSpace Assessment Summary</strong>
                         <p>Submits your confidential screener scores (e.g. PHQ-9, GAD-7) to {selectedDoctor.name} in advance for a more personalized consultation.</p>
                       </div>
                     </label>
