@@ -128,17 +128,21 @@ const Navbar: React.FC = () => {
                 {isProfileOpen && (
                   <div className="nav-profile-dropdown">
                     {/* Profile Card Header */}
-                    <div className="dropdown-profile-header">
+                    <div className="dropdown-profile-header" onClick={() => handleNavClick('/profile')} style={{ cursor: 'pointer' }}>
                       <div className="dropdown-avatar-lg">{getInitials()}</div>
                       <div>
                         <div className="dropdown-name">{user.firstName} {user.lastName}</div>
                         <div className="dropdown-email">{user.email}</div>
+                        <span style={{ fontSize: '0.75rem', color: '#3b82f6', fontWeight: 600 }}>View Full Profile →</span>
                       </div>
                     </div>
 
                     <div className="dropdown-divider"></div>
 
                     {/* Menu Items */}
+                    <button className="dropdown-item" onClick={() => handleNavClick('/profile')}>
+                      <span>👤</span> My Profile &amp; Records
+                    </button>
                     <button className="dropdown-item" onClick={() => handleNavClick('/mood-tracker')}>
                       <span>📊</span> Mood Dashboard
                     </button>

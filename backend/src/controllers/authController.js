@@ -13,9 +13,14 @@ const buildUserResponse = (user) => ({
   _id: user._id,
   firstName: user.firstName,
   lastName: user.lastName,
+  username: user.username || (user.email ? user.email.split('@')[0] : 'soul_seeker'),
   email: user.email,
   phone: user.phone || '',
+  bio: user.bio || 'On a journey toward mental clarity and mindful living with SoulSpace.',
+  emergencyContact: user.emergencyContact || { name: '', phone: '', relation: '' },
   isDemo: user.isDemo || false,
+  assessmentResults: user.assessmentResults || [],
+  moodLogs: user.moodLogs || [],
   createdAt: user.createdAt,
 });
 
@@ -180,3 +185,85 @@ export const getMe = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Server error.' });
   }
 };
+
+// =============================================================
+// @route   PUT /api/auth/profile
+// @desc    Update user profile (name, username, phone, bio, emergency contact)
+// @access  Private (JWT required)
+// =============================================================
+export const updateProfile = async (req, res) => {
+  try {
+    const { firstName, lastName, phone, username, bio, emergencyContact } = req.body;
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    if (firstName) user.firstName = firstName.trim();
+    if (lastName) user.lastName = lastName.trim();
+    if (phone !== undefined) user.phone = phone.trim();
+    if (username) {
+      user.username = username.replace(/^@/, '').trim().toLowerCase();
+    }
+    if (bio !== undefined) user.bio = bio.trim();
+    if (emergencyContact) {
+      user.emergencyContact = {
+        name: emergencyContact.name || '',
+        phone: emergencyContact.phone || '',
+        relation: emergencyContact.relation || '',
+      };
+    }
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully!',
+      user: buildUserResponse(user),
+    });
+  } catch (error) {
+    console.error('Update Profile Error:', error.message);
+    return res.status(500).json({ success: false, message: 'Failed to update profile.' });
+  }
+};
+
+// =============================================================
+// @route   POST /api/auth/mood
+// @desc    Log mood entry to user profile
+// @access  Private (JWT required)
+// =============================================================
+export const logMood = async (req, res) => {
+  try {
+    const { mood, level, emoji, type, confidence, note, date, time } = req.body;
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    const newLog = {
+      mood,
+      level,
+      emoji,
+      type: type || 'Manual Selection',
+      confidence: confidence || '',
+      note: note || '',
+      date: date || 'Today',
+      time: time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      loggedAt: new Date(),
+    };
+
+    user.moodLogs.push(newLog);
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Mood saved to profile!',
+      moodLog: newLog,
+      moodLogs: user.moodLogs,
+    });
+  } catch (error) {
+    console.error('Log Mood Error:', error.message);
+    return res.status(500).json({ success: false, message: 'Failed to log mood.' });
+  }
+};
+

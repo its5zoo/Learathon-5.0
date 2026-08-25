@@ -9,11 +9,12 @@ import AiSupport from './pages/AiSupport';
 import MoodTracker from './pages/MoodTracker';
 import Auth from './pages/Auth';
 import ResourcesPage from './pages/ResourcesPage';
+import Profile from './pages/Profile';
 
 function AppContent() {
   const location = useLocation();
   const isAuthPage = ['/login', '/register', '/forgot-password'].includes(location.pathname);
-  const showFooter = !isAuthPage && location.pathname !== '/ai-support';
+  const showFooter = !isAuthPage && location.pathname !== '/ai-support' && location.pathname !== '/profile';
 
   return (
     <div className="app">
@@ -26,6 +27,7 @@ function AppContent() {
           <Route path="/ai-support" element={<AiSupport />} />
           <Route path="/mood-tracker" element={<MoodTracker />} />
           <Route path="/resources" element={<ResourcesPage />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/login" element={<Auth />} />
           <Route path="/register" element={<Auth />} />
           <Route path="/forgot-password" element={<Auth />} />

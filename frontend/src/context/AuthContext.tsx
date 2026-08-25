@@ -3,12 +3,44 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from '
 const API_URL = 'http://localhost:5000/api';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+export interface EmergencyContact {
+  name: string;
+  phone: string;
+  relation: string;
+}
+
+export interface AssessmentResultItem {
+  assessmentId: string;
+  code: string;
+  title: string;
+  score: number;
+  severity: string;
+  completedAt: string;
+}
+
+export interface MoodLogItem {
+  mood: string;
+  level: number;
+  emoji: string;
+  type: string;
+  confidence?: string;
+  note?: string;
+  date: string;
+  time: string;
+  loggedAt?: string;
+}
+
 export interface AuthUser {
   _id: string;
   firstName: string;
   lastName: string;
+  username?: string;
   email: string;
   phone: string;
+  bio?: string;
+  emergencyContact?: EmergencyContact;
+  assessmentResults?: AssessmentResultItem[];
+  moodLogs?: MoodLogItem[];
   isDemo: boolean;
   createdAt: string;
 }
@@ -21,6 +53,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
   register: (data: RegisterData) => Promise<{ success: boolean; message: string }>;
   demoLogin: () => Promise<{ success: boolean; message: string }>;
+  updateProfile: (data: Partial<AuthUser>) => Promise<{ success: boolean; message: string; user?: AuthUser }>;
+  refreshUser: () => Promise<void>;
   logout: () => void;
 }
 
@@ -121,6 +155,47 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // ── Update Profile ─────────────────────────────────────────────────────────
+  const updateProfile = async (profileData: Partial<AuthUser>) => {
+    try {
+      const res = await fetch(`${API_URL}/auth/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token || localStorage.getItem('ss_token')}`,
+        },
+        body: JSON.stringify(profileData),
+      });
+      const data = await res.json();
+      if (data.success && data.user) {
+        persistSession(token || localStorage.getItem('ss_token') || '', data.user);
+        return { success: true, message: data.message, user: data.user };
+      }
+      return { success: false, message: data.message || 'Profile update failed.' };
+    } catch {
+      return { success: false, message: 'Unable to reach server. Please try again.' };
+    }
+  };
+
+  // ── Refresh User Info ───────────────────────────────────────────────────────
+  const refreshUser = async () => {
+    const currentToken = token || localStorage.getItem('ss_token');
+    if (!currentToken) return;
+    try {
+      const res = await fetch(`${API_URL}/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${currentToken}`,
+        },
+      });
+      const data = await res.json();
+      if (data.success && data.user) {
+        persistSession(currentToken, data.user);
+      }
+    } catch (err) {
+      console.warn('Silent refresh user error:', err);
+    }
+  };
+
   // ── Logout ──────────────────────────────────────────────────────────────────
   const logout = () => {
     localStorage.removeItem('ss_token');
@@ -139,6 +214,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         login,
         register,
         demoLogin,
+        updateProfile,
+        refreshUser,
         logout,
       }}
     >

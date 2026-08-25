@@ -39,6 +39,32 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    username: {
+      type: String,
+      trim: true,
+    },
+    bio: {
+      type: String,
+      default: 'On a journey toward mental clarity and mindful living with SoulSpace.',
+    },
+    emergencyContact: {
+      name: { type: String, default: '' },
+      phone: { type: String, default: '' },
+      relation: { type: String, default: '' },
+    },
+    moodLogs: [
+      {
+        mood: { type: String },
+        level: { type: Number },
+        emoji: { type: String },
+        type: { type: String }, // 'AI Facial Scan' | 'Manual Selection'
+        confidence: { type: String },
+        note: { type: String },
+        date: { type: String },
+        time: { type: String },
+        loggedAt: { type: Date, default: Date.now },
+      },
+    ],
     assessmentResults: [
       {
         assessmentId: { type: String },

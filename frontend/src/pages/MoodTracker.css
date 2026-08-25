@@ -178,8 +178,48 @@
   transition: color 0.2s ease;
 }
 
-.btn-hero-logout:hover {
-  color: #ef4444;
+.btn-camera-toggle {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-camera-toggle:hover {
+  background: rgba(56, 189, 248, 0.25);
+  color: #ffffff;
+  border-color: #38bdf8;
+}
+
+.btn-camera-off {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+.btn-camera-off:hover {
+  background: rgba(239, 68, 68, 0.25);
+  color: #ffffff;
+  border-color: #ef4444;
+}
+
+.camera-error-banner {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  margin-bottom: 14px;
+  max-width: 520px;
 }
 
 /* AI Biometric Camera Scanner Card */
@@ -194,9 +234,21 @@
 .scanner-img-wrapper {
   position: relative;
   width: 100%;
-  height: 240px;
+  height: 250px;
   background: #020617;
   overflow: hidden;
+}
+
+.scanner-live-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transform: scaleX(-1); /* Mirror camera feed */
+}
+
+.scanner-live-video.hidden {
+  display: none;
 }
 
 .scanner-live-preview-img {
@@ -764,20 +816,30 @@
   font-size: 32px;
 }
 
-.mood-label-name {
-  font-size: 13.5px;
-  font-weight: 700;
-  color: #334155;
+.mood-desc-sub {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
 }
 
-.mood-select-pill.selected .mood-label-name {
-  color: #1e3a8a;
+.mood-select-pill.selected .mood-desc-sub {
+  color: #2563eb;
+  font-weight: 600;
 }
 
 .mood-notes-box {
   position: relative;
   max-width: 800px;
   margin: 0 auto 24px;
+  text-align: left;
+}
+
+.notes-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 6px;
 }
 
 .mood-textarea {
@@ -912,6 +974,138 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+
+/* ─── Reason Chips & Trigger Selector ─────────────────────────────────────── */
+.mood-reasons-wrapper {
+  max-width: 800px;
+  margin: 0 auto 20px;
+  text-align: left;
+}
+
+.optional-tag {
+  font-size: 11.5px;
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.reason-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.reason-chip {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.reason-chip:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.reason-chip.active {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  color: #2563eb;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.15);
+}
+
+/* ─── How It Works (3-Step Guide) ────────────────────────────────────────── */
+.how-it-works-section {
+  padding: 20px 0 60px;
+}
+
+.how-it-works-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 36px 32px;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+  text-align: center;
+}
+
+.how-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 4px;
+}
+
+.how-subtitle {
+  font-size: 13.5px;
+  color: #64748b;
+  margin: 0 0 28px;
+}
+
+.how-steps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  text-align: left;
+}
+
+.how-step-item {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 20px;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.how-step-num {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.how-step-icon {
+  font-size: 26px;
+  margin-bottom: 2px;
+}
+
+.how-step-item h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.how-step-item p {
+  font-size: 12.5px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .how-steps-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ==========================================================================
