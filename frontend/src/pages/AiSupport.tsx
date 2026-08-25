@@ -388,13 +388,10 @@ const AiSupport: React.FC = () => {
         <div className="chat-topbar">
           <div className="chat-topbar-left">
             <div className="chat-agent-avatar">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" strokeWidth="2">
-                <path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"></path>
-                <path d="M9 21h6"></path>
-              </svg>
+              <img src="/logo_main.png" alt="SoulSpace Companion" className="chat-avatar-logo-img" />
             </div>
             <div>
-              <div className="chat-topbar-title">SoulSpace AI Companion</div>
+              <div className="chat-topbar-title">SoulSpace Companion</div>
               <div className="chat-topbar-sub">
                 <span className="online-dot"></span> Mental Health Support · Empathetic · Private
               </div>
@@ -446,7 +443,7 @@ const AiSupport: React.FC = () => {
             <div className="chat-welcome-screen">
               <img src="/support_welcome.jpg" alt="Mindfulness" className="welcome-avatar-img" />
               <h2 className="welcome-title">
-                {isLoggedIn ? `Hello, ${user?.firstName}! 👋` : 'SoulSpace AI Companion'}
+                {isLoggedIn ? `Hello, ${user?.firstName}! 👋` : 'SoulSpace Companion'}
               </h2>
               <p className="welcome-sub">
                 {isLoggedIn
@@ -501,9 +498,7 @@ const AiSupport: React.FC = () => {
               <div key={idx} className={`msg-row ${msg.role}`}>
                 {msg.role === 'assistant' && (
                   <div className="msg-avatar ai-avatar">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" strokeWidth="2">
-                      <path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"></path>
-                    </svg>
+                    <img src="/logo_main.png" alt="SoulSpace" className="msg-avatar-logo-img" />
                   </div>
                 )}
                 <div className="msg-bubble-wrap">
@@ -598,7 +593,7 @@ const AiSupport: React.FC = () => {
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
               </svg>
-              <span>Login to start chatting with SoulSpace AI…</span>
+              <span>Login to start chatting with SoulSpace…</span>
               <button className="locked-login-btn" onClick={(e) => { e.stopPropagation(); navigate('/login'); }}>
                 Login →
               </button>
@@ -637,7 +632,7 @@ const AiSupport: React.FC = () => {
                 </div>
               </div>
               <p className="input-disclaimer">
-                SoulSpace AI is a mental wellness companion and not a substitute for professional therapy.
+                SoulSpace is a mental wellness companion and not a substitute for professional therapy.
               </p>
             </div>
           )}

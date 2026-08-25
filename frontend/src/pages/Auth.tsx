@@ -187,7 +187,7 @@ const Auth: React.FC = () => {
                 <span className="headline-highlight">Heal Your Life.</span>
               </h2>
               <p className="auth-showcase-paragraph">
-                SoulSpace AI is your safe, confidential sanctuary for mental wellness and inner peace. Connect with empathetic AI therapy companions, consult licensed clinical psychologists, and understand your emotional trends in a safe, judgment-free space.
+                SoulSpace is your safe, confidential sanctuary for mental wellness and inner peace. Connect with empathetic AI therapy companions, consult licensed clinical psychologists, and understand your emotional trends in a safe, judgment-free space.
               </p>
             </div>
             <div className="auth-clean-footer-note">
