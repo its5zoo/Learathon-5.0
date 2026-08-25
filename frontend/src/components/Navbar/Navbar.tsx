@@ -115,9 +115,6 @@ const Navbar: React.FC = () => {
                     <span className="nav-profile-name">
                       {user.firstName} {user.lastName}
                     </span>
-                    {user.isDemo && (
-                      <span className="nav-demo-badge">Demo</span>
-                    )}
                   </div>
                   <svg
                     className={`nav-chevron ${isProfileOpen ? 'rotated' : ''}`}
@@ -136,9 +133,6 @@ const Navbar: React.FC = () => {
                       <div>
                         <div className="dropdown-name">{user.firstName} {user.lastName}</div>
                         <div className="dropdown-email">{user.email}</div>
-                        {user.isDemo && (
-                          <span className="dropdown-demo-tag">🎭 Demo Account</span>
-                        )}
                       </div>
                     </div>
 

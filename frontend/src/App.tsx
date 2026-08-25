@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar/Navbar';
 import Footer from './components/Footer/Footer';
-import ChatbotWidget from './components/ChatbotWidget/ChatbotWidget';
 import Home from './pages/Home';
 import MentalHealth from './pages/MentalHealth';
 import Appointment from './pages/Appointment';
@@ -33,7 +32,6 @@ function AppContent() {
         </Routes>
       </main>
       {showFooter && <Footer />}
-      <ChatbotWidget />
     </div>
   );
 }
