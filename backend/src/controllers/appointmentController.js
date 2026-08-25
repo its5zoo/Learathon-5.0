@@ -357,13 +357,15 @@ export const bookAppointment = async (req, res) => {
       // Non-fatal — appointment is still saved
     }
 
+    // Fetch the updated document from DB so status, emailPreviewUrl, etc. are correct in response
+    const updatedAppointment = await Appointment.findById(appointment._id);
+
     return res.status(201).json({
       success: true,
       message: 'Appointment request booked and email sent to clinic.',
       appointment: {
-        ...appointment.toObject(),
+        ...updatedAppointment.toObject(),
         bookingRef,
-        emailPreviewUrl,
       },
     });
 
