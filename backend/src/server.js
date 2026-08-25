@@ -1,13 +1,15 @@
+// ⚠️ dotenv MUST be configured before ANY other imports
+// because ESM modules are evaluated at import time, not at runtime.
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import assessmentRoutes from './routes/assessmentRoutes.js';
-
-// Load environment variables
-dotenv.config();
+import appointmentRoutes from './routes/appointmentRoutes.js';
 
 // Connect to MongoDB Atlas
 connectDB();
@@ -27,6 +29,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/assessments', assessmentRoutes);
+app.use('/api/appointments', appointmentRoutes);
 
 // Basic health check route
 app.get('/', (req, res) => {
