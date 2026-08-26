@@ -25,6 +25,7 @@ interface Doctor {
   matchReason?: string;
   specialtyHighlight?: string;
   isTopPick?: boolean;
+  email?: string;
 }
 
 // ─── Static Doctor Data (mirrors backend DOCTORS list) ────────────────────────
@@ -44,6 +45,7 @@ const doctorsData: Doctor[] = [
     modes: ['In-Clinic', 'Video Consultation'],
     nextAvailable: 'Today, 4:30 PM',
     fee: '₹1,200 / session',
+    email: '25cse195.rakhilesh@giet.edu',
     image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
   },
   {
@@ -61,6 +63,7 @@ const doctorsData: Doctor[] = [
     modes: ['In-Clinic', 'Video Consultation'],
     nextAvailable: 'Tomorrow, 11:00 AM',
     fee: '₹1,500 / session',
+    email: 'ashiafhalak786@gmail.com',
     image: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
   },
   {
@@ -78,6 +81,7 @@ const doctorsData: Doctor[] = [
     modes: ['In-Clinic', 'Video Consultation'],
     nextAvailable: 'Today, 6:00 PM',
     fee: '₹1,000 / session',
+    email: '25cse169.grigariaannsunil@giet.edu',
     image: 'https://images.unsplash.com/photo-1594824813686-7a1a8c9b9173?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
   },
   {
@@ -95,6 +99,7 @@ const doctorsData: Doctor[] = [
     modes: ['In-Clinic', 'Video Consultation'],
     nextAvailable: 'Tomorrow, 3:30 PM',
     fee: '₹1,300 / session',
+    email: 'dummy.doc4@soulspace.demo',
     image: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
   },
   {
@@ -112,6 +117,7 @@ const doctorsData: Doctor[] = [
     modes: ['In-Clinic', 'Video Consultation'],
     nextAvailable: 'Today, 2:00 PM',
     fee: '₹900 / session',
+    email: 'dummy.doc5@soulspace.demo',
     image: 'https://images.unsplash.com/photo-1614608682850-e0d6ed316d47?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
   },
   {
@@ -129,9 +135,11 @@ const doctorsData: Doctor[] = [
     modes: ['In-Clinic', 'Video Consultation'],
     nextAvailable: 'Tomorrow, 9:00 AM',
     fee: '₹1,800 / session',
+    email: 'ashiafhalak786@gmail.com',
     image: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
   },
 ];
+
 
 const timeSlots = [
   '10:00 AM', '11:30 AM', '02:00 PM', '03:30 PM', '04:30 PM', '06:00 PM', '07:30 PM',
@@ -385,13 +393,17 @@ const Appointment: React.FC = () => {
   };
 
   // ─── Simulate Clinic Reply ─────────────────────────────────────────────────
-  const handleSimulateReply = async () => {
+  const handleSimulateReply = async (outcome: string = 'confirmed') => {
     if (!bookedAppointment?._id) return;
     setIsSimulatingReply(true);
     try {
       const res = await fetch(`${API_URL}/appointments/${bookedAppointment._id}/simulate-reply`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ outcome }),
       });
       const data = await res.json();
       if (data.success) {
@@ -399,7 +411,7 @@ const Appointment: React.FC = () => {
         setClinicReplyRaw(data.clinicReplyRaw);
         setAppointmentStatus(data.status);
 
-        // Update profile notification with confirmed status
+        // Update profile notification with status
         try {
           const existing = JSON.parse(localStorage.getItem('ss_latest_appointment') || '{}');
           localStorage.setItem('ss_latest_appointment', JSON.stringify({
@@ -415,6 +427,7 @@ const Appointment: React.FC = () => {
       setIsSimulatingReply(false);
     }
   };
+
 
   const resetAll = () => {
     setCurrentStep(1);
@@ -630,6 +643,17 @@ const Appointment: React.FC = () => {
                               <p className="address-text">{doctor.address}</p>
                             </div>
                           </div>
+                          {doctor.email && (
+                            <div className="doc-email-row-badge">
+                              <span className="doc-email-badge-icon">✉️</span>
+                              <span className="doc-email-addr-text">Official: <strong>{doctor.email}</strong></span>
+                              {doctor.email.endsWith('@soulspace.demo') ? (
+                                <span className="doc-badge-pill demo-pill">Demo Mode</span>
+                              ) : (
+                                <span className="doc-badge-pill live-pill">Live Dispatch</span>
+                              )}
+                            </div>
+                          )}
                           <div className="doc-footer-row">
                             <div className="slot-and-fee">
                               <div className="next-slot"><span className="slot-dot"></span> Next Slot: <strong>{doctor.nextAvailable}</strong></div>
@@ -666,6 +690,7 @@ const Appointment: React.FC = () => {
                   <h3 className="summary-doc-name">{selectedDoctor.name}</h3>
                   <p className="summary-doc-title">{selectedDoctor.title}</p>
                   <p className="summary-doc-address">📍 {selectedDoctor.clinicName}, {selectedDoctor.address}</p>
+                  <p className="summary-doc-email-line">✉️ Destination Email: <strong>{selectedDoctor.email}</strong></p>
                 </div>
                 <div className="summary-doc-fee">
                   <span>Fee</span>
@@ -687,68 +712,78 @@ const Appointment: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Date */}
-                <h4 className="slots-heading">Select Date</h4>
-                <div className="dates-row">
-                  {['Today (Earliest)', 'Tomorrow', 'Day After Tomorrow'].map(d => (
-                    <button key={d} className={`date-btn ${selectedDate === d ? 'active' : ''}`} onClick={() => setSelectedDate(d)}>{d}</button>
+                {/* Date Selection */}
+                <h3 className="schedule-card-title" style={{ marginTop: '24px' }}>Preferred Date</h3>
+                <div className="date-options-row">
+                  {['Today (Earliest)', 'Tomorrow', 'This Weekend', 'Next Monday'].map(d => (
+                    <button key={d} className={`date-chip ${selectedDate === d ? 'active' : ''}`} onClick={() => setSelectedDate(d)}>
+                      {d}
+                    </button>
                   ))}
                 </div>
 
-                {/* Time */}
-                <h4 className="slots-heading">Select Time Slot</h4>
-                <div className="time-slots-grid">
-                  {timeSlots.map(time => (
-                    <button key={time} className={`time-slot-btn ${selectedTime === time ? 'active' : ''}`} onClick={() => setSelectedTime(time)}>{time}</button>
+                {/* Time Selection */}
+                <h3 className="schedule-card-title" style={{ marginTop: '24px' }}>Preferred Time Slot</h3>
+                <div className="time-slot-grid">
+                  {timeSlots.map(t => (
+                    <button key={t} className={`time-chip ${selectedTime === t ? 'active' : ''}`} onClick={() => setSelectedTime(t)}>
+                      {t}
+                    </button>
                   ))}
                 </div>
 
-                {/* Patient Details (prefilled) */}
-                <h4 className="slots-heading" style={{ marginTop: '28px' }}>Your Contact Details</h4>
-                <div className="schedule-patient-fields">
-                  <div className="form-row">
-                    <div className="form-field">
-                      <label>Full Name</label>
-                      <input
-                        type="text"
-                        value={patientName}
-                        onChange={e => setPatientName(e.target.value)}
-                        placeholder="Your full name"
-                        required
-                      />
-                    </div>
-                    <div className="form-field">
-                      <label>Phone Number</label>
-                      <input
-                        type="tel"
-                        value={patientPhone}
-                        onChange={e => setPatientPhone(e.target.value)}
-                        placeholder="+91 XXXXX XXXXX"
-                        required
-                      />
-                    </div>
+                {/* Patient Info */}
+                <h3 className="schedule-card-title" style={{ marginTop: '28px' }}>Patient Details</h3>
+                <div className="patient-form-grid">
+                  <div className="form-group">
+                    <label>Full Name *</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Your full name"
+                      value={patientName}
+                      onChange={e => setPatientName(e.target.value)}
+                    />
                   </div>
-                  <div className="form-field form-field-full">
-                    <label>Email (pre-filled from account)</label>
-                    <input type="email" value={user?.email || ''} readOnly className="readonly-input" />
+                  <div className="form-group">
+                    <label>Phone Number *</label>
+                    <input
+                      type="tel"
+                      className="form-input"
+                      placeholder="+91 98765 43210"
+                      value={patientPhone}
+                      onChange={e => setPatientPhone(e.target.value)}
+                    />
                   </div>
-
-                  {/* Attach report toggle */}
-                  <div className="ai-report-attachment-box" style={{ marginTop: '12px' }}>
-                    <label className="ai-report-checkbox">
-                      <input type="checkbox" checked={attachReport} onChange={e => setAttachReport(e.target.checked)} />
-                      <div>
-                        <strong>Attach Assessment Summary to Email</strong>
-                        <p>Sends your PHQ-9/GAD-7 scores to {selectedDoctor.name} for a more personalized session.</p>
-                      </div>
-                    </label>
+                  <div className="form-group full-width">
+                    <label>What would you like to discuss with the doctor? (Optional)</label>
+                    <textarea
+                      className="form-textarea"
+                      rows={3}
+                      placeholder="e.g. Having severe panic attacks since 2 weeks, trouble sleeping…"
+                      value={userConcerns}
+                      onChange={e => setUserConcerns(e.target.value)}
+                    />
                   </div>
                 </div>
 
-                <div className="schedule-actions-row">
-                  <button className="btn btn-outline" onClick={() => setCurrentStep(1)}>← Change Specialist</button>
+                {/* Attach Assessment Report toggle */}
+                <div className="attach-report-toggle" onClick={() => setAttachReport(!attachReport)}>
+                  <div className={`checkbox-custom ${attachReport ? 'checked' : ''}`}>
+                    {attachReport && '✓'}
+                  </div>
+                  <div>
+                    <strong>Attach My Clinical Assessment Summary to Doctor's Email</strong>
+                    <p>Includes your PHQ-9, GAD-7, or other screener scores so the doctor can prepare before your session.</p>
+                  </div>
+                </div>
+
+                <div className="step-action-row">
+                  <button className="btn btn-outline" onClick={() => setCurrentStep(1)}>
+                    ← Back to Specialists
+                  </button>
                   <button
-                    className="btn btn-primary"
+                    className="btn btn-primary step-next-btn"
                     onClick={() => setCurrentStep(3)}
                     disabled={!patientName.trim() || !patientPhone.trim()}
                   >
@@ -859,15 +894,42 @@ const Appointment: React.FC = () => {
 
           {/* CONFIRMED STATE */}
           {currentStep === 'confirmed' && bookedAppointment && selectedDoctor && (
-            <div className="confirmed-receipt-card">
-              <div className="success-icon-badge">✓</div>
+            <div className={`confirmed-receipt-card status-${appointmentStatus}`}>
+              <div className={`success-icon-badge ${
+                appointmentStatus === 'confirmed' ? 'status-confirmed-badge' :
+                appointmentStatus === 'rejected' ? 'status-rejected-badge' :
+                appointmentStatus === 'expired' ? 'status-expired-badge' :
+                appointmentStatus === 'rescheduled' ? 'status-rescheduled-badge' :
+                'status-pending-badge'
+              }`}>
+                {appointmentStatus === 'confirmed' ? '✓' :
+                 appointmentStatus === 'rejected' ? '✕' :
+                 appointmentStatus === 'rescheduled' ? '🔄' :
+                 appointmentStatus === 'expired' ? '⌛' : '⏳'}
+              </div>
               <h2 className="confirmed-title">
-                {isDummyDoctor ? 'Appointment Booked! (Demo Mode)' : 'Appointment Request Sent!'}
+                {appointmentStatus === 'confirmed'
+                  ? '🎉 Appointment Confirmed!'
+                  : appointmentStatus === 'rejected'
+                  ? '❌ Requested Slot Unavailable (No Slots Left)'
+                  : appointmentStatus === 'rescheduled'
+                  ? '🔄 Alternative Slot Proposed by Clinic'
+                  : appointmentStatus === 'expired'
+                  ? '⏳ Request Expired (24-Hour SLA Window)'
+                  : '⏳ Appointment Request Sent — Pending Confirmation'}
               </h2>
               <p className="confirmed-desc">
-                {isDummyDoctor
-                  ? <>This doctor is in <strong>demo mode</strong> — no real email was sent. Your booking is saved. You can use this to demonstrate the flow.</>
-                  : <>Our AI Agent has emailed <strong>{selectedDoctor.clinicName}</strong> on your behalf. You'll see a reply summary here once the clinic responds.</>
+                {appointmentStatus === 'confirmed'
+                  ? <>Dr. <strong>{selectedDoctor.name}</strong> ({selectedDoctor.clinicName}) has confirmed your appointment for <strong>{selectedDate} at {selectedTime}</strong>.</>
+                  : appointmentStatus === 'rejected'
+                  ? <>Dr. <strong>{selectedDoctor.name}</strong> is currently fully booked for this time window. We recommend choosing an alternative date or picking another top-matched specialist below.</>
+                  : appointmentStatus === 'rescheduled'
+                  ? <>The clinic has suggested an alternative consultation time. Please review the AI summary below.</>
+                  : appointmentStatus === 'expired'
+                  ? <>No response was received from <strong>{selectedDoctor.clinicName}</strong> within the 24-hour SLA window. Your request has been automatically suspended to save your time.</>
+                  : isDummyDoctor
+                  ? <>This doctor is in <strong>demo mode</strong> — request is stored in pending status for demonstration.</>
+                  : <>Your appointment is currently <strong>Pending Confirmation</strong>. Our AI Agent has emailed <strong>{selectedDoctor.clinicName}</strong> on your behalf (24-Hour Response SLA). Once the doctor confirms, this screen and your profile will automatically update to <strong>Confirmed</strong>.</>
                 }
               </p>
 
@@ -894,10 +956,12 @@ const Appointment: React.FC = () => {
                   <div className={`t-step ${clinicReplySummary ? 'done' : 'pending'}`}>
                     <div className={`t-dot ${clinicReplySummary ? 'done' : 'pending'}`}></div>
                     <div className="t-content">
-                      <strong>Clinic Reply</strong>
+                      <strong>Clinic Reply / SLA</strong>
                       <span>{clinicReplySummary
-                        ? (appointmentStatus === 'confirmed' ? '✅ Confirmed!' : '🔄 Rescheduled')
-                        : 'Awaiting clinic response…'
+                        ? (appointmentStatus === 'confirmed' ? '✅ Confirmed!' :
+                           appointmentStatus === 'rejected' ? '❌ No Slots Left' :
+                           appointmentStatus === 'expired' ? '⏳ 24h SLA Expired' : '🔄 Rescheduled')
+                        : 'Awaiting clinic response (24h SLA)…'
                       }</span>
                     </div>
                   </div>
@@ -914,41 +978,67 @@ const Appointment: React.FC = () => {
                 )}
               </div>
 
-              {/* Live auto-check indicator + Simulate fallback */}
+              {/* Live auto-check indicator + Simulation Bar for Testing/Judges */}
               {!clinicReplySummary && (
                 <div className="live-poll-section">
                   <div className="live-poll-indicator">
                     <span className="live-poll-dot"></span>
                     <span>
-                      <strong>Auto-checking for clinic reply…</strong>
+                      <strong>Auto-checking for clinic reply… (24h SLA Window)</strong>
                       <br />
-                      <small>When {selectedDoctor.clinicName} replies to the email, it will appear here automatically.</small>
+                      <small>When {selectedDoctor.clinicName} replies via email, it will appear here automatically.</small>
                     </span>
                   </div>
-                  <button
-                    className="btn btn-outline simulate-reply-btn"
-                    onClick={handleSimulateReply}
-                    disabled={isSimulatingReply}
-                    style={{ marginTop: '12px' }}
-                  >
-                    {isSimulatingReply ? (
-                      <><span className="btn-spinner"></span> AI Summarizing Clinic Reply…</>
-                    ) : (
-                      '📥 Simulate Clinic Reply (Demo — don\'t wait)'
-                    )}
-                  </button>
+
+                  {/* Demo simulation toolbar */}
+                  <div className="demo-simulation-toolbar">
+                    <p className="demo-sim-label">⚡ Demo Simulation Shortcuts (Test All Clinic Outcomes):</p>
+                    <div className="demo-sim-buttons">
+                      <button
+                        className="demo-sim-btn btn-sim-confirm"
+                        onClick={() => handleSimulateReply('confirmed')}
+                        disabled={isSimulatingReply}
+                      >
+                        ✅ Simulate Confirmed
+                      </button>
+                      <button
+                        className="demo-sim-btn btn-sim-reject"
+                        onClick={() => handleSimulateReply('rejected')}
+                        disabled={isSimulatingReply}
+                      >
+                        ❌ Simulate Declined (No Slots)
+                      </button>
+                      <button
+                        className="demo-sim-btn btn-sim-resched"
+                        onClick={() => handleSimulateReply('rescheduled')}
+                        disabled={isSimulatingReply}
+                      >
+                        🔄 Simulate Reschedule
+                      </button>
+                      <button
+                        className="demo-sim-btn btn-sim-expire"
+                        onClick={() => handleSimulateReply('expired')}
+                        disabled={isSimulatingReply}
+                      >
+                        ⏳ Simulate 24h Expiry
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
 
-
               {/* AI-Summarized Clinic Reply */}
               {clinicReplySummary && (
-                <div className={`clinic-reply-card ${appointmentStatus === 'confirmed' ? 'confirmed' : 'rescheduled'}`}>
+                <div className={`clinic-reply-card ${appointmentStatus}`}>
                   <div className="clinic-reply-header">
                     <div className="clinic-reply-icon">🤖</div>
                     <div>
-                      <strong>AI Summary of Clinic Reply</strong>
-                      <span className="reply-status-pill">{appointmentStatus === 'confirmed' ? '✅ Confirmed' : '🔄 Rescheduled'}</span>
+                      <strong>AI Summary of Clinic Decision</strong>
+                      <span className={`reply-status-pill pill-${appointmentStatus}`}>
+                        {appointmentStatus === 'confirmed' ? '✅ Confirmed' :
+                         appointmentStatus === 'rejected' ? '❌ No Slots Left' :
+                         appointmentStatus === 'expired' ? '⏳ Expired (24h)' : '🔄 Rescheduled'}
+                      </span>
                     </div>
                   </div>
                   <div className="clinic-reply-summary-text">
@@ -956,14 +1046,19 @@ const Appointment: React.FC = () => {
                       <p key={i}>{line}</p>
                     ))}
                   </div>
-                  <button className="show-raw-btn" onClick={() => setShowRawReply(!showRawReply)}>
-                    {showRawReply ? '▲ Hide' : '▼ Show'} raw clinic email
-                  </button>
-                  {showRawReply && (
-                    <pre className="raw-reply-text">{clinicReplyRaw}</pre>
+                  {clinicReplyRaw && (
+                    <>
+                      <button className="show-raw-btn" onClick={() => setShowRawReply(!showRawReply)}>
+                        {showRawReply ? '▲ Hide' : '▼ Show'} raw clinic email
+                      </button>
+                      {showRawReply && (
+                        <pre className="raw-reply-text">{clinicReplyRaw}</pre>
+                      )}
+                    </>
                   )}
                 </div>
               )}
+
 
               {/* Booking Details */}
               <div className="receipt-details-box">

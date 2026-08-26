@@ -238,23 +238,24 @@ const Profile: React.FC = () => {
 
       {/* Appointment Notification Banner */}
       {showApptNotif && latestAppt && (
-        <div className="appt-notif-banner">
+        <div className={`appt-notif-banner ${latestAppt.status === 'confirmed' ? 'banner-confirmed' : 'banner-pending'}`}>
           <div className="appt-notif-icon">
-            {latestAppt.status === 'confirmed' ? '✅' : latestAppt.status === 'demo_no_email' ? '⚪' : '📬'}
+            {latestAppt.status === 'confirmed' ? '✅' : '⏳'}
           </div>
           <div className="appt-notif-content">
             <strong>
               {latestAppt.status === 'confirmed'
-                ? 'Appointment Confirmed!'
-                : latestAppt.status === 'demo_no_email'
-                ? 'Appointment Booked (Demo Mode)'
-                : 'Appointment Request Sent'}
+                ? `✅ Appointment Confirmed with ${latestAppt.doctorName}!`
+                : `⏳ Appointment Status: Pending Clinic Confirmation`}
             </strong>
             <span>
-              {latestAppt.doctorName} · {latestAppt.clinicName} · {latestAppt.date} at {latestAppt.time} ({latestAppt.mode})
+              {latestAppt.status === 'confirmed'
+                ? `Your appointment is fixed for ${latestAppt.date} at ${latestAppt.time} (${latestAppt.mode}) at ${latestAppt.clinicName}.`
+                : `Request sent to ${latestAppt.doctorName} (${latestAppt.clinicName}) for ${latestAppt.date} at ${latestAppt.time}. Awaiting confirmation email.`}
               &nbsp;·&nbsp; Ref: <em>#{latestAppt.bookingRef}</em>
             </span>
           </div>
+
           <button
             className="appt-notif-dismiss"
             onClick={() => {

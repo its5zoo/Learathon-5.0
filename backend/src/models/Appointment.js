@@ -40,7 +40,7 @@ const appointmentSchema = new mongoose.Schema(
     // Booking status
     status: {
       type: String,
-      enum: ['pending_email', 'request_sent', 'confirmed', 'rescheduled', 'cancelled'],
+      enum: ['pending_email', 'request_sent', 'confirmed', 'rescheduled', 'rejected', 'expired', 'cancelled'],
       default: 'pending_email',
     },
     confirmedDateTime: { type: String },

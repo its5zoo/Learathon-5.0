@@ -52,14 +52,26 @@ const extractBookingRefs = (text) => {
   return matches ? [...new Set(matches)] : [];
 };
 
-// ── Determine if reply is confirmation or reschedule ──────────────────────────
+// ── Determine if reply is confirmation, reschedule, or rejection ──────────────
 const detectReplyType = (text) => {
   const lower = text.toLowerCase();
-  const confirmWords = ['confirm', 'confirmed', 'pleased to confirm', 'appointment is set', 'see you', 'scheduled'];
-  const rescheduleWords = ['reschedule', 'alternative', 'not available', 'unavailable', 'suggest', 'different time', 'cannot accommodate'];
-  
-  if (confirmWords.some(w => lower.includes(w))) return 'confirmed';
+  const rejectWords = [
+    'reject', 'rejected', 'declined', 'decline', 'no slot', 'no slots',
+    'fully booked', 'cannot accept', 'not accepting', 'unavailable today',
+    'slots full', 'capacity reached', 'cancel request', 'cancelled', 'sorry'
+  ];
+  const rescheduleWords = [
+    'reschedule', 'alternative time', 'different time', 'suggest another',
+    'next week', 'postpone', 'moved to', 'different date', 'slots available at', 'alternative slot'
+  ];
+  const confirmWords = [
+    'confirm', 'confirmed', 'pleased to confirm', 'appointment is set',
+    'see you', 'scheduled', 'slot booked', 'accepted', 'approved'
+  ];
+
+  if (rejectWords.some(w => lower.includes(w))) return 'rejected';
   if (rescheduleWords.some(w => lower.includes(w))) return 'rescheduled';
+  if (confirmWords.some(w => lower.includes(w))) return 'confirmed';
   return 'confirmed'; // default assume confirmation
 };
 
@@ -67,6 +79,29 @@ const detectReplyType = (text) => {
 const pollInbox = async () => {
   if (isPolling) return; // Prevent overlapping runs
   isPolling = true;
+
+  // ── 1. Automatic 24-Hour Timeout / SLA Expiry Sweep ──────────────────────────
+  try {
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const expiredRes = await Appointment.updateMany(
+      {
+        status: { $in: ['request_sent', 'pending_email'] },
+        createdAt: { $lt: twentyFourHoursAgo },
+      },
+      {
+        $set: {
+          status: 'expired',
+          clinicReplySummary: '⏳ 24-Hour SLA Expired: The clinic did not respond within the 24-hour response window. Your request has been automatically suspended to save your time. Please book another available specialist.',
+          replyReceivedAt: new Date(),
+        }
+      }
+    );
+    if (expiredRes.modifiedCount > 0) {
+      console.log(`⏱️ IMAP: Auto-expired ${expiredRes.modifiedCount} overdue appointment request(s).`);
+    }
+  } catch (sweepErr) {
+    console.warn('IMAP 24h sweep warning:', sweepErr.message);
+  }
 
   const GMAIL_USER = process.env.GMAIL_USER;
   const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
@@ -87,6 +122,12 @@ const pollInbox = async () => {
     },
     logger: false, // Suppress verbose IMAP logs
   });
+
+  // Handle socket / connection errors gracefully so Node never crashes on ECONNRESET
+  client.on('error', (err) => {
+    console.warn('📬 IMAP socket error (handled):', err.message);
+  });
+
 
   try {
     await client.connect();
@@ -170,8 +211,11 @@ Focus on: (1) whether the appointment is confirmed or needs rescheduling, (2) ke
             const finalSummary = summary || (
               replyType === 'confirmed'
                 ? `✅ Your appointment has been confirmed\n📋 Please check your email for further details from the clinic\n📞 Contact the clinic if you need any changes`
+                : replyType === 'rejected'
+                ? `❌ Requested slot unavailable (No slots left)\n👨‍⚕️ The doctor is currently fully booked for this time\n🔄 Please select another date or pick another recommended specialist`
                 : `🔄 The clinic has suggested an alternative slot\n📧 Please reply to their email to confirm the new time\n📞 You can also call the clinic directly`
             );
+
 
             // Update appointment in DB
             await Appointment.findByIdAndUpdate(matched._id, {
