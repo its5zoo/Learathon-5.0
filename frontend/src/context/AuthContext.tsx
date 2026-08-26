@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-
-const API_URL = 'http://localhost:5000/api';
+import { API_URL } from '../config';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface EmergencyContact {

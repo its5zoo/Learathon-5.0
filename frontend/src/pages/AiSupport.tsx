@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { API_URL as API } from '../config';
 import './AiSupport.css';
-
-const API = 'http://localhost:5000/api';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Message {

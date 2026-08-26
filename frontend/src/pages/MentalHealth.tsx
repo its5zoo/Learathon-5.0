@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../config';
 import './MentalHealth.css';
-
-const API_URL = 'http://localhost:5000/api';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface QuestionOption {
