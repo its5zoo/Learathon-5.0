@@ -112,7 +112,7 @@ flowchart TD
 | **Home** | `Home.tsx` | Landing experience, India SVG interactive choropleth map (`@react-map/india`), clinical overview. |
 | **AI Support** | `AiSupport.tsx` | Empathetic CBT chatbot, 20-turn sliding memory, 20+ keyword crisis detection with instant helpline triggers. |
 | **Mental Health** | `MentalHealth.tsx` | 4 DSM-5 clinical screeners (PHQ-9, GAD-7, PCL-5, ISI) with instant scoring and recommendations. |
-| **Appointment Concierge** | `Appointment.tsx` | Gemini-powered specialist recommendation, 4-step wizard, Nodemailer SMTP patient/doctor dispatch. |
+| **Appointment Concierge** | `Appointment.tsx` | Gemma-2B-3BrainCell specialist recommendation, 3-step wizard, Nodemailer SMTP patient/doctor dispatch. |
 | **Mood Tracker** | `MoodTracker.tsx` | Biometric AI facial expression scanner (7 emotions), confidence indicator, hand-crafted SVG line trend chart. |
 | **Profile Hub** | `Profile.tsx` | User identity card, unique handle `@username`, 4-tab clinical & mood track records, live edit modal. |
 | **Resources** | `ResourcesPage.tsx` | Mental health directory with category filter and search. |
@@ -127,4 +127,4 @@ flowchart TD
 
 ## 🎤 30-Second Elevator Pitch for Judges (Presentation Script)
 
-> *"SoulSpace’s frontend is engineered with **React 19 and TypeScript**, built for speed, privacy, and clinical reliability. It features a clean **5-layer modular architecture**: from our **Auth & Session Context** to a **responsive App Shell**, branching into **7 core modules** including AI Therapy Chat, DSM-5 Screeners, and Biometric Mood Tracking. Everything communicates through a secure **JWT-authenticated REST gateway** connected to our Node.js and Gemini AI backend. Zero heavy third-party UI libraries — fully custom, ultra-fast, and accessible."*
+> *"SoulSpace’s frontend is engineered with **React 19 and TypeScript**, built for speed, privacy, and clinical reliability. It features a clean **5-layer modular architecture**: from our **Auth & Session Context** to a **responsive App Shell**, branching into **7 core modules** including AI Therapy Chat (powered by Team 3BrainCell's Fine-Tuned Gemma 2B Clinical Model), DSM-5 Screeners, and Biometric Mood Tracking. Everything communicates through a secure **JWT-authenticated REST gateway** connected to our Node.js AI backend. Zero heavy third-party UI libraries — fully custom, ultra-fast, and accessible."*

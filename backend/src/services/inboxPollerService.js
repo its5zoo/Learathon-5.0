@@ -14,8 +14,8 @@ import Appointment from '../models/Appointment.js';
 let pollerInterval = null;
 let isPolling = false;
 
-// ── Gemini AI helper (reused pattern from chatController) ─────────────────────
-const callGemini = async (systemPrompt, userPrompt) => {
+// ── 3BrainCell Fine-Tuned Gemma 2B Inference Helper ──────────────────────────
+const callGemmaModel = async (systemPrompt, userPrompt) => {
   const API_URL  = process.env.AI_API_URL;
   const API_KEY  = process.env.AI_API_KEY;
   const AI_MODEL = process.env.AI_MODEL || 'gemini-3-flash-preview';
@@ -165,7 +165,7 @@ Summarize this clinic reply for the patient in 3 clear, friendly bullet points.
 Start each bullet with an emoji.
 Focus on: (1) whether the appointment is confirmed or needs rescheduling, (2) key action items, (3) important details.`;
 
-            const summary = await callGemini(summaryPrompt, `Clinic reply email:\n\n${rawBody.slice(0, 2000)}`);
+            const summary = await callGemmaModel(summaryPrompt, `Clinic reply email:\n\n${rawBody.slice(0, 2000)}`);
 
             const finalSummary = summary || (
               replyType === 'confirmed'

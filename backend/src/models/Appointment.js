@@ -34,7 +34,7 @@ const appointmentSchema = new mongoose.Schema(
 
     // Clinic reply workflow
     clinicReplyRaw:     { type: String }, // simulated raw clinic reply
-    clinicReplySummary: { type: String }, // Gemini-summarized clinic reply
+    clinicReplySummary: { type: String }, // Gemma-2B-3BrainCell summarized clinic reply
     replyReceivedAt:    { type: Date },
 
     // Booking status

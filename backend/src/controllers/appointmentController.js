@@ -6,7 +6,7 @@ import { sendAppointmentRequestEmail, sendConfirmationToPatient } from '../servi
 // NOTE: env vars are read lazily inside the function (not at module level)
 // because ESM imports are hoisted before dotenv.config() can run.
 // ──────────────────────────────────────────────────────────────────────────────
-const callGemini = async (systemPrompt, userPrompt) => {
+const callGemmaModel = async (systemPrompt, userPrompt) => {
   const API_URL  = process.env.AI_API_URL;
   const API_KEY  = process.env.AI_API_KEY;
   const AI_MODEL = process.env.AI_MODEL || 'gemini-3-flash-preview';
@@ -216,7 +216,7 @@ Return exactly 3 doctor recommendations as a JSON array. Prioritize based on: sp
 
     let recommendations;
     try {
-      const aiResponse = await callGemini(systemPrompt, userPrompt);
+      const aiResponse = await callGemmaModel(systemPrompt, userPrompt);
       // Strip any accidental markdown code fences
       const cleaned = aiResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       recommendations = JSON.parse(cleaned);
@@ -279,7 +279,7 @@ export const bookAppointment = async (req, res) => {
         const summaryData = assessmentHistory.slice(-4).map(a =>
           `${a.assessmentName}: Score ${a.score}/${a.maxScore} — ${a.severity} (${a.interpretation})`
         ).join('; ');
-        assessmentSummary = await callGemini(summaryPrompt, `Assessment results: ${summaryData}`);
+        assessmentSummary = await callGemmaModel(summaryPrompt, `Assessment results: ${summaryData}`);
       } catch (e) {
         console.warn('Assessment summary AI failed:', e.message);
         assessmentSummary = assessmentHistory.slice(-4).map(a =>
@@ -411,7 +411,7 @@ export const simulateClinicReply = async (req, res) => {
     let clinicReplySummary = '';
     try {
       const summaryPrompt = `You are the SoulSpace AI concierge. Summarize this clinic's email reply for the patient in 2–3 clear, friendly bullet points. Start each bullet with an emoji. Focus on: (1) whether appointment is confirmed or rescheduled, (2) key action items for the patient, (3) any important details (time, instructions).`;
-      clinicReplySummary = await callGemini(summaryPrompt, `Clinic email:\n\n${clinicReplyRaw}`);
+      clinicReplySummary = await callGemmaModel(summaryPrompt, `Clinic email:\n\n${clinicReplyRaw}`);
     } catch (aiErr) {
       console.warn('Reply summarization AI failed:', aiErr.message);
       clinicReplySummary = isConfirmed

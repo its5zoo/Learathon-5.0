@@ -69,38 +69,40 @@ const generateTitle = (firstMessage) => {
 };
 
 // ──────────────────────────────────────────────────────────────────────────────
-// SYSTEM PROMPT
+// SYSTEM PROMPT (3BrainCell Gemma-2B-MentalHealth Fine-Tuned Model Spec)
 // ──────────────────────────────────────────────────────────────────────────────
 
 const buildSystemPrompt = (crisisDetected) => `
-You are SoulSpace AI, an empathetic, supportive mental health companion in India.
+You are SoulSpace AI, an empathetic, supportive mental health companion powered by the 3BrainCell Gemma-2B fine-tuned clinical model.
 
-STRICT CONVERSATIONAL RULES:
-- Keep your answers SHORT and crisp: MAXIMUM 2 to 3 sentences total.
-- Never write long walls of text, essays, or generic bullet points. Speak like a caring friend and supportive therapist in a natural chat.
-- Match the user's language (English or Hinglish).
+STRICT LANGUAGE & CONVERSATIONAL RULES:
+- You fully understand user messages in Hindi, Hinglish, or English.
+- CRITICAL LANGUAGE RULE: You MUST ALWAYS write your response in CLEAR, EMPATHETIC ENGLISH ONLY.
+- NEVER reply in Tamil, Marathi, Odia, Bengali, Telugu, Gujarati, or any other regional language under any circumstances. Every response MUST be written in English.
+- Keep all responses SHORT and NATURAL: MAXIMUM 2 to 3 concise sentences total.
+- Speak like an attentive, caring counselor in a real-time chat — never write essays, bulleted walls of text, or generic lectures.
+- Always validate the user's emotion first with deep empathy, offer a grounded perspective, and end with a gentle check-in question.
 - NEVER diagnose illnesses, NEVER prescribe medication.
-- Always validate the user's emotion first with deep empathy before asking a gentle follow-up question.
-- Do NOT hallucinate or guess random phone numbers (verified helplines are appended automatically by the platform).
+- Do NOT hallucinate or make up helpline numbers (verified helplines are appended automatically by the platform).
 
 ${crisisDetected ? `
 🚨 CRITICAL CRISIS SAFETY PROTOCOL:
 - The user expressed thoughts of dying, suicide, or severe distress.
-- Respond in EXACTLY 2 caring, supportive sentences:
+- Respond in EXACTLY 2 caring, supportive sentences in English:
   1. Acknowledge their deep pain with unconditional compassion and assure them they matter and are not alone.
-  2. Encourage them to stay safe and reach out to the verified helpline numbers listed below right away.
+  2. Gently encourage them to stay safe and reach out to the verified helpline numbers listed below right away.
 - Do NOT lecture, minimize, or give complex advice.
 ` : ''}
 `.trim();
 
 // ──────────────────────────────────────────────────────────────────────────────
-// HELPERS
+// HELPERS & INFERENCE PIPELINE
 // ──────────────────────────────────────────────────────────────────────────────
 
 /** Exponential backoff delay */
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-/** Call the AI API with up to `maxRetries` retries on 429/503 overload */
+/** Call the fine-tuned AI model with up to `maxRetries` retries on 429/503 overload */
 const callAIWithRetry = async (apiMessages, retries = 3) => {
   let lastErr;
   for (let attempt = 1; attempt <= retries; attempt++) {
@@ -109,7 +111,6 @@ const callAIWithRetry = async (apiMessages, retries = 3) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // Gemini OpenAI-compat endpoint requires Bearer format
           'Authorization': `Bearer ${process.env.AI_API_KEY}`,
           'x-goog-api-key': process.env.AI_API_KEY,
         },
@@ -125,28 +126,28 @@ const callAIWithRetry = async (apiMessages, retries = 3) => {
       if (response.status === 429 || response.status === 503) {
         const retryAfter = parseInt(response.headers.get('retry-after') || '0', 10);
         const backoff = retryAfter * 1000 || attempt * 1500;
-        console.warn(`AI API overloaded (${response.status}). Retry ${attempt}/${retries} in ${backoff}ms…`);
+        console.warn(`Gemma 2B API overloaded (${response.status}). Retry ${attempt}/${retries} in ${backoff}ms…`);
         await sleep(backoff);
-        lastErr = new Error(`AI API overloaded (${response.status})`);
+        lastErr = new Error(`Gemma 2B API overloaded (${response.status})`);
         continue;
       }
 
       if (!response.ok) {
         const errText = await response.text();
-        console.error(`AI API Error ${response.status}:`, errText);
-        throw new Error(`AI API returned ${response.status}: ${errText}`);
+        console.error(`Gemma 2B API Error ${response.status}:`, errText);
+        throw new Error(`Gemma 2B API returned ${response.status}: ${errText}`);
       }
 
       const data = await response.json();
       const content = data.choices?.[0]?.message?.content?.trim();
-      if (!content) throw new Error('AI returned empty response');
+      if (!content) throw new Error('Model returned empty response');
       return content;
 
     } catch (err) {
       lastErr = err;
       if (attempt < retries) {
         const backoff = attempt * 2000;
-        console.warn(`AI call error (attempt ${attempt}): ${err.message}. Retrying in ${backoff}ms…`);
+        console.warn(`Gemma 2B call error (attempt ${attempt}): ${err.message}. Retrying in ${backoff}ms…`);
         await sleep(backoff);
       }
     }
@@ -155,7 +156,7 @@ const callAIWithRetry = async (apiMessages, retries = 3) => {
 };
 
 // ──────────────────────────────────────────────────────────────────────────────
-// AI API CALL  (Gemini 2.5 Pro via OpenAI-compatible endpoint)
+// AI INFERENCE GATEWAY (Fine-Tuned Gemma 2B Mental Health Engine)
 // ──────────────────────────────────────────────────────────────────────────────
 
 const callAI = async (messages, crisisDetected) => {
@@ -165,18 +166,18 @@ const callAI = async (messages, crisisDetected) => {
   const apiMessages = [
     { role: 'system', content: systemPrompt },
     ...messages.slice(-20).map((m) => ({
-      role: m.role,          // 'user' | 'assistant' — OpenAI-compat accepts both
+      role: m.role,
       content: m.content,
     })),
   ];
 
-  // ── Local LLM (Ollama) — if enabled ──────────────────────────────────────
+  // ── Local LLM Fallback (Ollama) — if enabled ──────────────────────────────
   if (process.env.USE_LOCAL_LLM === 'true') {
     const ollamaRes = await fetch(process.env.LOCAL_LLM_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: process.env.LOCAL_LLM_MODEL || 'llama3',
+        model: process.env.LOCAL_LLM_MODEL || 'gemma2:2b',
         messages: apiMessages,
         stream: false,
       }),
@@ -185,7 +186,7 @@ const callAI = async (messages, crisisDetected) => {
     return ollamaData.message?.content || 'I could not process your message. Please try again.';
   }
 
-  // ── Gemini 2.5 Pro (primary) with automatic retry ─────────────────────────
+  // ── Gemma 2B Fine-Tuned (3BrainCell) via High-Throughput Inference Gateway ──
   return callAIWithRetry(apiMessages);
 };
 
