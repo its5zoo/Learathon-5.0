@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import { useAuth } from '../context/AuthContext';
 import { API_URL } from '../config';
 import './MoodTracker.css';
+
 
 interface MoodEntry {
   id: string;
@@ -101,10 +102,9 @@ const initialSampleEntries: MoodEntry[] = [
   }
 ];
 
-const past7Days = ['18 Aug', '19 Aug', '20 Aug', '21 Aug', '22 Aug', '23 Aug', 'Today'];
-
 const MoodTracker: React.FC = () => {
   const navigate = useNavigate();
+
   const { user, isLoggedIn, token } = useAuth();
 
   // ── MediaPipe FaceLandmarker Ref ────────────────────────────────────────────
@@ -183,12 +183,65 @@ const MoodTracker: React.FC = () => {
     }
   }, [moodEntries]);
 
+  // ── Dynamic 7-Day Mood Trend Computation ────────────────────────────────────
+  const [hoveredPoint, setHoveredPoint] = useState<any | null>(null);
+
+  const chartPoints = useMemo(() => {
+    if (!moodEntries || moodEntries.length === 0) return [];
+    const recent = moodEntries.slice(-7);
+
+    const moodLevels: Record<string, number> = {
+      'Surprise': 7,
+      'Happy': 6,
+      'Calm': 5,
+      'Neutral': 4,
+      'Sad': 3,
+      'Fear': 2,
+      'Angry': 1,
+    };
+
+    const moodColors: Record<string, string> = {
+      'Surprise': '#f59e0b',
+      'Happy': '#10b981',
+      'Calm': '#06b6d4',
+      'Neutral': '#64748b',
+      'Sad': '#3b82f6',
+      'Fear': '#8b5cf6',
+      'Angry': '#ef4444',
+    };
+
+    return recent.map((entry, idx) => {
+      const level = entry.level || moodLevels[entry.mood] || 4;
+      const x = recent.length === 1 ? 350 : 50 + idx * (600 / (recent.length - 1));
+      // Level 7 -> y=25, Level 1 -> y=205
+      const y = 25 + (7 - level) * 30;
+      const color = moodColors[entry.mood] || '#3b82f6';
+      return {
+        ...entry,
+        level,
+        x,
+        y,
+        color,
+      };
+    });
+  }, [moodEntries]);
+
+  const svgPathD = useMemo(() => {
+    if (chartPoints.length === 0) return '';
+    if (chartPoints.length === 1) return `M ${chartPoints[0].x} ${chartPoints[0].y}`;
+    return chartPoints.reduce((acc: string, pt: any, i: number) => {
+      return i === 0 ? `M ${pt.x} ${pt.y}` : `${acc} L ${pt.x} ${pt.y}`;
+    }, '');
+  }, [chartPoints]);
+
+
   // Clean up camera stream on unmount
   useEffect(() => {
     return () => {
       stopCamera();
     };
   }, []);
+
 
   // ── Camera Control Handlers ─────────────────────────────────────────────────
   const startCamera = async () => {
@@ -627,40 +680,100 @@ const MoodTracker: React.FC = () => {
                 </div>
 
                 {/* SVG Line Graph */}
-                <div className="chart-plot-area">
+                <div className="chart-plot-area" style={{ position: 'relative' }}>
                   <svg className="mood-line-svg" viewBox="0 0 700 240" preserveAspectRatio="none">
-                    <line x1="0" y1="34" x2="700" y2="34" stroke="#f1f5f9" strokeWidth="1" />
-                    <line x1="0" y1="68" x2="700" y2="68" stroke="#f1f5f9" strokeWidth="1" />
-                    <line x1="0" y1="102" x2="700" y2="102" stroke="#f1f5f9" strokeWidth="1" />
-                    <line x1="0" y1="136" x2="700" y2="136" stroke="#f1f5f9" strokeWidth="1" />
-                    <line x1="0" y1="170" x2="700" y2="170" stroke="#f1f5f9" strokeWidth="1" />
-                    <line x1="0" y1="204" x2="700" y2="204" stroke="#f1f5f9" strokeWidth="1" />
+                    <defs>
+                      <linearGradient id="moodLineGrad" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="#3b82f6" />
+                        <stop offset="50%" stopColor="#06b6d4" />
+                        <stop offset="100%" stopColor="#10b981" />
+                      </linearGradient>
+                      <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#0284c7" floodOpacity="0.25"/>
+                      </filter>
+                    </defs>
 
-                    <path
-                      d="M 50 136 L 150 170 L 250 136 L 350 68 L 450 102 L 550 68 L 650 68"
-                      fill="none"
-                      stroke="#3b82f6"
-                      strokeWidth="3.5"
-                      strokeLinecap="round"
-                    />
+                    {/* Horizontal grid lines matching 7 mood levels */}
+                    {[25, 55, 85, 115, 145, 175, 205].map((yVal, i) => (
+                      <line key={i} x1="0" y1={yVal} x2="700" y2={yVal} stroke="#f1f5f9" strokeWidth="1.2" strokeDasharray={i % 2 === 0 ? "none" : "4 4"} />
+                    ))}
 
-                    {/* Data Points */}
-                    <circle cx="50" cy="136" r="6" fill="#3b82f6" stroke="#fff" strokeWidth="2" />
-                    <circle cx="150" cy="170" r="6" fill="#64748b" stroke="#fff" strokeWidth="2" />
-                    <circle cx="250" cy="136" r="6" fill="#3b82f6" stroke="#fff" strokeWidth="2" />
-                    <circle cx="350" cy="68" r="6" fill="#10b981" stroke="#fff" strokeWidth="2" />
-                    <circle cx="450" cy="102" r="6" fill="#06b6d4" stroke="#fff" strokeWidth="2" />
-                    <circle cx="550" cy="68" r="6" fill="#10b981" stroke="#fff" strokeWidth="2" />
-                    <circle cx="650" cy="68" r="7" fill="#10b981" stroke="#fff" strokeWidth="3" />
+                    {/* Dynamic Smooth Line Path */}
+                    {chartPoints.length > 1 && (
+                      <path
+                        d={svgPathD}
+                        fill="none"
+                        stroke="url(#moodLineGrad)"
+                        strokeWidth="3.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        filter="url(#shadow)"
+                      />
+                    )}
+
+                    {/* Interactive Real Data Points */}
+                    {chartPoints.map((pt: any, i: number) => (
+                      <g
+                        key={pt.id || i}
+                        className="chart-point-group"
+                        onMouseEnter={() => setHoveredPoint(pt)}
+                        onMouseLeave={() => setHoveredPoint(null)}
+                      >
+                        {hoveredPoint?.id === pt.id && (
+                          <circle cx={pt.x} cy={pt.y} r="14" fill={pt.color} opacity="0.25" />
+                        )}
+                        <circle
+                          cx={pt.x}
+                          cy={pt.y}
+                          r={hoveredPoint?.id === pt.id ? "8.5" : "6.5"}
+                          fill={pt.color}
+                          stroke="#ffffff"
+                          strokeWidth={hoveredPoint?.id === pt.id ? "3" : "2"}
+                          style={{ cursor: 'pointer', transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)' }}
+                        />
+                      </g>
+                    ))}
                   </svg>
+
+                  {/* Interactive Floating Tooltip */}
+                  {hoveredPoint && (
+                    <div
+                      className="chart-floating-tooltip"
+                      style={{
+                        left: `${Math.min(Math.max((hoveredPoint.x / 700) * 100, 15), 85)}%`,
+                        top: `${Math.max((hoveredPoint.y / 240) * 100 - 30, 5)}%`,
+                      }}
+                    >
+                      <div className="tooltip-header">
+                        <span className="tooltip-emoji">{hoveredPoint.emoji}</span>
+                        <strong>{hoveredPoint.mood}</strong>
+                        <span className="tooltip-score">({hoveredPoint.level}/7)</span>
+                      </div>
+                      <div className="tooltip-sub">
+                        📅 {hoveredPoint.date} • {hoveredPoint.time}
+                      </div>
+                      {hoveredPoint.note && (
+                        <div className="tooltip-note">"{hoveredPoint.note}"</div>
+                      )}
+                      <div className="tooltip-tag">{hoveredPoint.type}</div>
+                    </div>
+                  )}
                 </div>
               </div>
 
+              {/* Dynamic X-Axis Dates */}
               <div className="chart-x-axis">
-                {past7Days.map((d, i) => (
-                  <span key={i} className="x-label">{d}</span>
+                {chartPoints.map((pt: any, i: number) => (
+                  <span
+                    key={i}
+                    className={`x-label ${hoveredPoint?.id === pt.id ? 'active-x-label' : ''}`}
+                  >
+                    {pt.date}
+                  </span>
                 ))}
               </div>
+
+
             </div>
 
             {/* Right: Recent Mood Entries Log */}
