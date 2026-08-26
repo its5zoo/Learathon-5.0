@@ -163,15 +163,24 @@
   background-color: #090e14;
   border-color: #1e293b;
   color: #ffffff;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.resource-item-card.video-card.card-video-hovered {
+  border-color: rgba(56, 189, 248, 0.6);
+  box-shadow: 0 10px 30px rgba(56, 189, 248, 0.2);
+  transform: translateY(-4px);
 }
 
 .video-preview-thumb {
   position: relative;
   width: 100%;
-  height: 140px;
+  height: 155px;
   border-radius: 10px;
   overflow: hidden;
   margin-bottom: 16px;
+  background-color: #000000;
+  cursor: pointer;
 }
 
 .video-preview-thumb img {
@@ -185,16 +194,29 @@
   transform: scale(1.05);
 }
 
+.video-preview-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 10px;
+  pointer-events: none;
+}
+
 .video-play-overlay {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.4);
+  background-color: rgba(0, 0, 0, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background-color 0.3s ease;
+}
+
+.video-preview-thumb:hover .video-play-overlay {
+  background-color: rgba(0, 0, 0, 0.15);
 }
 
 .play-button-triangle {
@@ -209,6 +231,13 @@
   font-size: 16px;
   padding-left: 3px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.video-preview-thumb:hover .play-button-triangle {
+  transform: scale(1.1);
+  background-color: #38bdf8;
+  color: #ffffff;
 }
 
 /* Audio specific card styling */
