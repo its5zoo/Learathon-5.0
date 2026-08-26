@@ -395,10 +395,16 @@ const AiSupport: React.FC = () => {
         {/* Crisis Banner */}
         {crisisActive && (
           <div className="crisis-banner">
-            <div className="crisis-banner-icon">🆘</div>
+            <div className="crisis-banner-icon">🚨</div>
             <div className="crisis-banner-text">
-              <strong>You are not alone.</strong> Please reach out to a helpline right now:
-              <span className="crisis-numbers"> iCall: 9152987821 · Vandrevala: 1860-2662-345 · AASRA: 9820466627</span>
+              <div className="crisis-banner-heading">EMERGENCY SUPPORT ACTIVATED — YOU ARE NOT ALONE</div>
+              <div className="crisis-banner-sub">Confidential 24/7 National Helplines are available right now:</div>
+              <div className="crisis-banner-pills">
+                <a href="tel:14416" className="crisis-pill-btn">📞 Tele-MANAS: 14416</a>
+                <a href="tel:9152987821" className="crisis-pill-btn">📞 iCall: 9152987821</a>
+                <a href="tel:9999666555" className="crisis-pill-btn">📞 Vandrevala: 9999 666 555</a>
+                <a href="tel:18005990019" className="crisis-pill-btn">📞 KIRAN: 1800-599-0019</a>
+              </div>
             </div>
             <button className="crisis-dismiss" onClick={() => setCrisisActive(false)}>✕</button>
           </div>
@@ -469,16 +475,23 @@ const AiSupport: React.FC = () => {
 
           {/* Messages */}
           {!loadingSession && messages.map((msg, idx) => {
+            const isCrisisMsg = msg.emotion === 'crisis';
             const emotionMeta = EMOTION_META[msg.emotion] || EMOTION_META.neutral;
             return (
-              <div key={idx} className={`msg-row ${msg.role}`}>
+              <div key={idx} className={`msg-row ${msg.role} ${isCrisisMsg ? 'crisis-row' : ''}`}>
                 {msg.role === 'assistant' && (
-                  <div className="msg-avatar ai-avatar">
-                    <img src="/logo_main.png" alt="SoulSpace" className="msg-avatar-logo-img" />
+                  <div className={`msg-avatar ai-avatar ${isCrisisMsg ? 'crisis-avatar' : ''}`}>
+                    {isCrisisMsg ? '🆘' : <img src="/logo_main.png" alt="SoulSpace" className="msg-avatar-logo-img" />}
                   </div>
                 )}
                 <div className="msg-bubble-wrap">
-                  <div className={`msg-bubble ${msg.role}`}>
+                  <div className={`msg-bubble ${msg.role} ${isCrisisMsg ? 'crisis-msg-bubble' : ''}`}>
+                    {isCrisisMsg && (
+                      <div className="crisis-msg-header-pill">
+                        <span className="pulse-dot-red"></span>
+                        <span>🚨 EMERGENCY SAFETY INTERVENTION</span>
+                      </div>
+                    )}
                     <div className="msg-text">{renderContent(msg.content)}</div>
                   </div>
                   <div className="msg-meta">
@@ -487,7 +500,7 @@ const AiSupport: React.FC = () => {
                     </span>
                     {msg.role === 'assistant' && msg.emotion !== 'neutral' && (
                       <span
-                        className="msg-emotion-tag"
+                        className={`msg-emotion-tag ${isCrisisMsg ? 'crisis-badge-dark' : ''}`}
                         style={{ '--emotion-color': emotionMeta.color } as React.CSSProperties}
                       >
                         {emotionMeta.emoji} {emotionMeta.label}
