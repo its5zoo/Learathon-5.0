@@ -1,5 +1,8 @@
 import React, { useState, useMemo, useRef } from 'react';
 import './ResourcesPage.css';
+import { SocialAnxietyGuideModal } from '../components/Resources/SocialAnxietyGuideModal';
+import { BookSummaryModal } from '../components/Resources/BookSummaryModal';
+import { AtomicHabitsModal } from '../components/Resources/AtomicHabitsModal';
 
 interface Resource {
   id: number;
@@ -164,6 +167,15 @@ const ResourcesPage: React.FC = () => {
 
   // Video hover state
   const [hoveredVideoId, setHoveredVideoId] = useState<number | null>(null);
+
+  // Social Anxiety Guide Modal state
+  const [isSocialGuideOpen, setIsSocialGuideOpen] = useState<boolean>(false);
+
+  // Book Summary Modal state
+  const [isBookModalOpen, setIsBookModalOpen] = useState<boolean>(false);
+
+  // Atomic Habits Modal state
+  const [isAtomicHabitsModalOpen, setIsAtomicHabitsModalOpen] = useState<boolean>(false);
 
   const types = ['All Types', 'Videos', 'Calming Audio', 'Awareness', 'Self-Help Guides', 'Books', 'Quotes'];
   const moods = ['All Moods', 'Angry', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sad', 'Surprise'];
@@ -421,6 +433,30 @@ const ResourcesPage: React.FC = () => {
                         >
                           {resource.actionText} →
                         </a>
+                      ) : resource.title === 'Overcoming Social Anxiety' ? (
+                        <button
+                          type="button"
+                          className="resource-card-action-btn guide-action-btn"
+                          onClick={() => setIsSocialGuideOpen(true)}
+                        >
+                          {resource.actionText} →
+                        </button>
+                      ) : resource.title === 'The Body Keeps the Score Summary' ? (
+                        <button
+                          type="button"
+                          className="resource-card-action-btn guide-action-btn"
+                          onClick={() => setIsBookModalOpen(true)}
+                        >
+                          {resource.actionText} →
+                        </button>
+                      ) : resource.title === 'Atomic Habits & Mental Wellness' ? (
+                        <button
+                          type="button"
+                          className="resource-card-action-btn guide-action-btn"
+                          onClick={() => setIsAtomicHabitsModalOpen(true)}
+                        >
+                          {resource.actionText} →
+                        </button>
                       ) : (
                         <a href="#" className="resource-card-action-btn" onClick={(e) => e.preventDefault()}>
                           {resource.actionText} →
@@ -442,6 +478,24 @@ const ResourcesPage: React.FC = () => {
           )}
         </div>
       </section>
+
+      {/* 7-Day Social Anxiety Action Plan Modal */}
+      <SocialAnxietyGuideModal 
+        isOpen={isSocialGuideOpen} 
+        onClose={() => setIsSocialGuideOpen(false)} 
+      />
+
+      {/* Book Summary Reader Modal */}
+      <BookSummaryModal
+        isOpen={isBookModalOpen}
+        onClose={() => setIsBookModalOpen(false)}
+      />
+
+      {/* Atomic Habits & Mental Wellness Modal */}
+      <AtomicHabitsModal
+        isOpen={isAtomicHabitsModalOpen}
+        onClose={() => setIsAtomicHabitsModalOpen(false)}
+      />
     </div>
   );
 };
