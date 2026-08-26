@@ -468,7 +468,7 @@
   color: #38bdf8;
 }
 
-.audio-action-btn {
+.audio-action-btn, .guide-action-btn {
   background: transparent;
   border: none;
   cursor: pointer;
@@ -478,6 +478,18 @@
   gap: 6px;
   font-family: inherit;
   outline: none;
+}
+
+.guide-action-btn {
+  color: #3f72af;
+  font-size: 13.5px;
+  font-weight: 700;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.guide-action-btn:hover {
+  transform: translateX(3px);
+  color: #112d4e;
 }
 
 .audio-action-btn .action-arrow {

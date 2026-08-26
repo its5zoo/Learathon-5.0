@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
 import './Resources.css';
+import { SocialAnxietyGuideModal } from './SocialAnxietyGuideModal';
+import { BookSummaryModal } from './BookSummaryModal';
+import { AtomicHabitsModal } from './AtomicHabitsModal';
 
 const Resources: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState('Videos');
+  const [isSocialGuideOpen, setIsSocialGuideOpen] = useState(false);
+  const [isBookModalOpen, setIsBookModalOpen] = useState(false);
+  const [isAtomicHabitsModalOpen, setIsAtomicHabitsModalOpen] = useState(false);
   
   const filters = ['Videos', 'Calming Audio', 'Awareness', 'Self-Help Guides', 'Books', 'Quotes'];
   
@@ -208,9 +214,38 @@ const Resources: React.FC = () => {
                 <div className="resource-content">
                   <h3 className="resource-title">{resource.title}</h3>
                   <p className="resource-description">{resource.description}</p>
-                  <a href="#" className="resource-link">
-                    {resource.actionText} <span className="arrow">→</span>
-                  </a>
+                  {resource.title === 'Overcoming Social Anxiety' ? (
+                    <button
+                      type="button"
+                      className="resource-link"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, font: 'inherit' }}
+                      onClick={() => setIsSocialGuideOpen(true)}
+                    >
+                      {resource.actionText} <span className="arrow">→</span>
+                    </button>
+                  ) : resource.title === 'The Body Keeps the Score' ? (
+                    <button
+                      type="button"
+                      className="resource-link"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, font: 'inherit' }}
+                      onClick={() => setIsBookModalOpen(true)}
+                    >
+                      {resource.actionText} <span className="arrow">→</span>
+                    </button>
+                  ) : resource.title === 'Atomic Habits' ? (
+                    <button
+                      type="button"
+                      className="resource-link"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, font: 'inherit' }}
+                      onClick={() => setIsAtomicHabitsModalOpen(true)}
+                    >
+                      {resource.actionText} <span className="arrow">→</span>
+                    </button>
+                  ) : (
+                    <a href="#" className="resource-link" onClick={(e) => e.preventDefault()}>
+                      {resource.actionText} <span className="arrow">→</span>
+                    </a>
+                  )}
                 </div>
               </div>
             ))
@@ -225,6 +260,24 @@ const Resources: React.FC = () => {
           <button className="btn btn-primary">Explore All Resources</button>
         </div>
       </div>
+
+      {/* 7-Day Social Anxiety Action Plan Modal */}
+      <SocialAnxietyGuideModal 
+        isOpen={isSocialGuideOpen} 
+        onClose={() => setIsSocialGuideOpen(false)} 
+      />
+
+      {/* Book Summary Reader Modal */}
+      <BookSummaryModal
+        isOpen={isBookModalOpen}
+        onClose={() => setIsBookModalOpen(false)}
+      />
+
+      {/* Atomic Habits Modal */}
+      <AtomicHabitsModal
+        isOpen={isAtomicHabitsModalOpen}
+        onClose={() => setIsAtomicHabitsModalOpen(false)}
+      />
     </section>
   );
 };
