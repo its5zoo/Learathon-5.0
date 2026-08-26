@@ -234,6 +234,99 @@ const MoodTracker: React.FC = () => {
     }, '');
   }, [chartPoints]);
 
+  // ── Dynamic Mood Analytics & Clinical Interpretation ────────────────────────
+  const [showGraphGuide, setShowGraphGuide] = useState(false);
+
+  const moodAnalytics = useMemo(() => {
+    if (!moodEntries || moodEntries.length === 0) {
+      return {
+        avgScore: 4.0,
+        avgLabel: 'Neutral Baseline',
+        dominantMood: 'Neutral',
+        dominantEmoji: '😐',
+        stabilityPct: 75,
+        trendDirection: 'stable' as const,
+        trendText: 'Steady baseline',
+        insight: 'Log more entries to reveal detailed emotional patterns over time.',
+        recommendation: 'Track your mood morning and evening for deeper self-awareness.',
+      };
+    }
+
+    const recent = moodEntries.slice(-7);
+    const totalLevel = recent.reduce((sum, e) => sum + (e.level || 4), 0);
+    const avgScore = Number((totalLevel / recent.length).toFixed(1));
+
+    // Count frequency of moods
+    const counts: Record<string, number> = {};
+    recent.forEach((e) => {
+      counts[e.mood] = (counts[e.mood] || 0) + 1;
+    });
+    let dominantMood = 'Neutral';
+    let maxCount = 0;
+    Object.entries(counts).forEach(([m, c]) => {
+      if (c > maxCount) {
+        maxCount = c;
+        dominantMood = m;
+      }
+    });
+
+    const moodEmojiMap: Record<string, string> = {
+      Surprise: '😲', Happy: '😄', Calm: '😌', Neutral: '😐',
+      Sad: '😢', Fear: '😨', Angry: '😡',
+    };
+
+    // Calculate stability: percentage of entries within ±1.2 of the average
+    const stableCount = recent.filter((e) => Math.abs((e.level || 4) - avgScore) <= 1.2).length;
+    const stabilityPct = Math.round((stableCount / recent.length) * 100);
+
+    // Trend direction
+    const firstHalf = recent.slice(0, Math.ceil(recent.length / 2));
+    const secondHalf = recent.slice(Math.ceil(recent.length / 2));
+    const firstAvg = firstHalf.length ? firstHalf.reduce((s, e) => s + (e.level || 4), 0) / firstHalf.length : avgScore;
+    const secondAvg = secondHalf.length ? secondHalf.reduce((s, e) => s + (e.level || 4), 0) / secondHalf.length : avgScore;
+
+    let trendDirection: 'up' | 'down' | 'stable' = 'stable';
+    let trendText = 'Stable balance';
+    if (secondAvg - firstAvg > 0.4) {
+      trendDirection = 'up';
+      trendText = `+${Math.round(((secondAvg - firstAvg) / firstAvg) * 100)}% Positive Uplift`;
+    } else if (firstAvg - secondAvg > 0.4) {
+      trendDirection = 'down';
+      trendText = `-${Math.round(((firstAvg - secondAvg) / firstAvg) * 100)}% Emotional Dip`;
+    }
+
+    let avgLabel = 'Balanced & Steady';
+    let insight = 'Your emotions show steady, balanced grounding with minimal turbulence.';
+    let recommendation = 'Maintain this balance with your regular daily routines and hydration.';
+
+    if (avgScore >= 5.5) {
+      avgLabel = 'Thriving & Joyful';
+      insight = `Strong positive emotional momentum! You experienced predominantly ${dominantMood.toLowerCase()} states across ${recent.length} logged checkpoints.`;
+      recommendation = 'Consider journaling what triggered your peak positivity so you can repeat those habits.';
+    } else if (avgScore >= 4.5) {
+      avgLabel = 'Calm & Content';
+      insight = 'Your emotional curve reflects peaceful stability with healthy regulation and calm energy.';
+      recommendation = 'Engage in a 10-minute mindfulness walk or calming nature audio to sustain inner peace.';
+    } else if (avgScore <= 3.5) {
+      avgLabel = 'Vulnerable / Heavy';
+      insight = 'Recent logs show dips toward heavier emotions (sadness, fatigue, or stress). You are not alone.';
+      recommendation = 'Try 4-4-4 Box Breathing or connect with our AI Companion for a calming talk.';
+    }
+
+    return {
+      avgScore,
+      avgLabel,
+      dominantMood,
+      dominantEmoji: moodEmojiMap[dominantMood] || '😐',
+      stabilityPct,
+      trendDirection,
+      trendText,
+      insight,
+      recommendation,
+    };
+  }, [moodEntries]);
+
+
 
   // Clean up camera stream on unmount
   useEffect(() => {
@@ -651,6 +744,46 @@ const MoodTracker: React.FC = () => {
           ==================================================================== */}
       <section className="mood-analytics-section">
         <div className="container">
+
+          {/* Educational Quick KPIs Grid */}
+          <div className="mood-kpi-summary-grid">
+            <div className="kpi-metric-card">
+              <div className="kpi-icon-box">📊</div>
+              <div className="kpi-content">
+                <span className="kpi-label">7-Day Mood Average</span>
+                <h3 className="kpi-val">{moodAnalytics.avgScore} <span className="kpi-max">/ 7.0</span></h3>
+                <span className="kpi-sub-tag tag-steady">{moodAnalytics.avgLabel}</span>
+              </div>
+            </div>
+
+            <div className="kpi-metric-card">
+              <div className="kpi-icon-box">{moodAnalytics.dominantEmoji}</div>
+              <div className="kpi-content">
+                <span className="kpi-label">Dominant Emotion</span>
+                <h3 className="kpi-val">{moodAnalytics.dominantMood}</h3>
+                <span className="kpi-sub-tag">Most Frequent State</span>
+              </div>
+            </div>
+
+            <div className="kpi-metric-card">
+              <div className="kpi-icon-box">🛡️</div>
+              <div className="kpi-content">
+                <span className="kpi-label">Stability Index</span>
+                <h3 className="kpi-val">{moodAnalytics.stabilityPct}%</h3>
+                <span className="kpi-sub-tag tag-stable">Emotional Resilience</span>
+              </div>
+            </div>
+
+            <div className="kpi-metric-card">
+              <div className="kpi-icon-box">📈</div>
+              <div className="kpi-content">
+                <span className="kpi-label">Weekly Trajectory</span>
+                <h3 className="kpi-val">{moodAnalytics.trendDirection === 'up' ? '↗ Uplift' : moodAnalytics.trendDirection === 'down' ? '↘ Dipping' : '→ Steady'}</h3>
+                <span className="kpi-sub-tag">{moodAnalytics.trendText}</span>
+              </div>
+            </div>
+          </div>
+
           <div className="mood-analytics-grid">
 
             {/* Left: 7-Day Interactive Mood Trend Chart */}
@@ -658,15 +791,46 @@ const MoodTracker: React.FC = () => {
               <div className="card-header-flex">
                 <div>
                   <h2 className="card-title">7-Day Emotional Trend Chart</h2>
-                  <p className="card-subtitle">Visual tracking of your mood stability and energy patterns.</p>
+                  <p className="card-subtitle">Visual tracking of your mood stability, energy patterns & triggers.</p>
                 </div>
-                <div className="chart-legend-row">
-                  <span className="legend-dot dot-happy">😄 Happy (6)</span>
-                  <span className="legend-dot dot-calm">😌 Calm (5)</span>
-                  <span className="legend-dot dot-neutral">😐 Neutral (4)</span>
-                  <span className="legend-dot dot-sad">😢 Sad (3)</span>
+                <div className="chart-actions-row">
+                  <button
+                    type="button"
+                    className={`btn-guide-toggle ${showGraphGuide ? 'active' : ''}`}
+                    onClick={() => setShowGraphGuide(!showGraphGuide)}
+                  >
+                    ℹ️ {showGraphGuide ? 'Hide Guide' : 'How to Read Graph'}
+                  </button>
+                  <div className="chart-legend-row">
+                    <span className="legend-dot dot-happy">😄 Happy (6)</span>
+                    <span className="legend-dot dot-calm">😌 Calm (5)</span>
+                    <span className="legend-dot dot-neutral">😐 Neutral (4)</span>
+                    <span className="legend-dot dot-sad">😢 Sad (3)</span>
+                  </div>
                 </div>
               </div>
+
+              {/* Informative How to Read Guide Drawer */}
+              {showGraphGuide && (
+                <div className="chart-educational-guide">
+                  <h4 className="guide-title">📘 Understanding Your 1–7 Mood Scale</h4>
+                  <div className="guide-levels-grid">
+                    <div className="guide-level-item tier-high">
+                      <strong>🌟 Levels 5–7 (Calm, Happy, Surprise)</strong>
+                      <p>High energy & restorative states. Reflects emotional fulfillment, joy, or active mental clarity.</p>
+                    </div>
+                    <div className="guide-level-item tier-mid">
+                      <strong>⚖️ Level 4 (Neutral)</strong>
+                      <p>Grounding baseline. Steady functioning without strong emotional peaks or low distress.</p>
+                    </div>
+                    <div className="guide-level-item tier-low">
+                      <strong>🌧️ Levels 1–3 (Sad, Fear, Angry)</strong>
+                      <p>Distress or fatigue triggers. A healthy signal to pause, practice breathing, or take a gentle walk.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
 
               <div className="chart-wrapper">
                 <div className="chart-y-axis">
@@ -773,8 +937,22 @@ const MoodTracker: React.FC = () => {
                 ))}
               </div>
 
+              {/* Dynamic Clinical AI Interpretation Banner */}
+              <div className="chart-ai-insight-banner">
+                <div className="insight-badge-row">
+                  <span className="insight-pill-tag">✨ AI PATTERN INTERPRETATION</span>
+                  <span className="insight-status-pill">{moodAnalytics.avgLabel}</span>
+                </div>
+                <p className="insight-text">{moodAnalytics.insight}</p>
+                <div className="insight-action-box">
+                  <span className="action-lightbulb">💡 Actionable Care Tip:</span>
+                  <span className="action-text">{moodAnalytics.recommendation}</span>
+                </div>
+              </div>
 
             </div>
+
+
 
             {/* Right: Recent Mood Entries Log */}
             <div className="analytics-card mood-recent-entries-card">

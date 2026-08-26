@@ -467,6 +467,256 @@
   border-radius: 2px;
 }
 
+/* Educational Quick KPIs Grid */
+.mood-kpi-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.kpi-metric-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kpi-metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.kpi-icon-box {
+  font-size: 26px;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid #e2e8f0;
+}
+
+.kpi-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.kpi-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 2px;
+}
+
+.kpi-val {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.kpi-max {
+  font-size: 13px;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.kpi-sub-tag {
+  font-size: 11px;
+  font-weight: 700;
+  color: #3b82f6;
+  margin-top: 4px;
+}
+
+.kpi-sub-tag.tag-steady {
+  color: #10b981;
+}
+
+.kpi-sub-tag.tag-stable {
+  color: #06b6d4;
+}
+
+/* Chart Header Actions & Guide Toggle */
+.chart-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.btn-guide-toggle {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-guide-toggle:hover,
+.btn-guide-toggle.active {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+}
+
+/* Educational Guide Drawer */
+.chart-educational-guide {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  animation: fadeInGuide 0.2s ease-out;
+}
+
+.guide-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 12px;
+}
+
+.guide-levels-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.guide-level-item {
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 12px 14px;
+  border-left: 4px solid #cbd5e1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+}
+
+.guide-level-item.tier-high {
+  border-left-color: #10b981;
+}
+
+.guide-level-item.tier-mid {
+  border-left-color: #3b82f6;
+}
+
+.guide-level-item.tier-low {
+  border-left-color: #ef4444;
+}
+
+.guide-level-item strong {
+  display: block;
+  font-size: 12.5px;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+
+.guide-level-item p {
+  font-size: 11.5px;
+  color: #64748b;
+  line-height: 1.45;
+  margin: 0;
+}
+
+@keyframes fadeInGuide {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Clinical AI Insight Banner */
+.chart-ai-insight-banner {
+  margin-top: 45px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%);
+  border: 1px solid #bae6fd;
+  border-radius: 14px;
+  padding: 16px 20px;
+}
+
+.insight-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.insight-pill-tag {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  background: #0284c7;
+  color: #ffffff;
+  padding: 3px 8px;
+  border-radius: 20px;
+}
+
+.insight-status-pill {
+  font-size: 11px;
+  font-weight: 700;
+  color: #0369a1;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid #7dd3fc;
+}
+
+.insight-text {
+  font-size: 13px;
+  color: #1e293b;
+  line-height: 1.55;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.insight-action-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.75);
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #93c5fd;
+  font-size: 12px;
+}
+
+.action-lightbulb {
+  font-weight: 800;
+  color: #0284c7;
+  white-space: nowrap;
+}
+
+.action-text {
+  color: #334155;
+  font-weight: 500;
+}
+
+@media (max-width: 900px) {
+  .mood-kpi-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .guide-levels-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 500px) {
+  .mood-kpi-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
 /* Mood Chart Area */
 .mood-chart-wrapper {
   position: relative;
