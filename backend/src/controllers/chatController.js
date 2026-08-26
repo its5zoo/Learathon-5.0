@@ -4,52 +4,63 @@ import Chat from '../models/Chat.js';
 // CONSTANTS
 // ──────────────────────────────────────────────────────────────────────────────
 
-// Indian Government Mental Health Helplines
+// Verified Indian Mental Health Crisis Helplines (Govt & RCI/TISS verified)
 const CRISIS_HELPLINES = `
-🆘 **You Are Not Alone — Free 24/7 Helplines (India)**
-• **iCall** (TISS): 📞 9152987821
-• **Vandrevala Foundation**: 📞 1860-2662-345 (24/7, free)
-• **NIMHANS**: 📞 080-46110007
-• **AASRA**: 📞 9820466627
-• **iCall WhatsApp**: wa.me/919152987821
+🆘 **You Are Not Alone — Free 24/7 National Helplines (India)**
+• **Tele-MANAS** (Govt of India): 📞 14416 / 1800-891-4416 (24/7, Toll-Free)
+• **iCall** (TISS): 📞 9152987821 (Mon–Sat, 10 AM – 8 PM)
+• **Vandrevala Foundation**: 📞 9999 666 555 / 1860-2662-345 (24/7, Free)
+• **KIRAN** (Ministry of Social Justice): 📞 1800-599-0019 (24/7, Toll-Free)
+• **NIMHANS Helpline**: 📞 080-46110007 (24/7)
 
-Please reach out — you deserve support. 💙
+Please reach out — confidential support is available right now. 💙
 `.trim();
 
-// Crisis trigger keywords
+// Comprehensive Crisis trigger keywords & patterns (English + Hinglish)
 const CRISIS_KEYWORDS = [
-  'suicide', 'suicidal', 'kill myself', 'end my life', 'want to die',
-  'cant go on', "can't go on", 'no reason to live', 'self harm', 'self-harm',
-  'hurt myself', 'worthless', 'hopeless', 'end it all', 'not worth living',
-  'wish i was dead', 'rather be dead', 'take my life', 'overdose'
+  'suicide', 'suicidal', 'kill myself', 'killing myself', 'end my life', 'ending my life',
+  'want to die', 'wanna die', 'going to die', 'gonna die', 'will die', 'feel like dying',
+  'wish i was dead', 'wish i were dead', 'rather be dead', 'better off dead',
+  'take my life', 'take my own life', 'overdose', 'cut myself', 'hanging myself',
+  'cant go on', "can't go on", 'no reason to live', 'no point living', 'nothing to live for',
+  'self harm', 'self-harm', 'hurt myself', 'hurting myself', 'worthless', 'hopeless',
+  'end it all', 'end everything', 'not worth living', 'ready to die', 'goodbye world',
+  'give up on life', 'tired of living', "don't want to live", 'dont want to live', 'hate being alive',
+  // Hinglish / Hindi triggers
+  'marne ka man', 'mar jaunga', 'mar jaungi', 'jaan de dunga', 'khudkushi', 'mar jana chahta', 'mar jana chahti', 'jeena nahi chahta'
 ];
 
 // Emotion detection patterns
 const EMOTION_PATTERNS = {
-  anxious:  ['anxious', 'anxiety', 'panic', 'overthink', 'worry', 'nervous', 'scared', 'fear', 'dread'],
-  sad:      ['sad', 'crying', 'cry', 'depressed', 'depression', 'lonely', 'alone', 'miss', 'grief', 'heartbroken'],
-  angry:    ['angry', 'anger', 'frustrated', 'furious', 'rage', 'hate', 'annoyed', 'irritated'],
-  stressed: ['stressed', 'stress', 'overwhelmed', 'burnout', 'exhausted', 'tired', 'pressure', 'deadline'],
-  happy:    ['happy', 'great', 'good', 'better', 'amazing', 'excited', 'joy', 'grateful', 'thankful'],
-  hopeful:  ['hopeful', 'hope', 'improving', 'progress', 'trying', 'effort'],
   crisis:   CRISIS_KEYWORDS,
+  anxious:  ['anxious', 'anxiety', 'panic', 'overthink', 'worry', 'nervous', 'scared', 'fear', 'dread', 'frightened'],
+  sad:      ['sad', 'crying', 'cry', 'depressed', 'depression', 'lonely', 'alone', 'miss', 'grief', 'heartbroken', 'hopeless'],
+  angry:    ['angry', 'anger', 'frustrated', 'furious', 'rage', 'hate', 'annoyed', 'irritated'],
+  stressed: ['stressed', 'stress', 'overwhelmed', 'burnout', 'exhausted', 'tired', 'pressure', 'deadline', 'burdened'],
+  happy:    ['happy', 'great', 'good', 'better', 'amazing', 'excited', 'joy', 'grateful', 'thankful', 'relieved'],
+  hopeful:  ['hopeful', 'hope', 'improving', 'progress', 'trying', 'effort'],
 };
 
 // ──────────────────────────────────────────────────────────────────────────────
 // HELPERS
 // ──────────────────────────────────────────────────────────────────────────────
 
+const isCrisis = (text) => {
+  const lower = text.toLowerCase();
+  // Direct keyword or phrase match
+  if (CRISIS_KEYWORDS.some((kw) => lower.includes(kw))) return true;
+  // Regex pattern matching for variations like "i will die", "wanna die", "die tonight", etc.
+  const crisisRegex = /\b(suicid|kill\s*myself|end\s*my\s*life|going\s*to\s*die|gonna\s*die|want\s*to\s*die|wanna\s*die|feel\s*like\s*dying|harm\s*myself|hurt\s*myself)\b/i;
+  return crisisRegex.test(lower);
+};
+
 const detectEmotion = (text) => {
+  if (isCrisis(text)) return 'crisis';
   const lower = text.toLowerCase();
   for (const [emotion, keywords] of Object.entries(EMOTION_PATTERNS)) {
     if (keywords.some((kw) => lower.includes(kw))) return emotion;
   }
   return 'neutral';
-};
-
-const isCrisis = (text) => {
-  const lower = text.toLowerCase();
-  return CRISIS_KEYWORDS.some((kw) => lower.includes(kw));
 };
 
 const generateTitle = (firstMessage) => {
@@ -62,30 +73,23 @@ const generateTitle = (firstMessage) => {
 // ──────────────────────────────────────────────────────────────────────────────
 
 const buildSystemPrompt = (crisisDetected) => `
-You are SoulSpace AI, a warm and professional mental health companion embedded in a healthcare platform used across India.
+You are SoulSpace AI, an empathetic, supportive mental health companion in India.
 
-Your role:
-- Provide empathetic, evidence-based emotional support (CBT, mindfulness, grounding)
-- Speak like a caring, experienced doctor talking to a patient — calm, clear, professional but human
-- You are NOT a replacement for therapy — always encourage professional help when needed
-
-Strict rules:
-- NEVER diagnose, NEVER prescribe medication
-- NEVER make up facts or statistics — if unsure, say so honestly
-- Keep responses SHORT by default (2–4 sentences). Only elaborate if the topic genuinely requires it
-- Always acknowledge the person's emotion BEFORE offering any advice
-- Use plain language — avoid jargon
-- Respond in the same language as the user (Hinglish is fine)
-- Context: You remember the full conversation history — use it to give coherent, continuous responses
+STRICT CONVERSATIONAL RULES:
+- Keep your answers SHORT and crisp: MAXIMUM 2 to 3 sentences total.
+- Never write long walls of text, essays, or generic bullet points. Speak like a caring friend and supportive therapist in a natural chat.
+- Match the user's language (English or Hinglish).
+- NEVER diagnose illnesses, NEVER prescribe medication.
+- Always validate the user's emotion first with deep empathy before asking a gentle follow-up question.
+- Do NOT hallucinate or guess random phone numbers (verified helplines are appended automatically by the platform).
 
 ${crisisDetected ? `
-CRITICAL — CRISIS DETECTED:
-The user may be in emotional danger. Your FIRST priority is their safety.
-- Acknowledge their pain with deep empathy (1–2 sentences)
-- Gently provide Indian helpline numbers
-- Assure them they are not alone
-- Do NOT minimize their feelings or immediately pivot to solutions
-- Keep your tone extremely gentle and caring
+🚨 CRITICAL CRISIS SAFETY PROTOCOL:
+- The user expressed thoughts of dying, suicide, or severe distress.
+- Respond in EXACTLY 2 caring, supportive sentences:
+  1. Acknowledge their deep pain with unconditional compassion and assure them they matter and are not alone.
+  2. Encourage them to stay safe and reach out to the verified helpline numbers listed below right away.
+- Do NOT lecture, minimize, or give complex advice.
 ` : ''}
 `.trim();
 
