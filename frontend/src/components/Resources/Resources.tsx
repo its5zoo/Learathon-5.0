@@ -1,10 +1,16 @@
 import React, { useState } from 'react';
 import './Resources.css';
+import { SocialAnxietyGuideModal } from './SocialAnxietyGuideModal';
+import { BookSummaryModal } from './BookSummaryModal';
+import { AtomicHabitsModal } from './AtomicHabitsModal';
 
 const Resources: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState('Videos');
+  const [isSocialGuideOpen, setIsSocialGuideOpen] = useState(false);
+  const [isBookModalOpen, setIsBookModalOpen] = useState(false);
+  const [isAtomicHabitsModalOpen, setIsAtomicHabitsModalOpen] = useState(false);
   
-  const filters = ['Videos', 'Calming Audio', 'Awareness Posters', 'Self-Help Guides', 'Books', 'Quotes'];
+  const filters = ['Videos', 'Calming Audio', 'Awareness', 'Self-Help Guides', 'Books', 'Quotes'];
   
   const allResources = [
     // Videos
@@ -59,33 +65,33 @@ const Resources: React.FC = () => {
       type: 'Calming Audio',
       actionText: 'Listen Now'
     },
-    
-    // Awareness Posters
+
+    // Awareness
     {
       id: 6,
       image: 'https://images.unsplash.com/photo-1584697964190-7cb52945a805?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
       title: 'Break the Stigma',
-      description: 'High-resolution poster raising awareness for mental health acceptance.',
-      type: 'Awareness Posters',
-      actionText: 'View Poster'
+      description: 'Visual guide raising awareness for mental health acceptance.',
+      type: 'Awareness',
+      actionText: 'View Guide'
     },
     {
       id: 7,
       image: 'https://images.unsplash.com/photo-1528716321680-815a8cdb8cbe?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
       title: 'It Is Okay To Not Be Okay',
-      description: 'A gentle daily reminder poster for your workspace or bedroom.',
-      type: 'Awareness Posters',
-      actionText: 'View Poster'
+      description: 'A gentle daily reminder for your emotional wellness.',
+      type: 'Awareness',
+      actionText: 'View Guide'
     },
     {
       id: 15,
       image: 'https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
       title: 'You Are Not Alone',
-      description: 'A supportive poster emphasizing the power of community.',
-      type: 'Awareness Posters',
-      actionText: 'View Poster'
+      description: 'Supportive insights emphasizing the power of community.',
+      type: 'Awareness',
+      actionText: 'View Guide'
     },
-
+    
     // Self-Help Guides
     {
       id: 8,
@@ -173,7 +179,7 @@ const Resources: React.FC = () => {
         <div className="resources-header">
           <h2 className="section-title">Explore Free Mental Health Resources</h2>
           <p className="resources-subtitle">
-            Find calming sounds, educational videos, awareness posters, and more to support your mental well-being.
+            Find calming sounds, educational videos, clinical guides, and literature to support your mental well-being.
           </p>
         </div>
         
@@ -186,7 +192,7 @@ const Resources: React.FC = () => {
             >
               {filter === 'Videos' && <span className="filter-icon">▶</span>}
               {filter === 'Calming Audio' && <span className="filter-icon">🎧</span>}
-              {filter === 'Awareness Posters' && <span className="filter-icon">🖼️</span>}
+              {filter === 'Awareness' && <span className="filter-icon">🎗️</span>}
               {filter === 'Self-Help Guides' && <span className="filter-icon">📖</span>}
               {filter === 'Books' && <span className="filter-icon">📚</span>}
               {filter === 'Quotes' && <span className="filter-icon">💬</span>}
@@ -208,9 +214,38 @@ const Resources: React.FC = () => {
                 <div className="resource-content">
                   <h3 className="resource-title">{resource.title}</h3>
                   <p className="resource-description">{resource.description}</p>
-                  <a href="#" className="resource-link">
-                    {resource.actionText} <span className="arrow">→</span>
-                  </a>
+                  {resource.title === 'Overcoming Social Anxiety' ? (
+                    <button
+                      type="button"
+                      className="resource-link"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, font: 'inherit' }}
+                      onClick={() => setIsSocialGuideOpen(true)}
+                    >
+                      {resource.actionText} <span className="arrow">→</span>
+                    </button>
+                  ) : resource.title === 'The Body Keeps the Score' ? (
+                    <button
+                      type="button"
+                      className="resource-link"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, font: 'inherit' }}
+                      onClick={() => setIsBookModalOpen(true)}
+                    >
+                      {resource.actionText} <span className="arrow">→</span>
+                    </button>
+                  ) : resource.title === 'Atomic Habits' ? (
+                    <button
+                      type="button"
+                      className="resource-link"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, font: 'inherit' }}
+                      onClick={() => setIsAtomicHabitsModalOpen(true)}
+                    >
+                      {resource.actionText} <span className="arrow">→</span>
+                    </button>
+                  ) : (
+                    <a href="#" className="resource-link" onClick={(e) => e.preventDefault()}>
+                      {resource.actionText} <span className="arrow">→</span>
+                    </a>
+                  )}
                 </div>
               </div>
             ))
@@ -225,6 +260,24 @@ const Resources: React.FC = () => {
           <button className="btn btn-primary">Explore All Resources</button>
         </div>
       </div>
+
+      {/* 7-Day Social Anxiety Action Plan Modal */}
+      <SocialAnxietyGuideModal 
+        isOpen={isSocialGuideOpen} 
+        onClose={() => setIsSocialGuideOpen(false)} 
+      />
+
+      {/* Book Summary Reader Modal */}
+      <BookSummaryModal
+        isOpen={isBookModalOpen}
+        onClose={() => setIsBookModalOpen(false)}
+      />
+
+      {/* Atomic Habits Modal */}
+      <AtomicHabitsModal
+        isOpen={isAtomicHabitsModalOpen}
+        onClose={() => setIsAtomicHabitsModalOpen(false)}
+      />
     </section>
   );
 };

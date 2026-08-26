@@ -163,15 +163,24 @@
   background-color: #090e14;
   border-color: #1e293b;
   color: #ffffff;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.resource-item-card.video-card.card-video-hovered {
+  border-color: rgba(56, 189, 248, 0.6);
+  box-shadow: 0 10px 30px rgba(56, 189, 248, 0.2);
+  transform: translateY(-4px);
 }
 
 .video-preview-thumb {
   position: relative;
   width: 100%;
-  height: 140px;
+  height: 155px;
   border-radius: 10px;
   overflow: hidden;
   margin-bottom: 16px;
+  background-color: #000000;
+  cursor: pointer;
 }
 
 .video-preview-thumb img {
@@ -185,16 +194,29 @@
   transform: scale(1.05);
 }
 
+.video-preview-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 10px;
+  pointer-events: none;
+}
+
 .video-play-overlay {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.4);
+  background-color: rgba(0, 0, 0, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background-color 0.3s ease;
+}
+
+.video-preview-thumb:hover .video-play-overlay {
+  background-color: rgba(0, 0, 0, 0.15);
 }
 
 .play-button-triangle {
@@ -209,6 +231,13 @@
   font-size: 16px;
   padding-left: 3px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.video-preview-thumb:hover .play-button-triangle {
+  transform: scale(1.1);
+  background-color: #38bdf8;
+  color: #ffffff;
 }
 
 /* Audio specific card styling */
@@ -216,15 +245,87 @@
   background-size: cover;
   background-position: center;
   color: #ffffff;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   position: relative;
   z-index: 1;
+}
+
+.resource-item-card.audio-card.card-audio-active {
+  border-color: rgba(56, 189, 248, 0.7);
+  box-shadow: 0 10px 30px rgba(56, 189, 248, 0.25);
+  transform: translateY(-4px);
 }
 
 /* Media badges at top row */
 .media-badge-row {
   margin-bottom: 16px;
   z-index: 2;
+  width: 100%;
+}
+
+.audio-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+/* Audio Visualizer */
+.audio-visualizer-container {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 22px;
+  padding: 3px 8px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.visualizer-bar {
+  display: inline-block;
+  width: 3px;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 3px;
+  height: 4px;
+  transition: all 0.2s ease;
+}
+
+.audio-visualizer-container.playing .visualizer-bar {
+  background: #38bdf8;
+}
+
+.audio-visualizer-container.playing .bar-1 {
+  animation: equalize 0.85s ease-in-out infinite alternate;
+}
+.audio-visualizer-container.playing .bar-2 {
+  animation: equalize 1.1s ease-in-out infinite alternate 0.18s;
+}
+.audio-visualizer-container.playing .bar-3 {
+  animation: equalize 0.65s ease-in-out infinite alternate 0.35s;
+}
+.audio-visualizer-container.playing .bar-4 {
+  animation: equalize 0.95s ease-in-out infinite alternate 0.12s;
+}
+.audio-visualizer-container.playing .bar-5 {
+  animation: equalize 1.25s ease-in-out infinite alternate 0.28s;
+}
+
+@keyframes equalize {
+  0% {
+    height: 4px;
+    background-color: #38bdf8;
+  }
+  50% {
+    height: 14px;
+    background-color: #60a5fa;
+  }
+  100% {
+    height: 18px;
+    background-color: #34d399;
+  }
 }
 
 .media-type-tag {
@@ -365,6 +466,43 @@
 
 .resource-item-card.audio-card .resource-card-action-btn {
   color: #38bdf8;
+}
+
+.audio-action-btn, .guide-action-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  outline: none;
+}
+
+.guide-action-btn {
+  color: #3f72af;
+  font-size: 13.5px;
+  font-weight: 700;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.guide-action-btn:hover {
+  transform: translateX(3px);
+  color: #112d4e;
+}
+
+.audio-action-btn .action-arrow {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+.audio-action-btn:hover .action-arrow {
+  transform: translateX(3px);
+}
+
+.audio-action-btn.is-playing {
+  color: #38bdf8 !important;
 }
 
 .resource-card-action-btn:hover {
