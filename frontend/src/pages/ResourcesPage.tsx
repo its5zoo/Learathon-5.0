@@ -5,13 +5,14 @@ interface Resource {
   id: number;
   title: string;
   description: string;
-  type: 'Videos' | 'Calming Audio' | 'Awareness Posters' | 'Self-Help Guides' | 'Books' | 'Quotes';
+  type: 'Videos' | 'Calming Audio' | 'Awareness' | 'Self-Help Guides' | 'Books' | 'Quotes';
   moods: string[];
   actionText: string;
   image?: string;
   link?: string;
   playing?: boolean;
   audioUrl?: string;
+  youtubeId?: string;
 }
 
 const resourcesData: Resource[] = [
@@ -23,7 +24,8 @@ const resourcesData: Resource[] = [
     type: 'Videos',
     moods: ['Fear', 'Neutral'],
     actionText: 'Watch Video',
-    image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+    image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    youtubeId: 'LiUnFJ8P4gM'
   },
   {
     id: 2,
@@ -32,7 +34,8 @@ const resourcesData: Resource[] = [
     type: 'Videos',
     moods: ['Neutral', 'Sad'],
     actionText: 'Watch Video',
-    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    youtubeId: 'inpok4MKVLM'
   },
   {
     id: 3,
@@ -41,7 +44,8 @@ const resourcesData: Resource[] = [
     type: 'Videos',
     moods: ['Angry', 'Fear', 'Sad'],
     actionText: 'Watch Video',
-    image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+    image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    youtubeId: 'hnpQrMqDoqE'
   },
   
   // Calming Audio
@@ -62,7 +66,7 @@ const resourcesData: Resource[] = [
     type: 'Calming Audio',
     moods: ['Neutral', 'Sad'],
     actionText: 'Listen Now',
-    image: 'https://images.unsplash.com/photo-1511295742364-92767fa62d9f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    image: '/sleepingmeditate_img.png',
     audioUrl: '/resource_audio/sleepmeditation_audio.mp3'
   },
   {
@@ -76,23 +80,23 @@ const resourcesData: Resource[] = [
     audioUrl: '/resource_audio/confidenceboost_audio.mp3'
   },
 
-  // Awareness Posters
+  // Awareness
   {
     id: 7,
-    title: 'Break the Stigma Poster',
-    description: 'A visual guide and poster raising awareness for mental health acceptance.',
-    type: 'Awareness Posters',
+    title: 'Break the Stigma',
+    description: 'A visual guide raising awareness and fostering open conversations for mental health acceptance.',
+    type: 'Awareness',
     moods: ['Happy', 'Neutral'],
-    actionText: 'Download Poster',
+    actionText: 'View Guide',
     image: 'https://images.unsplash.com/photo-1584697964190-7cb52945a805?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
   },
   {
     id: 8,
     title: 'It Is Okay To Not Be Okay',
-    description: 'A gentle daily reminder poster for your workspace or home.',
-    type: 'Awareness Posters',
+    description: 'A gentle daily reminder for your emotional wellness and mindful acceptance.',
+    type: 'Awareness',
     moods: ['Sad', 'Fear'],
-    actionText: 'Download Poster',
+    actionText: 'View Guide',
     image: 'https://images.unsplash.com/photo-1528716321680-815a8cdb8cbe?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
   },
 
@@ -158,7 +162,10 @@ const ResourcesPage: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const types = ['All Types', 'Videos', 'Calming Audio', 'Awareness Posters', 'Self-Help Guides', 'Books', 'Quotes'];
+  // Video hover state
+  const [hoveredVideoId, setHoveredVideoId] = useState<number | null>(null);
+
+  const types = ['All Types', 'Videos', 'Calming Audio', 'Awareness', 'Self-Help Guides', 'Books', 'Quotes'];
   const moods = ['All Moods', 'Angry', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sad', 'Surprise'];
 
   const filteredResources = useMemo(() => {
@@ -305,10 +312,11 @@ const ResourcesPage: React.FC = () => {
                 const isVideo = resource.type === 'Videos';
                 const isAudio = resource.type === 'Calming Audio';
                 const isThisAudioPlaying = isAudio && activeAudioId === resource.id && isPlaying;
+                const isThisVideoHovered = isVideo && resource.youtubeId && hoveredVideoId === resource.id;
 
                 return (
                   <div 
-                    className={`resource-item-card ${isVideo ? 'video-card' : ''} ${isAudio ? 'audio-card' : ''} ${isThisAudioPlaying ? 'card-audio-active' : ''}`}
+                    className={`resource-item-card ${isVideo ? 'video-card' : ''} ${isAudio ? 'audio-card' : ''} ${isThisAudioPlaying ? 'card-audio-active' : ''} ${isThisVideoHovered ? 'card-video-hovered' : ''}`}
                     key={resource.id}
                     style={isAudio && resource.image ? { backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.85)), url('${resource.image}')` } : {}}
                   >
@@ -344,12 +352,28 @@ const ResourcesPage: React.FC = () => {
 
                     {/* Card Content Area */}
                     <div className="resource-card-body">
-                      {isVideo && resource.image && (
-                        <div className="video-preview-thumb">
-                          <img src={resource.image} alt={resource.title} />
-                          <div className="video-play-overlay">
-                            <span className="play-button-triangle">▶</span>
-                          </div>
+                      {isVideo && (
+                        <div 
+                          className="video-preview-thumb"
+                          onMouseEnter={() => resource.youtubeId && setHoveredVideoId(resource.id)}
+                          onMouseLeave={() => resource.youtubeId && setHoveredVideoId(null)}
+                        >
+                          {resource.youtubeId && hoveredVideoId === resource.id ? (
+                            <iframe
+                              className="video-preview-iframe"
+                              src={`https://www.youtube.com/embed/${resource.youtubeId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${resource.youtubeId}&enablejsapi=1&playsinline=1`}
+                              title={resource.title}
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            />
+                          ) : (
+                            <>
+                              {resource.image && <img src={resource.image} alt={resource.title} />}
+                              <div className="video-play-overlay">
+                                <span className="play-button-triangle">▶</span>
+                              </div>
+                            </>
+                          )}
                         </div>
                       )}
 
@@ -388,6 +412,15 @@ const ResourcesPage: React.FC = () => {
                             </>
                           )}
                         </button>
+                      ) : isVideo && resource.youtubeId ? (
+                        <a 
+                          href={`https://www.youtube.com/watch?v=${resource.youtubeId}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="resource-card-action-btn"
+                        >
+                          {resource.actionText} →
+                        </a>
                       ) : (
                         <a href="#" className="resource-card-action-btn" onClick={(e) => e.preventDefault()}>
                           {resource.actionText} →
