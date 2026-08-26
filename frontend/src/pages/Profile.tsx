@@ -47,6 +47,26 @@ const Profile: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [copiedHandle, setCopiedHandle] = useState(false);
 
+  // Appointment notification from localStorage
+  const [latestAppt, setLatestAppt] = useState<any>(null);
+  const [showApptNotif, setShowApptNotif] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('ss_latest_appointment');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // Show banner only if booked in last 24h
+        const bookedAt = new Date(parsed.bookedAt).getTime();
+        const now = Date.now();
+        if (now - bookedAt < 24 * 60 * 60 * 1000) {
+          setLatestAppt(parsed);
+          setShowApptNotif(true);
+        }
+      }
+    } catch {}
+  }, []);
+
   // Redirect if not logged in
   useEffect(() => {
     if (!isLoggedIn) {
@@ -214,6 +234,37 @@ const Profile: React.FC = () => {
       {toastMessage && (
         <div className="profile-toast">
           <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {/* Appointment Notification Banner */}
+      {showApptNotif && latestAppt && (
+        <div className="appt-notif-banner">
+          <div className="appt-notif-icon">
+            {latestAppt.status === 'confirmed' ? '✅' : latestAppt.status === 'demo_no_email' ? '⚪' : '📬'}
+          </div>
+          <div className="appt-notif-content">
+            <strong>
+              {latestAppt.status === 'confirmed'
+                ? 'Appointment Confirmed!'
+                : latestAppt.status === 'demo_no_email'
+                ? 'Appointment Booked (Demo Mode)'
+                : 'Appointment Request Sent'}
+            </strong>
+            <span>
+              {latestAppt.doctorName} · {latestAppt.clinicName} · {latestAppt.date} at {latestAppt.time} ({latestAppt.mode})
+              &nbsp;·&nbsp; Ref: <em>#{latestAppt.bookingRef}</em>
+            </span>
+          </div>
+          <button
+            className="appt-notif-dismiss"
+            onClick={() => {
+              setShowApptNotif(false);
+              localStorage.removeItem('ss_latest_appointment');
+            }}
+          >
+            ✕
+          </button>
         </div>
       )}
 

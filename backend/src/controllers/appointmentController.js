@@ -62,8 +62,8 @@ const DOCTORS = [
     modes: ['In-Clinic', 'Video Consultation'],
     nextAvailable: 'Today, 4:30 PM',
     fee: '₹1,200 / session',
-    // 🔴 LIVE DEMO EMAIL — doctor receiver
-    email: '25cse022.mdfaizaanrazakhan@giet.edu',
+    // 🔴 LIVE DEMO EMAIL — doc-1 receiver
+    email: '25cse195.rakhilesh@giet.edu',
     image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
   },
   {
@@ -81,7 +81,7 @@ const DOCTORS = [
     modes: ['In-Clinic', 'Video Consultation'],
     nextAvailable: 'Tomorrow, 11:00 AM',
     fee: '₹1,500 / session',
-    // 🔴 LIVE DEMO EMAIL — doctor receiver
+    // 🔴 LIVE DEMO EMAIL — doc-2 receiver
     email: 'ashiafhalak786@gmail.com',
     image: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
   },
@@ -100,8 +100,8 @@ const DOCTORS = [
     modes: ['In-Clinic', 'Video Consultation'],
     nextAvailable: 'Today, 6:00 PM',
     fee: '₹1,000 / session',
-    // doctor receiver
-    email: '25cse022.mdfaizaanrazakhan@giet.edu',
+    // 🔴 LIVE DEMO EMAIL — doc-3 receiver
+    email: '25cse169.grigariaannsunil@giet.edu',
     image: 'https://images.unsplash.com/photo-1594824813686-7a1a8c9b9173?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
   },
   {
@@ -119,8 +119,8 @@ const DOCTORS = [
     modes: ['In-Clinic', 'Video Consultation'],
     nextAvailable: 'Tomorrow, 3:30 PM',
     fee: '₹1,300 / session',
-    // doctor receiver
-    email: 'ashiafhalak786@gmail.com',
+    // ⚪ DUMMY — no real email sent for doc-4
+    email: 'dummy.doc4@soulspace.demo',
     image: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
   },
   {
@@ -138,8 +138,8 @@ const DOCTORS = [
     modes: ['In-Clinic', 'Video Consultation'],
     nextAvailable: 'Today, 2:00 PM',
     fee: '₹900 / session',
-    // doctor receiver
-    email: '25cse022.mdfaizaanrazakhan@giet.edu',
+    // ⚪ DUMMY — no real email sent for doc-5
+    email: 'dummy.doc5@soulspace.demo',
     image: 'https://images.unsplash.com/photo-1614608682850-e0d6ed316d47?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
   },
   {
@@ -157,7 +157,7 @@ const DOCTORS = [
     modes: ['In-Clinic', 'Video Consultation'],
     nextAvailable: 'Tomorrow, 9:00 AM',
     fee: '₹1,800 / session',
-    // doctor receiver
+    // 🔴 LIVE DEMO EMAIL — doc-6 receiver
     email: 'ashiafhalak786@gmail.com',
     image: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
   },
@@ -312,49 +312,60 @@ export const bookAppointment = async (req, res) => {
       status: 'pending_email',
     });
 
-    // Send email to clinic
+    // Send email to clinic (skip for dummy @soulspace.demo addresses)
     let emailPreviewUrl = null;
-    try {
-      const emailResult = await sendAppointmentRequestEmail({
-        toClinicEmail: doctor.email,
-        clinicName: doctor.clinicName,
-        doctorName: doctor.name,
-        doctorPhone: doctor.phone,
-        patientName: appointment.patientName,
-        patientEmail: user.email,
-        patientPhone: patientPhone || user.phone,
-        date,
-        time,
-        mode,
-        concerns,
-        matchScore: aiMatchScore,
-        assessmentSummary,
-        bookingRef,
-      });
-      emailPreviewUrl = emailResult.previewUrl;
+    const isDummyEmail = doctor.email.endsWith('@soulspace.demo');
 
-      // Also send confirmation to patient
-      await sendConfirmationToPatient({
-        patientEmail: user.email,
-        patientName: appointment.patientName,
-        doctorName: doctor.name,
-        clinicName: doctor.clinicName,
-        clinicPhone: doctor.phone,
-        date, time, mode,
-        concerns,
-        bookingRef,
-      });
-
+    if (isDummyEmail) {
+      // Mark as demo — no real email sent
       await Appointment.findByIdAndUpdate(appointment._id, {
-        requestEmailSent: true,
-        requestEmailSentAt: new Date(),
-        emailPreviewUrl,
-        status: 'request_sent',
+        requestEmailSent: false,
+        status: 'demo_no_email',
       });
+      console.log(`⚪ Demo doctor ${doctor.name} — skipping real email (dummy address).`);
+    } else {
+      try {
+        const emailResult = await sendAppointmentRequestEmail({
+          toClinicEmail: doctor.email,
+          clinicName: doctor.clinicName,
+          doctorName: doctor.name,
+          doctorPhone: doctor.phone,
+          patientName: appointment.patientName,
+          patientEmail: user.email,
+          patientPhone: patientPhone || user.phone,
+          date,
+          time,
+          mode,
+          concerns,
+          matchScore: aiMatchScore,
+          assessmentSummary,
+          bookingRef,
+        });
+        emailPreviewUrl = emailResult.previewUrl;
 
-    } catch (emailErr) {
-      console.error('Email send failed:', emailErr.message);
-      // Non-fatal — appointment is still saved
+        // Also send confirmation to patient
+        await sendConfirmationToPatient({
+          patientEmail: user.email,
+          patientName: appointment.patientName,
+          doctorName: doctor.name,
+          clinicName: doctor.clinicName,
+          clinicPhone: doctor.phone,
+          date, time, mode,
+          concerns,
+          bookingRef,
+        });
+
+        await Appointment.findByIdAndUpdate(appointment._id, {
+          requestEmailSent: true,
+          requestEmailSentAt: new Date(),
+          emailPreviewUrl,
+          status: 'request_sent',
+        });
+
+      } catch (emailErr) {
+        console.error('Email send failed:', emailErr.message);
+        // Non-fatal — appointment is still saved
+      }
     }
 
     // Fetch the updated document from DB so status, emailPreviewUrl, etc. are correct in response
@@ -443,5 +454,30 @@ export const getMyAppointments = async (req, res) => {
     return res.json({ success: true, appointments });
   } catch (err) {
     return res.status(500).json({ success: false, message: 'Failed to fetch appointments.' });
+  }
+};
+
+// ──────────────────────────────────────────────────────────────────────────────
+// 5. GET SINGLE APPOINTMENT LIVE STATUS (for frontend auto-poll)
+//    GET /api/appointments/:id/status
+// ──────────────────────────────────────────────────────────────────────────────
+export const getAppointmentStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const appointment = await Appointment.findOne({ _id: id, userId: req.user._id })
+      .select('status clinicReplySummary clinicReplyRaw confirmedDateTime replyReceivedAt');
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: 'Appointment not found.' });
+    }
+    return res.json({
+      success: true,
+      status:             appointment.status,
+      clinicReplySummary: appointment.clinicReplySummary || null,
+      clinicReplyRaw:     appointment.clinicReplyRaw     || null,
+      confirmedDateTime:  appointment.confirmedDateTime  || null,
+      replyReceivedAt:    appointment.replyReceivedAt    || null,
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Failed to fetch appointment status.' });
   }
 };

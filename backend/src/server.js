@@ -10,9 +10,14 @@ import authRoutes from './routes/authRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import assessmentRoutes from './routes/assessmentRoutes.js';
 import appointmentRoutes from './routes/appointmentRoutes.js';
+import { startInboxPoller } from './services/inboxPollerService.js';
 
-// Connect to MongoDB Atlas
-connectDB();
+// Connect to MongoDB Atlas, then start background services
+connectDB().then(() => {
+  // Start Gmail IMAP inbox poller (checks for clinic reply emails every 60s)
+  const pollInterval = parseInt(process.env.IMAP_POLL_INTERVAL_MS || '60000', 10);
+  startInboxPoller(pollInterval);
+});
 
 const app = express();
 const PORT = process.env.PORT || 5000;

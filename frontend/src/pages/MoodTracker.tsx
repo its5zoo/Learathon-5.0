@@ -268,6 +268,42 @@ const MoodTracker: React.FC = () => {
     setScanPhaseText('Detecting facial contours…');
     setDetectedScanResult(null);
 
+    // Multi-frame blendshape accumulator during the 3s scan
+    const frameSamples: {
+      smile: number;
+      frown: number;
+      browDown: number;
+      browInnerUp: number;
+      browOuterUp: number;
+      jawOpen: number;
+      eyeWide: number;
+    }[] = [];
+
+    // Sample continuously every 150ms (20 samples total over 3 seconds)
+    const sampleInterval = setInterval(() => {
+      if (faceLandmarkerRef.current && videoRef.current && videoRef.current.readyState >= 2) {
+        try {
+          const results = faceLandmarkerRef.current.detectForVideo(videoRef.current, performance.now());
+          if (results.faceBlendshapes && results.faceBlendshapes.length > 0) {
+            const categories = results.faceBlendshapes[0].categories;
+            const getScore = (name: string) => categories.find((c) => c.categoryName === name)?.score || 0;
+
+            const smile = (getScore('mouthSmileLeft') + getScore('mouthSmileRight')) / 2;
+            const frown = (getScore('mouthFrownLeft') + getScore('mouthFrownRight')) / 2;
+            const browDown = (getScore('browDownLeft') + getScore('browDownRight')) / 2;
+            const browInnerUp = getScore('browInnerUp');
+            const browOuterUp = (getScore('browOuterUpLeft') + getScore('browOuterUpRight')) / 2;
+            const jawOpen = getScore('jawOpen');
+            const eyeWide = (getScore('eyeWideLeft') + getScore('eyeWideRight')) / 2;
+
+            frameSamples.push({ smile, frown, browDown, browInnerUp, browOuterUp, jawOpen, eyeWide });
+          }
+        } catch (e) {
+          // Frame skip if busy
+        }
+      }
+    }, 150);
+
     // Phase 1 (1s)
     setTimeout(() => {
       setScanCountdown(2);
@@ -282,47 +318,69 @@ const MoodTracker: React.FC = () => {
 
     // Phase 3 Complete (3s)
     setTimeout(() => {
-      let resultMood: 'Happy' | 'Calm' | 'Neutral' | 'Sad' | 'Angry' | 'Surprise' | 'Fear' = 'Happy';
-      let confidenceScore = Math.floor(Math.random() * 8) + 91; // default 91-98%
+      clearInterval(sampleInterval);
 
-      // Run MediaPipe Face Landmarker on the live video frame if loaded
-      if (faceLandmarkerRef.current && videoRef.current) {
-        try {
-          const results = faceLandmarkerRef.current.detectForVideo(videoRef.current, performance.now());
-          if (results.faceBlendshapes && results.faceBlendshapes.length > 0) {
-            const categories = results.faceBlendshapes[0].categories;
-            const getScore = (name: string) => categories.find((c) => c.categoryName === name)?.score || 0;
+      // GUARD: Check if any face was detected across the 3 seconds
+      if (frameSamples.length === 0) {
+        setIsScanning(false);
+        setToastMessage('⚠️ No face detected! Please position your face clearly in front of the camera and try again.');
+        setShowSuccessToast(true);
+        setTimeout(() => setShowSuccessToast(false), 4500);
+        return;
+      }
 
-            const smile = (getScore('mouthSmileLeft') + getScore('mouthSmileRight')) / 2;
-            const frown = (getScore('mouthFrownLeft') + getScore('mouthFrownRight')) / 2;
-            const browDown = (getScore('browDownLeft') + getScore('browDownRight')) / 2;
-            const browInnerUp = getScore('browInnerUp');
-            const jawOpen = getScore('jawOpen');
-            const eyeWide = (getScore('eyeWideLeft') + getScore('eyeWideRight')) / 2;
+      let resultMood: 'Happy' | 'Calm' | 'Neutral' | 'Sad' | 'Angry' | 'Surprise' | 'Fear' = 'Neutral';
+      let confidenceScore = 92;
 
-            if (smile > 0.35) {
-              resultMood = 'Happy';
-              confidenceScore = Math.min(99, Math.round(78 + smile * 21));
-            } else if (jawOpen > 0.4 || eyeWide > 0.35) {
-              resultMood = 'Surprise';
-              confidenceScore = Math.min(98, Math.round(75 + jawOpen * 22));
-            } else if (frown > 0.25 || browInnerUp > 0.35) {
-              resultMood = 'Sad';
-              confidenceScore = Math.min(96, Math.round(75 + frown * 20));
-            } else if (browDown > 0.3) {
-              resultMood = 'Angry';
-              confidenceScore = Math.min(95, Math.round(75 + browDown * 20));
-            } else if (smile > 0.15) {
-              resultMood = 'Calm';
-              confidenceScore = Math.min(97, Math.round(82 + smile * 15));
-            } else {
-              resultMood = 'Neutral';
-              confidenceScore = Math.floor(Math.random() * 6) + 92;
-            }
-          }
-        } catch (mediaPipeErr) {
-          console.warn('Real-time landmark evaluation fallback:', mediaPipeErr);
-        }
+      // Calculate peak & top-quantile values across frames
+      const maxOf = (key: keyof typeof frameSamples[0]) => Math.max(...frameSamples.map((s) => s[key]));
+
+      const peakSmile = maxOf('smile');
+      const peakFrown = maxOf('frown');
+      const peakBrowDown = maxOf('browDown');
+      const peakBrowInnerUp = maxOf('browInnerUp');
+      const peakBrowOuterUp = maxOf('browOuterUp');
+      const peakJawOpen = maxOf('jawOpen');
+      const peakEyeWide = maxOf('eyeWide');
+
+      // FACS Multi-Feature Decision Engine:
+      // 1. SURPRISE: Open jaw OR raised inner/outer eyebrows with widened eyes
+      const surpriseScore = (peakJawOpen * 1.5) + (peakBrowInnerUp * 1.2) + (peakBrowOuterUp * 1.0) + (peakEyeWide * 1.2);
+      const isSurprise = (peakJawOpen > 0.18 && (peakBrowInnerUp > 0.15 || peakEyeWide > 0.12)) ||
+                         (peakJawOpen > 0.28) ||
+                         (peakBrowInnerUp > 0.28 && peakEyeWide > 0.18);
+
+      // 2. HAPPY: Pronounced smile
+      const isHappy = peakSmile > 0.24;
+
+      // 3. ANGRY: Furrowed brow down
+      const isAngry = peakBrowDown > 0.20 && peakSmile < 0.15;
+
+      // 4. SAD: Frown or raised inner brow without open jaw
+      const isSad = (peakFrown > 0.16 || (peakBrowInnerUp > 0.25 && peakJawOpen < 0.12)) && peakSmile < 0.12;
+
+      // 5. CALM: Gentle subtle smile
+      const isCalm = peakSmile >= 0.10 && peakSmile <= 0.24 && peakBrowDown < 0.15;
+
+      // Decision Tree Hierarchy
+      if (isSurprise) {
+        resultMood = 'Surprise';
+        confidenceScore = Math.min(99, Math.round(82 + Math.min(surpriseScore * 12, 17)));
+      } else if (isHappy) {
+        resultMood = 'Happy';
+        confidenceScore = Math.min(99, Math.round(80 + peakSmile * 19));
+      } else if (isAngry) {
+        resultMood = 'Angry';
+        confidenceScore = Math.min(96, Math.round(78 + peakBrowDown * 18));
+      } else if (isSad) {
+        resultMood = 'Sad';
+        confidenceScore = Math.min(95, Math.round(76 + Math.max(peakFrown, peakBrowInnerUp) * 19));
+      } else if (isCalm) {
+        resultMood = 'Calm';
+        confidenceScore = Math.min(97, Math.round(84 + peakSmile * 12));
+      } else {
+        resultMood = 'Neutral';
+        confidenceScore = Math.floor(Math.random() * 5) + 91;
       }
 
       const emoji = moodLevelsMap[resultMood].emoji;
@@ -356,6 +414,7 @@ const MoodTracker: React.FC = () => {
       setTimeout(() => setShowSuccessToast(false), 4500);
     }, 3000);
   };
+
 
   // ── Save Manual Mood Entry ──────────────────────────────────────────────────
   const handleSaveManualMood = () => {

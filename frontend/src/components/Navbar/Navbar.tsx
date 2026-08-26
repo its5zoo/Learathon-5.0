@@ -133,7 +133,6 @@ const Navbar: React.FC = () => {
                       <div>
                         <div className="dropdown-name">{user.firstName} {user.lastName}</div>
                         <div className="dropdown-email">{user.email}</div>
-                        <span style={{ fontSize: '0.75rem', color: '#3b82f6', fontWeight: 600 }}>View Full Profile →</span>
                       </div>
                     </div>
 
@@ -142,15 +141,6 @@ const Navbar: React.FC = () => {
                     {/* Menu Items */}
                     <button className="dropdown-item" onClick={() => handleNavClick('/profile')}>
                       <span>👤</span> My Profile &amp; Records
-                    </button>
-                    <button className="dropdown-item" onClick={() => handleNavClick('/mood-tracker')}>
-                      <span>📊</span> Mood Dashboard
-                    </button>
-                    <button className="dropdown-item" onClick={() => handleNavClick('/mental-health')}>
-                      <span>🧠</span> My Assessments
-                    </button>
-                    <button className="dropdown-item" onClick={() => handleNavClick('/appointment')}>
-                      <span>📅</span> My Appointments
                     </button>
 
                     <div className="dropdown-divider"></div>

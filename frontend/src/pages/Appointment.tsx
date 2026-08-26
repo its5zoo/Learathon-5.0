@@ -22,7 +22,6 @@ interface Doctor {
   nextAvailable: string;
   fee: string;
   image: string;
-  // AI concierge fields
   matchScore?: number;
   matchReason?: string;
   specialtyHighlight?: string;
@@ -99,13 +98,46 @@ const doctorsData: Doctor[] = [
     fee: '₹1,300 / session',
     image: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
   },
+  {
+    id: 'doc-5',
+    name: 'Dr. Priya Nair',
+    title: 'Child & Adolescent Psychiatrist',
+    qualification: 'MD Psychiatry, DPM (KMC Manipal)',
+    experience: '8+ Years Experience',
+    rating: 4.8,
+    reviewsCount: 76,
+    specialties: ['Child & Adolescent', 'ADHD', 'Family Therapy'],
+    clinicName: 'HealMind Child Wellness Clinic',
+    address: '34/B, Pali Mala Road, Bandra West, Mumbai, Maharashtra 400050',
+    city: 'Mumbai',
+    modes: ['In-Clinic', 'Video Consultation'],
+    nextAvailable: 'Today, 2:00 PM',
+    fee: '₹900 / session',
+    image: 'https://images.unsplash.com/photo-1614608682850-e0d6ed316d47?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
+  },
+  {
+    id: 'doc-6',
+    name: 'Dr. Arjun Kapoor',
+    title: 'Neuropsychiatrist & Addiction Specialist',
+    qualification: 'MD Psychiatry, DNB (NIMHANS)',
+    experience: '14+ Years Experience',
+    rating: 4.88,
+    reviewsCount: 167,
+    specialties: ['Addiction Recovery', 'OCD', 'Bipolar Disorder'],
+    clinicName: 'Neuromind Institute',
+    address: '12, Richmond Road, Near Clarence Public School, Bengaluru, Karnataka 560025',
+    city: 'Bengaluru',
+    modes: ['In-Clinic', 'Video Consultation'],
+    nextAvailable: 'Tomorrow, 9:00 AM',
+    fee: '₹1,800 / session',
+    image: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
+  },
 ];
 
 const timeSlots = [
   '10:00 AM', '11:30 AM', '02:00 PM', '03:30 PM', '04:30 PM', '06:00 PM', '07:30 PM',
 ];
 
-// ─── AI Concierge Loading Steps ───────────────────────────────────────────────
 const AI_LOADING_STEPS = [
   'Analyzing your assessment history…',
   'Matching specialists to your profile…',
@@ -119,15 +151,16 @@ const Appointment: React.FC = () => {
   const navigate = useNavigate();
   const { isLoggedIn, user, token } = useAuth();
 
-  // Stepper state (1: Select, 2: Schedule, 3: Details, 4: Confirmed)
-  const [currentStep, setCurrentStep] = useState(1);
+  // Stepper: 1=Select, 2=Schedule, 3=Review & Send  | 'confirmed'=success state
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 'confirmed'>(1);
 
-  // Filters state
+  // Filters
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>(['Anxiety & Stress']);
-  const [selectedMode, setSelectedMode] = useState<string>('All');
-  const [selectedCity, setSelectedCity] = useState<string>('All');
+  const [selectedMode, setSelectedMode] = useState('All');
+  const [selectedCity, setSelectedCity] = useState('All');
+  const [userConcerns, setUserConcerns] = useState('');
 
-  // Booking selection state
+  // Booking state
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [selectedDate, setSelectedDate] = useState('Today (Earliest)');
   const [selectedTime, setSelectedTime] = useState('04:30 PM');
@@ -135,29 +168,29 @@ const Appointment: React.FC = () => {
   const [patientName, setPatientName] = useState('');
   const [patientPhone, setPatientPhone] = useState('');
   const [attachReport, setAttachReport] = useState(true);
-  const [userConcerns, setUserConcerns] = useState('');
 
-  // Booking result state
+  // Booking result
   const [bookedAppointment, setBookedAppointment] = useState<any>(null);
   const [bookingRef, setBookingRef] = useState('');
   const [isBooking, setIsBooking] = useState(false);
   const [bookingError, setBookingError] = useState('');
+  const [isDummyDoctor, setIsDummyDoctor] = useState(false);
 
-  // AI Concierge modal state
+  // AI Concierge modal
   const [showAiModal, setShowAiModal] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiLoadingStep, setAiLoadingStep] = useState(0);
   const [aiRecommendations, setAiRecommendations] = useState<Doctor[]>([]);
   const [aiError, setAiError] = useState('');
 
-  // Clinic reply / email tracker state
+  // Clinic reply
   const [isSimulatingReply, setIsSimulatingReply] = useState(false);
   const [clinicReplySummary, setClinicReplySummary] = useState('');
   const [clinicReplyRaw, setClinicReplyRaw] = useState('');
   const [showRawReply, setShowRawReply] = useState(false);
-  const [appointmentStatus, setAppointmentStatus] = useState<string>('request_sent');
+  const [appointmentStatus, setAppointmentStatus] = useState('request_sent');
 
-  // Pre-fill patient info from auth
+  // Pre-fill from auth
   useEffect(() => {
     if (user) {
       setPatientName(`${user.firstName} ${user.lastName}`);
@@ -165,7 +198,51 @@ const Appointment: React.FC = () => {
     }
   }, [user]);
 
-  // Restore assessment history from localStorage
+  // ─── Auto-poll for real clinic reply (IMAP detection) ─────────────────────
+  // When on confirmed screen and no reply yet, poll DB every 30s.
+  // If IMAP poller found a real clinic reply, this will auto-update the UI.
+  useEffect(() => {
+    if (currentStep !== 'confirmed' || !bookedAppointment?._id || clinicReplySummary) return;
+
+    let pollCount = 0;
+    const MAX_POLLS = 20; // Stop after ~10 minutes (20 × 30s)
+
+    const pollStatus = async () => {
+      pollCount++;
+      if (pollCount > MAX_POLLS) {
+        clearInterval(pollerId);
+        return;
+      }
+      try {
+        const res = await fetch(`${API_URL}/appointments/${bookedAppointment._id}/status`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (data.success && data.clinicReplySummary) {
+          // Real reply detected by IMAP poller!
+          setClinicReplySummary(data.clinicReplySummary);
+          setClinicReplyRaw(data.clinicReplyRaw || '');
+          setAppointmentStatus(data.status);
+
+          // Update profile notification
+          try {
+            const existing = JSON.parse(localStorage.getItem('ss_latest_appointment') || '{}');
+            localStorage.setItem('ss_latest_appointment', JSON.stringify({
+              ...existing,
+              status: data.status,
+              confirmedAt: new Date().toISOString(),
+            }));
+          } catch {}
+
+          clearInterval(pollerId);
+        }
+      } catch { /* silent fail — will retry */ }
+    };
+
+    const pollerId = setInterval(pollStatus, 30000); // every 30 seconds
+    return () => clearInterval(pollerId);
+  }, [currentStep, bookedAppointment, clinicReplySummary, token]);
+
   const getAssessmentHistory = () => {
     try {
       const stored = localStorage.getItem('ss_assessment_history');
@@ -175,11 +252,9 @@ const Appointment: React.FC = () => {
 
   // ─── Filters ───────────────────────────────────────────────────────────────
   const toggleSpecialty = (spec: string) => {
-    if (selectedSpecialties.includes(spec)) {
-      setSelectedSpecialties(selectedSpecialties.filter(s => s !== spec));
-    } else {
-      setSelectedSpecialties([...selectedSpecialties, spec]);
-    }
+    setSelectedSpecialties(prev =>
+      prev.includes(spec) ? prev.filter(s => s !== spec) : [...prev, spec]
+    );
   };
 
   const filteredDoctors = doctorsData.filter(doc => {
@@ -195,7 +270,7 @@ const Appointment: React.FC = () => {
     if (!isLoggedIn) { navigate('/login'); return; }
     setSelectedDoctor(doctor);
     setCurrentStep(2);
-    window.scrollTo({ top: 400, behavior: 'smooth' });
+    window.scrollTo({ top: 300, behavior: 'smooth' });
   };
 
   // ─── AI Concierge ──────────────────────────────────────────────────────────
@@ -207,13 +282,10 @@ const Appointment: React.FC = () => {
     setAiRecommendations([]);
     setAiLoadingStep(0);
 
-    // Animate loading steps
     let step = 0;
     const stepInterval = setInterval(() => {
       step++;
-      if (step < AI_LOADING_STEPS.length) {
-        setAiLoadingStep(step);
-      }
+      if (step < AI_LOADING_STEPS.length) setAiLoadingStep(step);
     }, 900);
 
     try {
@@ -231,10 +303,8 @@ const Appointment: React.FC = () => {
         }),
       });
       const data = await res.json();
-
       clearInterval(stepInterval);
       setAiLoading(false);
-
       if (data.success) {
         setAiRecommendations(data.recommendations);
       } else {
@@ -251,14 +321,12 @@ const Appointment: React.FC = () => {
     setSelectedDoctor(doctor);
     setShowAiModal(false);
     setCurrentStep(2);
-    window.scrollTo({ top: 400, behavior: 'smooth' });
+    window.scrollTo({ top: 300, behavior: 'smooth' });
   };
 
   // ─── Book Appointment ──────────────────────────────────────────────────────
-  const handleConfirmBooking = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleConfirmBooking = async () => {
     if (!selectedDoctor || !user) return;
-
     setIsBooking(true);
     setBookingError('');
 
@@ -276,6 +344,7 @@ const Appointment: React.FC = () => {
           mode: consultationMode,
           patientName,
           patientPhone,
+          concerns: userConcerns,
           attachReport,
           assessmentHistory: getAssessmentHistory(),
           aiMatchScore: selectedDoctor.matchScore,
@@ -289,7 +358,22 @@ const Appointment: React.FC = () => {
         setBookingRef(ref);
         setBookedAppointment(data.appointment);
         setAppointmentStatus(data.appointment.status || 'request_sent');
-        setCurrentStep(4);
+        setIsDummyDoctor(data.appointment.status === 'demo_no_email');
+        setCurrentStep('confirmed');
+
+        // Store notification for Profile page
+        const notif = {
+          doctorName: selectedDoctor.name,
+          clinicName: selectedDoctor.clinicName,
+          date: selectedDate,
+          time: selectedTime,
+          mode: consultationMode,
+          bookingRef: ref,
+          status: data.appointment.status,
+          bookedAt: new Date().toISOString(),
+        };
+        localStorage.setItem('ss_latest_appointment', JSON.stringify(notif));
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         setBookingError(data.message || 'Booking failed. Please try again.');
@@ -315,6 +399,16 @@ const Appointment: React.FC = () => {
         setClinicReplySummary(data.clinicReplySummary);
         setClinicReplyRaw(data.clinicReplyRaw);
         setAppointmentStatus(data.status);
+
+        // Update profile notification with confirmed status
+        try {
+          const existing = JSON.parse(localStorage.getItem('ss_latest_appointment') || '{}');
+          localStorage.setItem('ss_latest_appointment', JSON.stringify({
+            ...existing,
+            status: data.status,
+            confirmedAt: new Date().toISOString(),
+          }));
+        } catch {}
       }
     } catch {
       setClinicReplySummary('Failed to fetch clinic reply. Please try again.');
@@ -323,11 +417,24 @@ const Appointment: React.FC = () => {
     }
   };
 
+  const resetAll = () => {
+    setCurrentStep(1);
+    setSelectedDoctor(null);
+    setBookedAppointment(null);
+    setClinicReplySummary('');
+    setClinicReplyRaw('');
+    setAppointmentStatus('request_sent');
+    setIsDummyDoctor(false);
+    setBookingRef('');
+    setBookingError('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   // ─── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="appointment-page">
 
-      {/* ── Hero Header ─────────────────────────────────────────────────────── */}
+      {/* ── Hero Header ──────────────────────────────────────────────────────── */}
       <section className="app-hero">
         <div className="container app-hero-container">
           <div className="app-hero-left">
@@ -337,7 +444,6 @@ const Appointment: React.FC = () => {
               curated with empathy and professional expertise.
             </p>
 
-            {/* Concerns input (feeds AI concierge) */}
             {isLoggedIn && (
               <div className="concerns-input-wrapper">
                 <input
@@ -350,7 +456,6 @@ const Appointment: React.FC = () => {
               </div>
             )}
 
-            {/* AI Concierge Banner */}
             <div className="ai-agent-banner">
               <div className="ai-agent-icon">
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -368,7 +473,6 @@ const Appointment: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Visual Card */}
           <div className="app-hero-right-card">
             <img src="/appointment_therapy_bg.jpg" alt="Therapy Consultation Lounge" className="app-hero-img" />
             <div className="app-hero-card-overlay"></div>
@@ -380,31 +484,32 @@ const Appointment: React.FC = () => {
         </div>
       </section>
 
-      {/* ── Stepper ──────────────────────────────────────────────────────────── */}
-      <div className="container">
-        <div className="booking-stepper">
-          {[
-            { n: 1, label: 'Select Specialist' },
-            { n: 2, label: 'Schedule Slot' },
-            { n: 3, label: 'Details & Confirm' },
-            { n: 4, label: 'Email Tracker' },
-          ].map((s, i, arr) => (
-            <React.Fragment key={s.n}>
-              <div
-                className={`step-item ${currentStep >= s.n ? 'active' : ''} ${currentStep > s.n ? 'completed' : ''}`}
-                onClick={() => s.n < currentStep && setCurrentStep(s.n)}
-                style={{ cursor: s.n < currentStep ? 'pointer' : 'default' }}
-              >
-                <div className="step-circle">
-                  {currentStep > s.n ? '✓' : s.n}
+      {/* ── 3-Step Stepper ───────────────────────────────────────────────────── */}
+      {currentStep !== 'confirmed' && (
+        <div className="container">
+          <div className="booking-stepper">
+            {[
+              { n: 1, label: 'Select Specialist' },
+              { n: 2, label: 'Schedule' },
+              { n: 3, label: 'Review & Send' },
+            ].map((s, i, arr) => (
+              <React.Fragment key={s.n}>
+                <div
+                  className={`step-item ${currentStep >= s.n ? 'active' : ''} ${currentStep > s.n ? 'completed' : ''}`}
+                  onClick={() => s.n < (currentStep as number) && setCurrentStep(s.n as 1 | 2 | 3)}
+                  style={{ cursor: s.n < (currentStep as number) ? 'pointer' : 'default' }}
+                >
+                  <div className="step-circle">
+                    {(currentStep as number) > s.n ? '✓' : s.n}
+                  </div>
+                  <span className="step-label">{s.label}</span>
                 </div>
-                <span className="step-label">{s.label}</span>
-              </div>
-              {i < arr.length - 1 && <div className="step-line"></div>}
-            </React.Fragment>
-          ))}
+                {i < arr.length - 1 && <div className="step-line"></div>}
+              </React.Fragment>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── Main Content ─────────────────────────────────────────────────────── */}
       <section className="appointment-main-section">
@@ -544,10 +649,9 @@ const Appointment: React.FC = () => {
             </div>
           )}
 
-          {/* STEP 2: SCHEDULE SLOT */}
+          {/* STEP 2: SCHEDULE (Mode + Date + Time + Patient Info merged) */}
           {currentStep === 2 && selectedDoctor && (
             <div className="schedule-step-container">
-              {/* Selected doctor banner */}
               {selectedDoctor.isTopPick && (
                 <div className="ai-top-pick-banner">
                   <span>🤖 AI Top Pick</span>
@@ -555,6 +659,8 @@ const Appointment: React.FC = () => {
                   {selectedDoctor.matchReason && <span className="ai-match-reason-small">{selectedDoctor.matchReason}</span>}
                 </div>
               )}
+
+              {/* Selected doctor summary */}
               <div className="selected-doc-summary-card">
                 <img src={selectedDoctor.image} alt={selectedDoctor.name} className="summary-doc-img" />
                 <div>
@@ -569,7 +675,8 @@ const Appointment: React.FC = () => {
               </div>
 
               <div className="schedule-card">
-                <h3 className="schedule-card-title">Select Consultation Mode &amp; Date</h3>
+                {/* Mode */}
+                <h3 className="schedule-card-title">Select Consultation Mode</h3>
                 <div className="mode-toggle-group">
                   <button className={`mode-btn ${consultationMode === 'In-Clinic' ? 'active' : ''}`} onClick={() => setConsultationMode('In-Clinic')}>
                     🏥 In-Person at Clinic
@@ -581,13 +688,15 @@ const Appointment: React.FC = () => {
                   </button>
                 </div>
 
-                <h4 className="slots-heading">Available Dates</h4>
+                {/* Date */}
+                <h4 className="slots-heading">Select Date</h4>
                 <div className="dates-row">
                   {['Today (Earliest)', 'Tomorrow', 'Day After Tomorrow'].map(d => (
                     <button key={d} className={`date-btn ${selectedDate === d ? 'active' : ''}`} onClick={() => setSelectedDate(d)}>{d}</button>
                   ))}
                 </div>
 
+                {/* Time */}
                 <h4 className="slots-heading">Select Time Slot</h4>
                 <div className="time-slots-grid">
                   {timeSlots.map(time => (
@@ -595,82 +704,125 @@ const Appointment: React.FC = () => {
                   ))}
                 </div>
 
+                {/* Patient Details (prefilled) */}
+                <h4 className="slots-heading" style={{ marginTop: '28px' }}>Your Contact Details</h4>
+                <div className="schedule-patient-fields">
+                  <div className="form-row">
+                    <div className="form-field">
+                      <label>Full Name</label>
+                      <input
+                        type="text"
+                        value={patientName}
+                        onChange={e => setPatientName(e.target.value)}
+                        placeholder="Your full name"
+                        required
+                      />
+                    </div>
+                    <div className="form-field">
+                      <label>Phone Number</label>
+                      <input
+                        type="tel"
+                        value={patientPhone}
+                        onChange={e => setPatientPhone(e.target.value)}
+                        placeholder="+91 XXXXX XXXXX"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="form-field form-field-full">
+                    <label>Email (pre-filled from account)</label>
+                    <input type="email" value={user?.email || ''} readOnly className="readonly-input" />
+                  </div>
+
+                  {/* Attach report toggle */}
+                  <div className="ai-report-attachment-box" style={{ marginTop: '12px' }}>
+                    <label className="ai-report-checkbox">
+                      <input type="checkbox" checked={attachReport} onChange={e => setAttachReport(e.target.checked)} />
+                      <div>
+                        <strong>Attach Assessment Summary to Email</strong>
+                        <p>Sends your PHQ-9/GAD-7 scores to {selectedDoctor.name} for a more personalized session.</p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
                 <div className="schedule-actions-row">
                   <button className="btn btn-outline" onClick={() => setCurrentStep(1)}>← Change Specialist</button>
-                  <button className="btn btn-primary" onClick={() => setCurrentStep(3)}>Continue to Details →</button>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => setCurrentStep(3)}
+                    disabled={!patientName.trim() || !patientPhone.trim()}
+                  >
+                    Review Before Sending →
+                  </button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* STEP 3: DETAILS & CONFIRMATION */}
+          {/* STEP 3: REVIEW & SEND */}
           {currentStep === 3 && selectedDoctor && (
             <div className="details-step-container">
               <div className="booking-summary-header">
-                <h2>Confirm Appointment Details</h2>
-                <p>Review your booking and let our AI send an appointment request to the clinic on your behalf.</p>
+                <h2>Review Your Appointment Request</h2>
+                <p>Here's exactly what our AI will send to <strong>{selectedDoctor.clinicName}</strong>. Confirm when ready.</p>
               </div>
 
-              <div className="details-grid-layout">
-                <form className="patient-details-form" onSubmit={handleConfirmBooking}>
-                  <h3 className="form-section-title">Patient Contact Information</h3>
-                  <div className="form-row">
-                    <div className="form-field">
-                      <label>Full Name</label>
-                      <input type="text" value={patientName} onChange={e => setPatientName(e.target.value)} required />
-                    </div>
-                    <div className="form-field">
-                      <label>Phone Number</label>
-                      <input type="tel" value={patientPhone} onChange={e => setPatientPhone(e.target.value)} required />
-                    </div>
-                  </div>
+              <div className="review-send-layout">
 
-                  <div className="form-field form-field-full">
-                    <label>Email (used for appointment confirmation)</label>
-                    <input type="email" value={user?.email || ''} readOnly className="readonly-input" />
-                  </div>
-
-                  {/* AI Email Disclosure */}
-                  <div className="ai-email-disclosure">
-                    <div className="ai-email-icon">📧</div>
+                {/* Email Preview Panel */}
+                <div className="email-preview-panel">
+                  <div className="email-preview-header">
+                    <span className="email-preview-icon">📧</span>
                     <div>
-                      <strong>AI Concierge will send an appointment request email</strong>
-                      <p>Our AI Agent will email {selectedDoctor.clinicName} on your behalf with your booking details. You'll be notified here when they reply.</p>
+                      <strong>Email Preview — Sent from SoulSpace AI</strong>
+                      <p className="email-preview-meta">
+                        <span>To: <em>{selectedDoctor.name}</em> at {selectedDoctor.clinicName}</span><br />
+                        <span>From: <em>iamrevenent007@gmail.com</em> (SoulSpace AI Concierge)</span>
+                      </p>
                     </div>
                   </div>
 
-                  {/* Assessment Report Attachment */}
-                  <div className="ai-report-attachment-box">
-                    <label className="ai-report-checkbox">
-                      <input type="checkbox" checked={attachReport} onChange={e => setAttachReport(e.target.checked)} />
-                      <div>
-                        <strong>Attach SoulSpace Assessment Summary to Email</strong>
-                        <p>Sends your screener scores (PHQ-9, GAD-7, etc.) to {selectedDoctor.name} for a more personalized first session.</p>
+                  <div className="email-preview-body">
+                    <div className="email-preview-subject">
+                      📋 Subject: Appointment Request — {patientName} via SoulSpace AI
+                    </div>
+                    <div className="email-preview-content">
+                      <p>Dear <strong>{selectedDoctor.name}</strong>,</p>
+                      <p>
+                        A patient has requested an appointment through the <strong>SoulSpace Mental Health Platform</strong>.
+                        Here are their details:
+                      </p>
+                      <div className="email-detail-table">
+                        <div className="email-detail-row"><span>Patient Name</span><strong>{patientName}</strong></div>
+                        <div className="email-detail-row"><span>Phone</span><strong>{patientPhone}</strong></div>
+                        <div className="email-detail-row"><span>Email</span><strong>{user?.email}</strong></div>
+                        <div className="email-detail-row"><span>Preferred Date</span><strong>{selectedDate}</strong></div>
+                        <div className="email-detail-row"><span>Preferred Time</span><strong>{selectedTime}</strong></div>
+                        <div className="email-detail-row"><span>Mode</span><strong>{consultationMode}</strong></div>
+                        {userConcerns && <div className="email-detail-row"><span>Concerns</span><strong>{userConcerns}</strong></div>}
+                        {attachReport && <div className="email-detail-row"><span>Assessment Summary</span><strong>✓ Attached (PHQ-9 / GAD-7 scores)</strong></div>}
+                        {selectedDoctor.matchScore && <div className="email-detail-row"><span>AI Match Score</span><strong>{selectedDoctor.matchScore}% match</strong></div>}
                       </div>
-                    </label>
+                      <p style={{ marginTop: '12px', color: '#64748b', fontSize: '0.85rem' }}>
+                        Please reply to this email to confirm or suggest an alternative slot. Your reply will be
+                        AI-summarized and shown to the patient in their SoulSpace dashboard.
+                      </p>
+                    </div>
                   </div>
 
-                  {bookingError && <div className="booking-error-msg">⚠️ {bookingError}</div>}
+                  <button className="btn btn-outline edit-back-btn" onClick={() => setCurrentStep(2)}>
+                    ← Edit Details
+                  </button>
+                </div>
 
-                  <div className="form-actions-row">
-                    <button type="button" className="btn btn-outline" onClick={() => setCurrentStep(2)}>← Back to Schedule</button>
-                    <button type="submit" className="btn btn-primary confirm-submit-btn" disabled={isBooking}>
-                      {isBooking ? (
-                        <><span className="btn-spinner"></span> Sending Appointment Request…</>
-                      ) : (
-                        '🤖 Confirm & Send Email Request →'
-                      )}
-                    </button>
-                  </div>
-                </form>
-
-                <div className="order-summary-card">
+                {/* Confirm Panel */}
+                <div className="confirm-panel">
                   <h3 className="summary-title">Appointment Summary</h3>
                   <div className="summary-item"><span>Specialist</span><strong>{selectedDoctor.name}</strong></div>
                   <div className="summary-item"><span>Mode</span><strong>{consultationMode}</strong></div>
-                  <div className="summary-item"><span>Date &amp; Time</span><strong>{selectedDate}, {selectedTime}</strong></div>
-                  <div className="summary-item"><span>Clinic</span><strong className="summary-address-text">{selectedDoctor.clinicName}</strong></div>
-                  <div className="summary-item"><span>Address</span><strong className="summary-address-text">{selectedDoctor.address}</strong></div>
+                  <div className="summary-item"><span>Date & Time</span><strong>{selectedDate}, {selectedTime}</strong></div>
+                  <div className="summary-item"><span>Clinic</span><strong>{selectedDoctor.clinicName}</strong></div>
                   <div className="summary-divider"></div>
                   <div className="summary-total-row">
                     <span>Consultation Fee</span>
@@ -682,38 +834,61 @@ const Appointment: React.FC = () => {
                       <span className="match-score-pill">{selectedDoctor.matchScore}%</span>
                     </div>
                   )}
+
+                  {bookingError && <div className="booking-error-msg">⚠️ {bookingError}</div>}
+
+                  <button
+                    className="btn btn-primary confirm-submit-btn"
+                    onClick={handleConfirmBooking}
+                    disabled={isBooking}
+                    style={{ marginTop: '24px', width: '100%' }}
+                  >
+                    {isBooking ? (
+                      <><span className="btn-spinner"></span> Sending Appointment Request…</>
+                    ) : (
+                      '🤖 Confirm & Send Email →'
+                    )}
+                  </button>
+                  <p className="confirm-disclaimer">
+                    By confirming, our AI will email {selectedDoctor.clinicName} on your behalf.
+                    You'll be notified when they reply.
+                  </p>
                 </div>
               </div>
             </div>
           )}
 
-          {/* STEP 4: EMAIL TRACKER / CONFIRMATION */}
-          {currentStep === 4 && bookedAppointment && selectedDoctor && (
+          {/* CONFIRMED STATE */}
+          {currentStep === 'confirmed' && bookedAppointment && selectedDoctor && (
             <div className="confirmed-receipt-card">
               <div className="success-icon-badge">✓</div>
-              <h2 className="confirmed-title">Appointment Request Sent!</h2>
+              <h2 className="confirmed-title">
+                {isDummyDoctor ? 'Appointment Booked! (Demo Mode)' : 'Appointment Request Sent!'}
+              </h2>
               <p className="confirmed-desc">
-                Our AI Agent has emailed <strong>{selectedDoctor.clinicName}</strong> on your behalf.
-                You'll see a reply summary here once the clinic responds.
+                {isDummyDoctor
+                  ? <>This doctor is in <strong>demo mode</strong> — no real email was sent. Your booking is saved. You can use this to demonstrate the flow.</>
+                  : <>Our AI Agent has emailed <strong>{selectedDoctor.clinicName}</strong> on your behalf. You'll see a reply summary here once the clinic responds.</>
+                }
               </p>
 
               {/* Email Status Timeline */}
               <div className="email-timeline">
                 <div className="email-timeline-title">📬 Email Status Tracker</div>
                 <div className="timeline-steps">
-                  <div className={`t-step done`}>
+                  <div className="t-step done">
                     <div className="t-dot done"></div>
                     <div className="t-content">
-                      <strong>Appointment Request Sent</strong>
-                      <span>AI Agent emailed {selectedDoctor.clinicName}</span>
+                      <strong>Appointment Request</strong>
+                      <span>{isDummyDoctor ? '⚪ Demo mode — no real email' : `AI Agent emailed ${selectedDoctor.clinicName}`}</span>
                     </div>
                   </div>
                   <div className="t-line"></div>
-                  <div className={`t-step done`}>
-                    <div className="t-dot done"></div>
+                  <div className={`t-step ${isDummyDoctor ? '' : 'done'}`}>
+                    <div className={`t-dot ${isDummyDoctor ? '' : 'done'}`}></div>
                     <div className="t-content">
-                      <strong>Confirmation Sent to You</strong>
-                      <span>Check your inbox: {user?.email}</span>
+                      <strong>Confirmation to You</strong>
+                      <span>{isDummyDoctor ? '⚪ Skipped (demo mode)' : `Check your inbox: ${user?.email}`}</span>
                     </div>
                   </div>
                   <div className="t-line"></div>
@@ -721,7 +896,10 @@ const Appointment: React.FC = () => {
                     <div className={`t-dot ${clinicReplySummary ? 'done' : 'pending'}`}></div>
                     <div className="t-content">
                       <strong>Clinic Reply</strong>
-                      <span>{clinicReplySummary ? (appointmentStatus === 'confirmed' ? '✅ Confirmed!' : '🔄 Rescheduled') : 'Awaiting clinic response…'}</span>
+                      <span>{clinicReplySummary
+                        ? (appointmentStatus === 'confirmed' ? '✅ Confirmed!' : '🔄 Rescheduled')
+                        : 'Awaiting clinic response…'
+                      }</span>
                     </div>
                   </div>
                 </div>
@@ -737,20 +915,32 @@ const Appointment: React.FC = () => {
                 )}
               </div>
 
-              {/* Simulate Clinic Reply Button */}
+              {/* Live auto-check indicator + Simulate fallback */}
               {!clinicReplySummary && (
-                <button
-                  className="btn btn-outline simulate-reply-btn"
-                  onClick={handleSimulateReply}
-                  disabled={isSimulatingReply}
-                >
-                  {isSimulatingReply ? (
-                    <><span className="btn-spinner"></span> AI Summarizing Clinic Reply…</>
-                  ) : (
-                    '📥 Simulate Clinic Reply (Demo)'
-                  )}
-                </button>
+                <div className="live-poll-section">
+                  <div className="live-poll-indicator">
+                    <span className="live-poll-dot"></span>
+                    <span>
+                      <strong>Auto-checking for clinic reply…</strong>
+                      <br />
+                      <small>When {selectedDoctor.clinicName} replies to the email, it will appear here automatically.</small>
+                    </span>
+                  </div>
+                  <button
+                    className="btn btn-outline simulate-reply-btn"
+                    onClick={handleSimulateReply}
+                    disabled={isSimulatingReply}
+                    style={{ marginTop: '12px' }}
+                  >
+                    {isSimulatingReply ? (
+                      <><span className="btn-spinner"></span> AI Summarizing Clinic Reply…</>
+                    ) : (
+                      '📥 Simulate Clinic Reply (Demo — don\'t wait)'
+                    )}
+                  </button>
+                </div>
               )}
+
 
               {/* AI-Summarized Clinic Reply */}
               {clinicReplySummary && (
@@ -778,26 +968,11 @@ const Appointment: React.FC = () => {
 
               {/* Booking Details */}
               <div className="receipt-details-box">
-                <div className="receipt-row">
-                  <span>Booking Reference:</span>
-                  <strong>#{bookingRef}</strong>
-                </div>
-                <div className="receipt-row">
-                  <span>Specialist:</span>
-                  <strong>{selectedDoctor.name}</strong>
-                </div>
-                <div className="receipt-row">
-                  <span>Scheduled:</span>
-                  <strong>{selectedDate}, {selectedTime}</strong>
-                </div>
-                <div className="receipt-row">
-                  <span>Consultation Mode:</span>
-                  <strong>{consultationMode}</strong>
-                </div>
-                <div className="receipt-row">
-                  <span>Location:</span>
-                  <strong>{selectedDoctor.clinicName}, {selectedDoctor.address}</strong>
-                </div>
+                <div className="receipt-row"><span>Booking Reference:</span><strong>#{bookingRef}</strong></div>
+                <div className="receipt-row"><span>Specialist:</span><strong>{selectedDoctor.name}</strong></div>
+                <div className="receipt-row"><span>Scheduled:</span><strong>{selectedDate}, {selectedTime}</strong></div>
+                <div className="receipt-row"><span>Consultation Mode:</span><strong>{consultationMode}</strong></div>
+                <div className="receipt-row"><span>Location:</span><strong>{selectedDoctor.clinicName}, {selectedDoctor.address}</strong></div>
                 {attachReport && (
                   <div className="receipt-row">
                     <span>Assessment:</span>
@@ -807,11 +982,11 @@ const Appointment: React.FC = () => {
               </div>
 
               <div className="confirmed-actions">
-                <button className="btn btn-outline" onClick={() => { setCurrentStep(1); setBookedAppointment(null); setClinicReplySummary(''); }}>
+                <button className="btn btn-outline" onClick={resetAll}>
                   Book Another Appointment
                 </button>
-                <button className="btn btn-primary" onClick={() => window.location.href = '/'}>
-                  Return to Home
+                <button className="btn btn-primary" onClick={() => navigate('/profile')}>
+                  View in Profile →
                 </button>
               </div>
             </div>
@@ -820,7 +995,7 @@ const Appointment: React.FC = () => {
         </div>
       </section>
 
-      {/* ── AI Concierge Modal ────────────────────────────────────────────────── */}
+      {/* ── AI Concierge Modal ──────────────────────────────────────────────── */}
       {showAiModal && (
         <div className="ai-modal-overlay" onClick={e => { if (e.target === e.currentTarget) setShowAiModal(false); }}>
           <div className="ai-modal">
@@ -839,7 +1014,7 @@ const Appointment: React.FC = () => {
               </div>
             </div>
 
-            {/* Loading state */}
+            {/* Loading */}
             {aiLoading && (
               <div className="ai-loading-container">
                 <div className="ai-loading-orb">
@@ -857,7 +1032,7 @@ const Appointment: React.FC = () => {
               </div>
             )}
 
-            {/* Error state */}
+            {/* Error */}
             {aiError && !aiLoading && (
               <div className="ai-error-box">
                 <p>⚠️ {aiError}</p>

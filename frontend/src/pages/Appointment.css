@@ -1743,3 +1743,182 @@
 }
 .ai-error-box p { margin-bottom: 16px; }
 
+/* ==========================================================================
+   Step 2: Inline Patient Fields
+   ========================================================================== */
+.schedule-patient-fields {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+.schedule-patient-fields .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.schedule-patient-fields .form-field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 6px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+.schedule-patient-fields .form-field input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #1e293b;
+  background: #fff;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+.schedule-patient-fields .form-field input:focus {
+  outline: none;
+  border-color: #3f72af;
+  box-shadow: 0 0 0 3px rgba(63,114,175,0.1);
+}
+.schedule-patient-fields .form-field-full { margin-bottom: 0; }
+.schedule-patient-fields .readonly-input {
+  background: #f8fafc;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   Step 3: Review & Send Layout
+   ========================================================================== */
+.review-send-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 28px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .review-send-layout { grid-template-columns: 1fr; }
+}
+
+/* Email Preview Panel */
+.email-preview-panel {
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+.email-preview-header {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #1a3a6b 0%, #3f72af 100%);
+  color: #fff;
+}
+.email-preview-icon { font-size: 28px; margin-top: 2px; }
+.email-preview-header strong { font-size: 15px; font-weight: 700; }
+.email-preview-meta {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.85;
+  line-height: 1.8;
+}
+.email-preview-body {
+  padding: 20px 24px;
+}
+.email-preview-subject {
+  background: #f0f4f8;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 16px;
+  border-left: 3px solid #3f72af;
+}
+.email-preview-content {
+  font-size: 13.5px;
+  color: #334155;
+  line-height: 1.7;
+}
+.email-preview-content p { margin-bottom: 10px; }
+.email-detail-table {
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  margin: 12px 0;
+}
+.email-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 14px;
+  font-size: 13px;
+  border-bottom: 1px solid #e2e8f0;
+}
+.email-detail-row:last-child { border-bottom: none; }
+.email-detail-row span { color: #64748b; font-size: 12px; }
+.email-detail-row strong { color: #1e293b; text-align: right; max-width: 60%; }
+.edit-back-btn {
+  margin: 16px 24px 20px 24px;
+  font-size: 13px;
+}
+
+/* Confirm Panel */
+.confirm-panel {
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  position: sticky;
+  top: 100px;
+}
+.confirm-disclaimer {
+  margin-top: 10px;
+  font-size: 11px;
+  color: #94a3b8;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ==========================================================================
+   Live Poll Indicator (real clinic reply auto-detection)
+   ========================================================================== */
+.live-poll-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 16px 0;
+}
+.live-poll-indicator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f0fdf4;
+  border: 1.5px solid #86efac;
+  border-radius: 12px;
+  padding: 14px 20px;
+  width: 100%;
+  max-width: 520px;
+}
+.live-poll-indicator span { font-size: 13.5px; color: #166534; line-height: 1.5; }
+.live-poll-indicator small { font-size: 11.5px; color: #4ade80; }
+.live-poll-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #22c55e;
+  flex-shrink: 0;
+  animation: livePulse 1.4s ease-in-out infinite;
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+}
+@keyframes livePulse {
+  0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
+  70%  { transform: scale(1.1);  box-shadow: 0 0 0 8px rgba(34,197,94,0); }
+  100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+}
