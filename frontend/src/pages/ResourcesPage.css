@@ -486,10 +486,6 @@
   white-space: nowrap;
 }
 
-.resource-item-card.video-card .resource-card-action-btn {
-  color: #38bdf8;
-}
-
 .resource-item-card.audio-card .resource-card-action-btn {
   color: #38bdf8;
 }
@@ -534,6 +530,55 @@
 .resource-card-action-btn:hover {
   transform: translateX(3px);
 }
+
+
+.audio-play-btn {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid #38bdf8;
+  color: #38bdf8;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.audio-play-btn:hover {
+  background: #38bdf8;
+  color: #0f172a;
+}
+
+.audio-play-btn.playing {
+  background: #10b981;
+  border-color: #10b981;
+  color: #ffffff;
+}
+
+.audio-bars-anim {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+
+.audio-bars-anim span {
+  width: 2.5px;
+  background: #ffffff;
+  border-radius: 1px;
+  animation: bar-bounce 0.8s ease-in-out infinite alternate;
+}
+
+.audio-bars-anim span:nth-child(1) { height: 6px; animation-delay: 0.1s; }
+.audio-bars-anim span:nth-child(2) { height: 12px; animation-delay: 0.3s; }
+.audio-bars-anim span:nth-child(3) { height: 8px; animation-delay: 0.2s; }
+
+@keyframes bar-bounce {
+  0% { height: 3px; }
+  100% { height: 12px; }
+}
+
 
 /* No results state */
 .no-results-notice {
