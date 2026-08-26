@@ -288,26 +288,24 @@ const ResourcesPage: React.FC = () => {
                 </select>
               </div>
 
-              {/* Search Box */}
-              <div className="filter-group">
-                <label className="filter-label">Search:</label>
-                <div className="search-input-wrapper">
-                  <input 
-                    type="text"
-                    className="filter-search-input"
-                    placeholder="Search resources..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                  <span className="search-icon">🔍</span>
+              {/* Search Box & Clear Button in Same Line */}
+              <div className="filter-group filter-search-row-group">
+                <label className="filter-label">Search & Actions:</label>
+                <div className="search-with-clear-row">
+                  <div className="search-input-wrapper">
+                    <input 
+                      type="text"
+                      className="filter-search-input"
+                      placeholder="Search resources..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    <span className="search-icon">🔍</span>
+                  </div>
+                  <button className="btn-clear-filters" onClick={handleClearFilters} type="button">
+                    ✕ Clear Filters
+                  </button>
                 </div>
-              </div>
-
-              {/* Clear Button */}
-              <div className="filter-action-group">
-                <button className="btn-clear-filters" onClick={handleClearFilters}>
-                  ✕ Clear Filters
-                </button>
               </div>
 
             </div>
