@@ -519,7 +519,7 @@ type ModalStep = 'consent' | 'questions' | 'results';
 
 const MentalHealth: React.FC = () => {
   const navigate = useNavigate();
-  const { user, token, isLoggedIn, logout } = useAuth();
+  const { user, token, isLoggedIn } = useAuth();
 
   // Prerequisite checks
   const [prereqs, setPrereqs] = useState({
@@ -605,11 +605,6 @@ const MentalHealth: React.FC = () => {
     setIsSaved(false);
   };
 
-  const handleLogout = () => {
-    logout();
-    setPrereqs({ quietSpace: false, honestAnswers: false, crisisAwareness: false });
-  };
-
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="mental-health-page">
@@ -667,20 +662,6 @@ const MentalHealth: React.FC = () => {
                     Please confirm these three things to help us deliver the most accurate and meaningful assessment results for you.
                   </p>
                 </div>
-              </div>
-
-              <div className="auth-status-container">
-                {isLoggedIn ? (
-                  <div className="auth-logged-in-pill">
-                    <span className="auth-user-dot"></span>
-                    <span>{user?.firstName} {user?.lastName}</span>
-                    <button className="auth-logout-btn" onClick={handleLogout}>Log Out</button>
-                  </div>
-                ) : (
-                  <button className="btn btn-primary auth-login-pill-btn" onClick={() => navigate('/login')}>
-                    🔒 Login to Unlock
-                  </button>
-                )}
               </div>
             </div>
 
