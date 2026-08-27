@@ -82,10 +82,16 @@ const isCrisis = (text) => {
 };
 
 const detectEmotion = (text) => {
+  if (!text || typeof text !== 'string') return 'neutral';
   if (isCrisis(text)) return 'crisis';
   const lower = text.toLowerCase();
   for (const [emotion, keywords] of Object.entries(EMOTION_PATTERNS)) {
-    if (keywords.some((kw) => lower.includes(kw))) return emotion;
+    for (const kw of keywords) {
+      const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      if (new RegExp(`\\b${escaped}\\b`, 'i').test(lower)) {
+        return emotion;
+      }
+    }
   }
   return 'neutral';
 };
@@ -339,6 +345,25 @@ export const sendMessage = async (req, res) => {
       }
       if (!aiContent.includes('Tele-MANAS') && !aiContent.includes('iCall')) {
         aiContent = aiContent + '\n\n' + CRISIS_HELPLINES;
+      }
+    } else {
+      // 1. Detect colloquial / gaming expressions where "died" is hyperbole or gaming
+      const casualGamingSlang = /\b(i\s*died\s*(again)?\s*(bro|bruh|man|dude)?|died\s*in\s*(the\s*)?(game|match|round|boss|val|bgmi|cod)|(lol|lmao|haha|lmfao)\s*i\s*died|died\s*laughing)\b/i;
+      if (casualGamingSlang.test(userContent)) {
+        aiContent = "Haha wait, did you die in a video game or was today just that exhausting bro? 🎮 If you're gaming, which game was it? If life is just wearing you down, I'm right here with you!";
+      } else {
+        // 2. Strip repetitive, hallucinated 2B boilerplate templates like "takes a lot of courage to reach out..."
+        const isHallucinatedBoilerplate = /takes a lot of courage to reach out|acknowledge the strength it took for you to share/i.test(aiContent);
+        if (isHallucinatedBoilerplate) {
+          aiContent = aiContent
+            .replace(/I'm here to (listen and )?support you through this difficult time\.\s*/i, '')
+            .replace(/It takes a lot of courage to reach out,?\s*(and\s*)?I want to acknowledge the strength it took for you to share your thoughts and feelings with me\.\s*/i, '')
+            .trim();
+
+          if (!aiContent || aiContent.length < 25) {
+            aiContent = "I hear you. What's on your mind today, or what happened that got you feeling like this?";
+          }
+        }
       }
     }
 
