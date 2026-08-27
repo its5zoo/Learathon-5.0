@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { API_URL } from '../config';
+import InvoiceModal from '../components/InvoiceModal/InvoiceModal';
 import './Appointment.css';
+
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Doctor {
@@ -177,11 +179,13 @@ const Appointment: React.FC = () => {
   // Stepper: 1=Select, 2=Schedule, 3=Review & Send  | 'confirmed'=success state
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 'confirmed'>(1);
 
-  // Payment states (Razorpay)
+  // Payment & Invoice states
   const [paymentOption, setPaymentOption] = useState<'razorpay' | 'clinic'>('razorpay');
   const [paymentId, setPaymentId] = useState<string | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<string>('pending');
   const [amountPaid, setAmountPaid] = useState<number | null>(null);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+
 
   // Filters
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>(['Anxiety & Stress']);
@@ -1226,6 +1230,9 @@ const Appointment: React.FC = () => {
               </div>
 
               <div className="confirmed-actions">
+                <button className="btn btn-invoice-btn" onClick={() => setShowInvoiceModal(true)}>
+                  📄 Download Official Tax Invoice / Receipt
+                </button>
                 <button className="btn btn-outline" onClick={resetAll}>
                   Book Another Appointment
                 </button>
@@ -1235,6 +1242,7 @@ const Appointment: React.FC = () => {
               </div>
             </div>
           )}
+
 
         </div>
       </section>
@@ -1345,8 +1353,37 @@ const Appointment: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* ── Official Tax Invoice Modal ────────────────────────────────────── */}
+      {selectedDoctor && (
+
+        <InvoiceModal
+          isOpen={showInvoiceModal}
+          onClose={() => setShowInvoiceModal(false)}
+          data={{
+            bookingRef: bookingRef || bookedAppointment?.bookingRef || 'SSAI-DEMO-2026',
+            doctorName: selectedDoctor.name,
+            doctorTitle: selectedDoctor.title,
+            qualification: selectedDoctor.qualification,
+            clinicName: selectedDoctor.clinicName,
+            clinicAddress: selectedDoctor.address,
+            clinicPhone: (selectedDoctor as any).phone,
+            patientName: patientName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Valued Patient',
+            patientEmail: user?.email || 'patient@soulspace.app',
+            patientPhone: patientPhone || user?.phone,
+            appointmentDate: selectedDate,
+            appointmentTime: selectedTime,
+            consultationMode: consultationMode,
+            fee: selectedDoctor.fee,
+            paymentStatus: (paymentStatus as 'paid' | 'pending') || 'pending',
+            paymentId: paymentId,
+            paymentMethod: paymentOption === 'razorpay' ? 'Razorpay Online Gateway (UPI / Cards / NetBanking)' : 'Pay at Clinic',
+          }}
+        />
+      )}
     </div>
   );
 };
+
 
 export default Appointment;

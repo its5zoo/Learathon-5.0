@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ClinicalReportModal from '../components/ClinicalReport/ClinicalReportModal';
+import InvoiceModal from '../components/InvoiceModal/InvoiceModal';
 import { API_URL } from '../config';
 import './Profile.css';
+
 
 interface AppointmentRecord {
   _id: string;
@@ -49,6 +51,9 @@ const Profile: React.FC = () => {
   // Appointment notification from localStorage
   const [latestAppt, setLatestAppt] = useState<any>(null);
   const [showApptNotif, setShowApptNotif] = useState(false);
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
+  const [selectedInvoiceData, setSelectedInvoiceData] = useState<any>(null);
+
 
   useEffect(() => {
     try {
@@ -254,7 +259,34 @@ const Profile: React.FC = () => {
                 : `Request sent to ${latestAppt.doctorName} (${latestAppt.clinicName}) for ${latestAppt.date} at ${latestAppt.time}. Awaiting confirmation email.`}
               &nbsp;·&nbsp; Ref: <em>#{latestAppt.bookingRef}</em>
             </span>
+            <div style={{ marginTop: '8px' }}>
+              <button
+                type="button"
+                className="btn-profile-invoice"
+                onClick={() => {
+                  setSelectedInvoiceData({
+                    bookingRef: latestAppt.bookingRef || 'SSAI-DEMO-2026',
+                    doctorName: latestAppt.doctorName,
+                    clinicName: latestAppt.clinicName,
+                    patientName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Patient',
+                    patientEmail: user.email,
+                    patientPhone: user.phone,
+                    appointmentDate: latestAppt.date,
+                    appointmentTime: latestAppt.time,
+                    consultationMode: latestAppt.mode,
+                    fee: '₹1,200 / session',
+                    paymentStatus: latestAppt.paymentStatus || 'pending',
+                    paymentId: latestAppt.paymentId,
+                    paymentMethod: latestAppt.paymentStatus === 'paid' ? 'Razorpay Online Gateway' : 'Pay at Clinic',
+                  });
+                  setIsInvoiceModalOpen(true);
+                }}
+              >
+                📄 View Tax Invoice &amp; Receipt
+              </button>
+            </div>
           </div>
+
 
           <button
             className="appt-notif-dismiss"
@@ -856,7 +888,17 @@ const Profile: React.FC = () => {
         moodLogs={moodLogs}
         appointments={appointments}
       />
+
+      {/* Official Tax Invoice Modal */}
+      {selectedInvoiceData && (
+        <InvoiceModal
+          isOpen={isInvoiceModalOpen}
+          onClose={() => setIsInvoiceModalOpen(false)}
+          data={selectedInvoiceData}
+        />
+      )}
     </div>
+
   );
 };
 

@@ -1058,3 +1058,26 @@
     grid-template-columns: 1fr;
   }
 }
+
+.btn-profile-invoice {
+  background: #ffffff;
+  color: #1e40af;
+  border: 1.5px solid #93c5fd;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-profile-invoice:hover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+}
+
