@@ -65,16 +65,35 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/assessments', assessmentRoutes);
 app.use('/api/appointments', appointmentRoutes);
 
-// Basic health check route
-app.get('/', (req, res) => {
-  res.json({
-    status: 'success',
-    message: '🌿 Learnathon 5.0 (SoulSpace) Backend API is running.',
-    db: 'MongoDB Atlas Connected',
-  });
-});
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
 
-// 404 handler
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const distPath = path.resolve(__dirname, '../../frontend/dist');
+
+// If frontend build dist exists, serve static assets
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) {
+      return next();
+    }
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+} else {
+  // Basic health check route
+  app.get('/', (req, res) => {
+    res.json({
+      status: 'success',
+      message: '🌿 Learnathon 5.0 (SoulSpace) Backend API is running.',
+      db: 'MongoDB Atlas Connected',
+    });
+  });
+}
+
+// 404 handler for API routes
 app.use((req, res) => {
   res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found.` });
 });
