@@ -162,35 +162,30 @@ const resourcesData: Resource[] = [
 const ResourcesPage: React.FC = () => {
   const [selectedType, setSelectedType] = useState<string>('All Types');
   const [selectedMood, setSelectedMood] = useState<string>('All Moods');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
   // Audio state
   const [activeAudioId, setActiveAudioId] = useState<number | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const toggleAudio = (resource: Resource) => {
     const audioSrc = resource.audioUrl || resource.link;
-    if (!audioSrc) return;
+    if (!audioSrc || !audioRef.current) return;
 
     if (activeAudioId === resource.id && isPlaying) {
-      audioPlayerRef.current?.pause();
+      audioRef.current.pause();
       setIsPlaying(false);
     } else {
-      if (!audioPlayerRef.current) {
-        audioPlayerRef.current = new Audio(audioSrc);
-      } else {
-        audioPlayerRef.current.src = audioSrc;
+      if (activeAudioId !== resource.id || audioRef.current.src !== audioSrc) {
+        audioRef.current.src = audioSrc;
+        setActiveAudioId(resource.id);
       }
-      audioPlayerRef.current.play().catch((e) => console.warn('Audio play error:', e));
-      setActiveAudioId(resource.id);
-      setIsPlaying(true);
-
-      audioPlayerRef.current.onended = () => {
-        setIsPlaying(false);
-        setActiveAudioId(null);
-      };
+      audioRef.current.play().then(() => {
+        setIsPlaying(true);
+      }).catch((e) => console.warn('Audio play error:', e));
     }
   };
-
 
   // Video hover state
   const [hoveredVideoId, setHoveredVideoId] = useState<number | null>(null);
@@ -228,30 +223,6 @@ const ResourcesPage: React.FC = () => {
     setSearchQuery('');
   };
 
-  const handleToggleAudio = (resource: Resource) => {
-    if (!resource.audioUrl) return;
-
-    if (activeAudioId === resource.id && isPlaying) {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        setIsPlaying(false);
-      }
-    } else {
-      if (audioRef.current) {
-        if (activeAudioId !== resource.id) {
-          audioRef.current.src = resource.audioUrl;
-          setActiveAudioId(resource.id);
-        }
-        audioRef.current.play()
-          .then(() => {
-            setIsPlaying(true);
-          })
-          .catch((err) => {
-            console.error('Audio playback error:', err);
-          });
-      }
-    }
-  };
 
   return (
     <div className="resources-page-container">
