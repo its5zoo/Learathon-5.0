@@ -2514,5 +2514,184 @@
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25) !important;
 }
 
+/* ==========================================================================
+   MOBILE RESPONSIVE RULES (APPOINTMENTS PAGE)
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  .app-hero-container {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .app-hero-right-card {
+    max-height: 280px;
+  }
+
+  .appointment-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .filters-sidebar {
+    position: static;
+    margin-bottom: 24px;
+  }
+
+  .review-send-layout {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .shifts-container-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-hero {
+    padding: 36px 0 28px;
+  }
+
+  .app-hero-title {
+    font-size: 28px;
+  }
+
+  .app-hero-subtitle {
+    font-size: 14px;
+  }
+
+  .ai-agent-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .ai-agent-banner .ai-book-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .booking-stepper {
+    padding: 16px 12px;
+    gap: 8px;
+  }
+
+  .step-label {
+    font-size: 11.5px;
+  }
+
+  .step-circle {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .doctor-card-modern {
+    padding: 18px;
+  }
+
+  .doctor-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .doctor-avatar-col {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .doctor-card-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .doctor-fee-box {
+    text-align: left;
+  }
+
+  .schedule-card {
+    padding: 20px 16px;
+    border-radius: 18px;
+  }
+
+  .mode-toggle-group {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .date-chips-scroll-row {
+    gap: 8px;
+    padding-bottom: 8px;
+  }
+
+  .date-chip {
+    padding: 8px 12px;
+    font-size: 12.5px;
+  }
+
+  .patient-form-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .payment-options-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .step-action-row {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+
+  .step-action-row .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .receipt-meta-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .next-steps-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-hero-title {
+    font-size: 24px;
+  }
+
+  .time-slot-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .time-chip {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .summary-doc-fee {
+    margin-left: 0;
+    margin-top: 8px;
+    text-align: left;
+  }
+
+  .selected-doc-summary-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px;
+  }
+}
+
+
 
 

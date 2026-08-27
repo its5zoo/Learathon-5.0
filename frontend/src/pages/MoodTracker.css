@@ -1625,47 +1625,140 @@
 }
 
 /* ==========================================================================
-   RESPONSIVE MEDIA QUERIES
+   RESPONSIVE MEDIA QUERIES (MOOD TRACKER)
    ========================================================================== */
 
-@media (max-width: 992px) {
+@media (max-width: 1024px) {
+  .mood-kpi-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
   .mood-hero-grid {
     grid-template-columns: 1fr;
+    gap: 28px;
   }
 
   .mood-analytics-grid {
     grid-template-columns: 1fr;
   }
-
-  .how-to-ai-card {
-    grid-template-columns: 1fr;
-    text-align: center;
-  }
-
-  .how-to-icon-box {
-    margin: 0 auto;
-  }
-
-  .how-to-steps-list li {
-    justify-content: flex-start;
-  }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  .mood-hero-banner {
+    padding: 36px 0 24px;
+  }
+
   .mood-hero-title {
     font-size: 28px;
   }
 
+  .mood-hero-desc {
+    font-size: 14.5px;
+  }
+
+  .mood-hero-action-row {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .mood-hero-action-row button,
+  .mood-hero-action-row .hero-logged-pill {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .trend-y-axis {
+    width: 75px;
+    min-width: 75px;
+  }
+
+  .y-mood-label {
+    display: none;
+  }
+
+  .card-header-flex {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .chart-actions-row {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .chart-legend-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
   .manual-mood-card {
     padding: 24px 16px;
+    border-radius: 18px;
+  }
+
+  .section-center-heading {
+    font-size: 20px;
+  }
+
+  .mood-emojis-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
   }
 
   .mood-select-pill {
-    min-width: 76px;
-    padding: 12px 10px;
+    min-width: auto;
+    padding: 10px 6px;
   }
 
-  .mood-emoji-large {
-    font-size: 24px;
+  .mood-label-name {
+    font-size: 11px;
+  }
+
+  .mood-desc-sub {
+    display: none;
+  }
+
+  .btn-save-manual-mood {
+    width: 100%;
+    justify-content: center;
   }
 }
+
+@media (max-width: 480px) {
+  .mood-kpi-summary-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .mood-hero-title {
+    font-size: 24px;
+  }
+
+  .mood-emojis-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .trend-y-axis {
+    width: 45px;
+    min-width: 45px;
+  }
+
+  .y-mood-emoji {
+    font-size: 13px;
+  }
+
+  .x-day-name {
+    font-size: 10px;
+  }
+
+  .x-day-emoji-badge {
+    display: none;
+  }
+}
+

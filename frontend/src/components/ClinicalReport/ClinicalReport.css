@@ -489,3 +489,49 @@
     margin: 1.5cm;
   }
 }
+
+/* ─── Screen Mobile Responsive Rules ──────────────────────────────────────── */
+@media screen and (max-width: 768px) {
+  .report-modal-backdrop {
+    padding: 8px;
+  }
+
+  .clinical-report-sheet {
+    padding: 20px 16px;
+    border-radius: 8px;
+  }
+
+  .letterhead-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .report-meta-box {
+    text-align: left;
+    width: 100%;
+  }
+
+  .demographics-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .report-signatures-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .report-floating-bar {
+    width: 95%;
+    bottom: 12px;
+    padding: 8px 12px;
+  }
+
+  .bar-btn-print,
+  .bar-btn-close {
+    padding: 7px 12px;
+    font-size: 0.78rem;
+  }
+}
+

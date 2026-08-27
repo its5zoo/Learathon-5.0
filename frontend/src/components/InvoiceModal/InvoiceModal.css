@@ -516,3 +516,57 @@
     padding: 20px;
   }
 }
+
+/* ─── Screen Mobile Responsive Rules ──────────────────────────────────────── */
+@media screen and (max-width: 768px) {
+  .invoice-modal-overlay {
+    padding: 8px;
+  }
+
+  .invoice-modal-container {
+    max-height: 96vh;
+    border-radius: 12px;
+  }
+
+  .invoice-sheet {
+    padding: 20px 16px;
+  }
+
+  .invoice-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .invoice-meta-col {
+    text-align: left;
+    width: 100%;
+  }
+
+  .invoice-parties-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .session-particulars-box {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .invoice-calc-layout {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .invoice-footer {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 16px;
+  }
+
+  .footer-terms {
+    text-align: left;
+  }
+}
+
