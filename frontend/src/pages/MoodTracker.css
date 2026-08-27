@@ -630,14 +630,14 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Clinical AI Insight Banner */
+/* Clinical AI Insight Banner - warm, friendly, human-centric design */
 .chart-ai-insight-banner {
   margin-top: 45px;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  border: 1px solid rgba(59, 130, 246, 0.25);
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
   border-radius: 14px;
   padding: 18px 22px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.16);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
 }
 
 .insight-badge-row {
@@ -650,9 +650,9 @@
 .insight-pill-tag {
   font-size: 11px;
   font-weight: 800;
-  color: #38bdf8;
-  background: rgba(56, 189, 248, 0.14);
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #1e40af;
+  background: #dbeafe;
+  border: 1px solid #bfdbfe;
   padding: 3px 10px;
   border-radius: 6px;
   letter-spacing: 0.5px;
@@ -661,16 +661,16 @@
 .insight-status-pill {
   font-size: 11.5px;
   font-weight: 700;
-  color: #34d399;
-  background: rgba(52, 211, 153, 0.12);
-  border: 1px solid rgba(52, 211, 153, 0.25);
+  color: #047857;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
   padding: 3px 10px;
   border-radius: 6px;
 }
 
 .insight-text {
   font-size: 13.5px;
-  color: #cbd5e1;
+  color: #334155;
   line-height: 1.6;
   margin-bottom: 12px;
   font-weight: 500;
@@ -680,21 +680,21 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(255, 255, 255, 0.05);
+  background: #ffffff;
   padding: 10px 16px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid #e2e8f0;
   font-size: 12.5px;
 }
 
 .action-lightbulb {
   font-weight: 800;
-  color: #38bdf8;
+  color: #2563eb;
   white-space: nowrap;
 }
 
 .action-text {
-  color: #e2e8f0;
+  color: #1e293b;
   font-weight: 500;
 }
 
