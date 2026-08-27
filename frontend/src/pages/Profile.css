@@ -83,14 +83,14 @@
 .appt-notif-banner.banner-pending .appt-notif-dismiss:hover { background: rgba(217, 119, 6, 0.15); }
 
 .appt-notif-banner.banner-confirmed {
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-  border: 1.5px solid #22c55e;
-  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.12);
+  background: #f0f4f9;
+  border: 1.5px solid #d0dce8;
+  box-shadow: 0 4px 16px rgba(17, 45, 78, 0.06);
 }
-.appt-notif-banner.banner-confirmed .appt-notif-content strong { color: #166534; }
-.appt-notif-banner.banner-confirmed .appt-notif-content span { color: #15803d; }
-.appt-notif-banner.banner-confirmed .appt-notif-dismiss { color: #16a34a; }
-.appt-notif-banner.banner-confirmed .appt-notif-dismiss:hover { background: rgba(22, 163, 74, 0.15); }
+.appt-notif-banner.banner-confirmed .appt-notif-content strong { color: #112d4e; }
+.appt-notif-banner.banner-confirmed .appt-notif-content span { color: #1e3a5f; }
+.appt-notif-banner.banner-confirmed .appt-notif-dismiss { color: #3f72af; }
+.appt-notif-banner.banner-confirmed .appt-notif-dismiss:hover { background: rgba(63, 114, 175, 0.15); }
 
 
 /* ─── 2-Column Dashboard Grid Layout ─────────────────────────────────────── */

@@ -1403,8 +1403,8 @@
   animation: slide-up 0.4s ease;
 }
 .clinic-reply-card.confirmed {
-  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
-  border: 1.5px solid #86efac;
+  background: #f0f4f9;
+  border: 1.5px solid #d0dce8;
 }
 .clinic-reply-card.rescheduled {
   background: linear-gradient(135deg, #fffbeb, #fef9c3);
@@ -1904,23 +1904,23 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #f0fdf4;
-  border: 1.5px solid #86efac;
+  background: #f0f4f9;
+  border: 1.5px solid #d0dce8;
   border-radius: 12px;
   padding: 14px 20px;
   width: 100%;
   max-width: 520px;
 }
-.live-poll-indicator span { font-size: 13.5px; color: #166534; line-height: 1.5; }
-.live-poll-indicator small { font-size: 11.5px; color: #4ade80; }
+.live-poll-indicator span { font-size: 13.5px; color: #112d4e; line-height: 1.5; }
+.live-poll-indicator small { font-size: 11.5px; color: #3f72af; }
 .live-poll-dot {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #22c55e;
+  background: #3f72af;
   flex-shrink: 0;
   animation: livePulse 1.4s ease-in-out infinite;
-  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+  box-shadow: 0 0 0 0 rgba(63, 114, 175, 0.4);
 }
 @keyframes livePulse {
   0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
@@ -1965,9 +1965,9 @@
 }
 
 .doc-badge-pill.live-pill {
-  background: #dcfce7;
-  color: #166534;
-  border: 1px solid #86efac;
+  background: #edf3f8;
+  color: #112d4e;
+  border: 1px solid #c2d4e8;
 }
 
 .doc-badge-pill.demo-pill {
@@ -2071,9 +2071,9 @@
 }
 
 .btn-sim-confirm {
-  background: #dcfce7;
-  color: #166534;
-  border-color: #86efac;
+  background: #eff6ff;
+  color: #1e3a8a;
+  border-color: #bfdbfe;
 }
 
 .btn-sim-reject {
@@ -2203,8 +2203,8 @@
 }
 
 .receipt-payment-banner.paid-banner {
-  background: #f0fdf4;
-  border: 1.5px solid #86efac;
+  background: #f0f4f9;
+  border: 1.5px solid #d0dce8;
 }
 
 .receipt-payment-banner.clinic-banner {
@@ -2245,9 +2245,9 @@
 .pay-verified-pill {
   font-size: 11px;
   font-weight: 800;
-  color: #15803d;
-  background: #dcfce7;
-  border: 1px solid #86efac;
+  color: #112d4e;
+  background: #edf3f8;
+  border: 1px solid #c2d4e8;
   padding: 4px 8px;
   border-radius: 20px;
   letter-spacing: 0.5px;
