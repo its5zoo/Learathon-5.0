@@ -1,11 +1,43 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './WaterSurface.css';
 
+interface LocalRipple {
+  x: number;
+  y: number;
+  r: number;
+  maxR: number;
+  alpha: number;
+  speed: number;
+  lineWidth: number;
+  hue: number;
+}
+
+interface WaterDrop {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  size: number;
+  alpha: number;
+  life: number;
+  maxLife: number;
+}
+
 const WaterSurface: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animFrameIdRef = useRef<number>(0);
   const [isEnabled, setIsEnabled] = useState<boolean>(true);
-  const [intensity, setIntensity] = useState<'calm' | 'deep'>('deep');
+
+  const ripplesRef = useRef<LocalRipple[]>([]);
+  const dropsRef = useRef<WaterDrop[]>([]);
+  const mousePosRef = useRef<{ x: number; y: number; targetX: number; targetY: number; speed: number }>({
+    x: -200,
+    y: -200,
+    targetX: -200,
+    targetY: -200,
+    speed: 0,
+  });
+  const isHoveringRef = useRef<boolean>(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -14,214 +46,232 @@ const WaterSurface: React.FC = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Grid resolution for fast, silky-smooth 60 FPS 2D Wave physics
-    const scale = 3;
-    let gridWidth = Math.floor(window.innerWidth / scale);
-    let gridHeight = Math.floor(window.innerHeight / scale);
-    let totalPixels = gridWidth * gridHeight;
-
-    let buffer1 = new Float32Array(totalPixels);
-    let buffer2 = new Float32Array(totalPixels);
-
-    // Offscreen canvas for fast image rendering
-    const offscreen = document.createElement('canvas');
-    offscreen.width = gridWidth;
-    offscreen.height = gridHeight;
-    const offCtx = offscreen.getContext('2d');
-    if (!offCtx) return;
-
-    let imgData = offCtx.createImageData(gridWidth, gridHeight);
-    let data32 = new Uint32Array(imgData.data.buffer);
-
     const handleResize = () => {
       if (!canvas) return;
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-
-      gridWidth = Math.floor(window.innerWidth / scale);
-      gridHeight = Math.floor(window.innerHeight / scale);
-      totalPixels = gridWidth * gridHeight;
-
-      buffer1 = new Float32Array(totalPixels);
-      buffer2 = new Float32Array(totalPixels);
-
-      offscreen.width = gridWidth;
-      offscreen.height = gridHeight;
-      imgData = offCtx.createImageData(gridWidth, gridHeight);
-      data32 = new Uint32Array(imgData.data.buffer);
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      canvas.style.width = `${window.innerWidth}px`;
+      canvas.style.height = `${window.innerHeight}px`;
+      ctx.scale(dpr, dpr);
     };
 
     handleResize();
     window.addEventListener('resize', handleResize);
 
-    // Add water disturbance (wave injection)
-    const disturb = (screenX: number, screenY: number, radius = 6, force = 180) => {
-      const gx = Math.floor((screenX / window.innerWidth) * gridWidth);
-      const gy = Math.floor((screenY / window.innerHeight) * gridHeight);
+    const spawnRipple = (x: number, y: number, isClick = false) => {
+      const maxRadius = isClick ? 130 : 75 + Math.random() * 25;
+      const baseAlpha = isClick ? 0.42 : 0.26;
+      const speed = isClick ? 3.0 : 1.8 + Math.random() * 0.8;
 
-      for (let dy = -radius; dy <= radius; dy++) {
-        const ny = gy + dy;
-        if (ny <= 1 || ny >= gridHeight - 2) continue;
-        const row = ny * gridWidth;
+      ripplesRef.current.push({
+        x,
+        y,
+        r: 4,
+        maxR: maxRadius,
+        alpha: baseAlpha,
+        speed,
+        lineWidth: isClick ? 2.2 : 1.5,
+        hue: 196 + Math.random() * 15,
+      });
 
-        for (let dx = -radius; dx <= radius; dx++) {
-          const nx = gx + dx;
-          if (nx <= 1 || nx >= gridWidth - 2) continue;
+      if (isClick) {
+        setTimeout(() => {
+          ripplesRef.current.push({
+            x,
+            y,
+            r: 2,
+            maxR: maxRadius * 0.7,
+            alpha: baseAlpha * 0.7,
+            speed: speed * 0.85,
+            lineWidth: 1.4,
+            hue: 205,
+          });
+        }, 80);
 
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist <= radius) {
-            const weight = Math.cos((dist / radius) * (Math.PI / 2));
-            buffer1[row + nx] += force * weight;
-          }
+        for (let i = 0; i < 5; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const v = 1.2 + Math.random() * 2.2;
+          dropsRef.current.push({
+            x,
+            y,
+            vx: Math.cos(angle) * v,
+            vy: Math.sin(angle) * v,
+            size: 1.8 + Math.random() * 1.5,
+            alpha: 0.5,
+            life: 0,
+            maxLife: 26 + Math.random() * 14,
+          });
         }
       }
     };
 
-    let lastX = -100;
-    let lastY = -100;
+    let lastDisturbTime = 0;
 
     const handleMouseMove = (e: MouseEvent) => {
-      const { clientX: x, clientY: y } = e;
-      const dx = x - lastX;
-      const dy = y - lastY;
+      isHoveringRef.current = true;
+      const mouse = mousePosRef.current;
+      const now = performance.now();
+
+      const dx = e.clientX - mouse.targetX;
+      const dy = e.clientY - mouse.targetY;
       const dist = Math.sqrt(dx * dx + dy * dy);
 
-      if (dist > 6) {
-        // Continuous hydrodynamic water trail
-        const steps = Math.min(Math.floor(dist / 6), 6);
-        for (let i = 1; i <= steps; i++) {
-          const ix = lastX + (dx * i) / steps;
-          const iy = lastY + (dy * i) / steps;
-          disturb(ix, iy, intensity === 'deep' ? 7 : 5, intensity === 'deep' ? 140 : 90);
+      mouse.targetX = e.clientX;
+      mouse.targetY = e.clientY;
+      mouse.speed = Math.min(dist, 40);
+
+      // Localized water trail directly under mouse
+      if (dist > 14 && now - lastDisturbTime > 35) {
+        spawnRipple(e.clientX, e.clientY, false);
+
+        if (Math.random() > 0.45) {
+          dropsRef.current.push({
+            x: e.clientX + (Math.random() - 0.5) * 12,
+            y: e.clientY + (Math.random() - 0.5) * 12,
+            vx: (Math.random() - 0.5) * 0.8,
+            vy: (Math.random() - 0.5) * 0.8 - 0.3,
+            size: 1.4 + Math.random() * 1.6,
+            alpha: 0.35,
+            life: 0,
+            maxLife: 22 + Math.random() * 12,
+          });
         }
-        lastX = x;
-        lastY = y;
+        lastDisturbTime = now;
       }
     };
 
     const handleMouseDown = (e: MouseEvent) => {
-      disturb(e.clientX, e.clientY, 14, 450);
+      spawnRipple(e.clientX, e.clientY, true);
+    };
+
+    const handleMouseLeave = () => {
+      isHoveringRef.current = false;
     };
 
     const handleTouchMove = (e: TouchEvent) => {
       if (e.touches.length > 0) {
-        const touch = e.touches[0];
-        const dx = touch.clientX - lastX;
-        const dy = touch.clientY - lastY;
-        if (Math.sqrt(dx * dx + dy * dy) > 8) {
-          disturb(touch.clientX, touch.clientY, 8, 200);
-          lastX = touch.clientX;
-          lastY = touch.clientY;
-        }
+        const t = e.touches[0];
+        isHoveringRef.current = true;
+        mousePosRef.current.targetX = t.clientX;
+        mousePosRef.current.targetY = t.clientY;
+        spawnRipple(t.clientX, t.clientY, false);
       }
     };
 
     const handleTouchStart = (e: TouchEvent) => {
       if (e.touches.length > 0) {
-        const touch = e.touches[0];
-        disturb(touch.clientX, touch.clientY, 16, 500);
-        lastX = touch.clientX;
-        lastY = touch.clientY;
+        const t = e.touches[0];
+        isHoveringRef.current = true;
+        mousePosRef.current.targetX = t.clientX;
+        mousePosRef.current.targetY = t.clientY;
+        spawnRipple(t.clientX, t.clientY, true);
       }
     };
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
     window.addEventListener('mousedown', handleMouseDown, { passive: true });
+    document.addEventListener('mouseleave', handleMouseLeave);
     window.addEventListener('touchmove', handleTouchMove, { passive: true });
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
 
-    // Ambient gentle water swell (natural breathing lake motion)
-    let ambientTimer = 0;
+    let lastTime = performance.now();
 
-    const render = () => {
-      ambientTimer += 0.03;
+    const render = (time: number) => {
+      const dt = Math.min((time - lastTime) / 16.66, 2.0);
+      lastTime = time;
 
-      // Soft natural water swell on edges/center every few seconds
-      if (Math.random() < 0.02) {
-        const ax = (0.2 + Math.random() * 0.6) * window.innerWidth;
-        const ay = (0.2 + Math.random() * 0.6) * window.innerHeight;
-        disturb(ax, ay, 8, 45);
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+      const mouse = mousePosRef.current;
+      // Smooth viscous fluid trailing
+      mouse.x += (mouse.targetX - mouse.x) * 0.22 * dt;
+      mouse.y += (mouse.targetY - mouse.y) * 0.22 * dt;
+      mouse.speed *= 0.92;
+
+      // 1. Draw localized Liquid Water Lens directly around the mouse cursor
+      if (isHoveringRef.current && mouse.x > 0 && mouse.y > 0) {
+        const lensRadius = 85 + Math.min(mouse.speed * 1.5, 30);
+        const grad = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, lensRadius);
+        grad.addColorStop(0, 'rgba(56, 189, 248, 0.22)');
+        grad.addColorStop(0.45, 'rgba(14, 165, 233, 0.12)');
+        grad.addColorStop(0.8, 'rgba(56, 189, 248, 0.04)');
+        grad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(mouse.x, mouse.y, lensRadius, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // Inner glowing water droplet center
+        const coreGrad = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 22);
+        coreGrad.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
+        coreGrad.addColorStop(0.5, 'rgba(56, 189, 248, 0.25)');
+        coreGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+        ctx.beginPath();
+        ctx.arc(mouse.x, mouse.y, 22, 0, Math.PI * 2);
+        ctx.fillStyle = coreGrad;
+        ctx.fill();
+        ctx.restore();
       }
 
-      // Wave equation propagation:
-      // next[x, y] = (prev[x-1, y] + prev[x+1, y] + prev[x, y-1] + prev[x, y+1]) / 2 - current[x, y]
-      const damping = intensity === 'deep' ? 0.985 : 0.975;
+      // 2. Render localized expanding fluid ripples
+      const nextRipples: LocalRipple[] = [];
+      for (let i = 0; i < ripplesRef.current.length; i++) {
+        const r = ripplesRef.current[i];
+        r.r += r.speed * dt;
+        const progress = r.r / r.maxR;
+        r.alpha = (1 - progress) * (r.alpha * 0.98);
 
-      for (let y = 1; y < gridHeight - 1; y++) {
-        const row = y * gridWidth;
-        const prevRow = (y - 1) * gridWidth;
-        const nextRow = (y + 1) * gridWidth;
+        if (r.alpha > 0.008 && r.r < r.maxR) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2);
+          ctx.strokeStyle = `hsla(${r.hue}, 88%, 62%, ${r.alpha})`;
+          ctx.lineWidth = r.lineWidth * (1 - progress * 0.5);
+          ctx.stroke();
 
-        for (let x = 1; x < gridWidth - 1; x++) {
-          const idx = row + x;
-
-          // 2D wave kernel
-          const wave =
-            (buffer1[idx - 1] +
-              buffer1[idx + 1] +
-              buffer1[prevRow + x] +
-              buffer1[nextRow + x]) *
-              0.5 -
-            buffer2[idx];
-
-          buffer2[idx] = wave * damping;
-        }
-      }
-
-      // Swap buffers
-      const temp = buffer1;
-      buffer1 = buffer2;
-      buffer2 = temp;
-
-      // Shading & caustics rendering into pixel buffer
-      let idx = 0;
-      for (let y = 0; y < gridHeight; y++) {
-        const row = y * gridWidth;
-        const prevRow = Math.max(0, y - 1) * gridWidth;
-        const nextRow = Math.min(gridHeight - 1, y + 1) * gridWidth;
-
-        for (let x = 0; x < gridWidth; x++) {
-          if (x === 0 || x === gridWidth - 1 || y === 0 || y === gridHeight - 1) {
-            data32[idx++] = 0;
-            continue;
+          // Soft secondary refraction edge
+          if (r.r > 8) {
+            ctx.beginPath();
+            ctx.arc(r.x, r.y, r.r * 0.72, 0, Math.PI * 2);
+            ctx.strokeStyle = `hsla(${r.hue + 12}, 92%, 78%, ${r.alpha * 0.4})`;
+            ctx.lineWidth = r.lineWidth * 0.55;
+            ctx.stroke();
           }
 
-          // Gradients / surface normals (refraction)
-          const dx = buffer1[row + x + 1] - buffer1[row + x - 1];
-          const dy = buffer1[nextRow + x] - buffer1[prevRow + x];
-
-          // Sun / sky highlight caustics
-          const light = (-dx * 0.7 - dy * 0.7) * 1.8;
-          const heightVal = buffer1[row + x];
-
-          const waveMagnitude = Math.abs(heightVal) * 0.8 + Math.abs(dx) + Math.abs(dy);
-
-          if (waveMagnitude > 0.8 || light > 1.2) {
-            // Calm aquatic palette: Cyan (56, 189, 248) -> Deep Teal (14, 165, 233) -> Sun Shimmer
-            const specular = Math.min(255, Math.max(0, light * 1.4));
-
-            const r = Math.min(255, Math.floor(35 + specular * 0.85));
-            const g = Math.min(255, Math.floor(160 + specular * 0.4));
-            const b = Math.min(255, Math.floor(235 + specular * 0.15));
-
-            // Alpha transparency: gentle water caustics
-            const alphaVal = Math.min(160, Math.floor(Math.min(waveMagnitude * 1.4, 90) + specular * 0.45));
-
-            // ABGR 32-bit integer packing for high speed
-            data32[idx++] = (alphaVal << 24) | (b << 16) | (g << 8) | r;
-          } else {
-            data32[idx++] = 0;
-          }
+          ctx.restore();
+          nextRipples.push(r);
         }
       }
+      ripplesRef.current = nextRipples;
 
-      // Render image data to offscreen canvas, then stretch to main canvas with smooth bilinear filter
-      offCtx.putImageData(imgData, 0, 0);
+      // 3. Render soft micro droplets
+      const nextDrops: WaterDrop[] = [];
+      for (let i = 0; i < dropsRef.current.length; i++) {
+        const d = dropsRef.current[i];
+        d.x += d.vx * dt;
+        d.y += d.vy * dt;
+        d.vx *= 0.94;
+        d.vy *= 0.94;
+        d.life += dt;
+        const lifeRatio = d.life / d.maxLife;
+        const alpha = d.alpha * (1 - lifeRatio);
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(offscreen, 0, 0, canvas.width, canvas.height);
+        if (d.life < d.maxLife && alpha > 0.01) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(d.x, d.y, d.size * (1 - lifeRatio * 0.25), 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(56, 189, 248, ${alpha})`;
+          ctx.shadowColor = 'rgba(56, 189, 248, 0.6)';
+          ctx.shadowBlur = 4;
+          ctx.fill();
+          ctx.restore();
+          nextDrops.push(d);
+        }
+      }
+      dropsRef.current = nextDrops;
 
       animFrameIdRef.current = requestAnimationFrame(render);
     };
@@ -232,11 +282,12 @@ const WaterSurface: React.FC = () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener('mouseleave', handleMouseLeave);
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchstart', handleTouchStart);
       cancelAnimationFrame(animFrameIdRef.current);
     };
-  }, [isEnabled, intensity]);
+  }, [isEnabled]);
 
   return (
     <>
@@ -250,22 +301,11 @@ const WaterSurface: React.FC = () => {
           type="button"
           className={`water-toggle-btn ${isEnabled ? 'water-on' : 'water-off'}`}
           onClick={() => setIsEnabled(!isEnabled)}
-          title={isEnabled ? 'Liquid Water Motion: Active (Click to pause)' : 'Liquid Water Motion: Paused (Click to activate)'}
+          title={isEnabled ? 'Water Cursor Motion: Active (Click to pause)' : 'Water Cursor Motion: Paused (Click to activate)'}
         >
-          <span className="water-icon">🌊</span>
-          <span className="water-label">{isEnabled ? 'Deep Water Fluid' : 'Calm Mode'}</span>
+          <span className="water-icon">💧</span>
+          <span className="water-label">{isEnabled ? 'Water Cursor' : 'Calm Mode'}</span>
         </button>
-
-        {isEnabled && (
-          <button
-            type="button"
-            className="water-intensity-btn"
-            onClick={() => setIntensity(intensity === 'deep' ? 'calm' : 'deep')}
-            title="Toggle Fluid Motion Depth"
-          >
-            {intensity === 'deep' ? '🌊 Deep Fluid' : '💧 Subtle Flow'}
-          </button>
-        )}
       </div>
     </>
   );
