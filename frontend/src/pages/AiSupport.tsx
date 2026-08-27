@@ -87,6 +87,35 @@ const fmtDate = (d: string) => {
   return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
 };
 
+// ── Clinical Crisis Detection Helper ──────────────────────────────────────────
+const isCrisisText = (text: string): boolean => {
+  if (!text) return false;
+  const lower = text.toLowerCase().trim();
+  const keywords = [
+    'suicide', 'suicidal', 'kill myself', 'killing myself', 'end my life', 'ending my life',
+    'want to die', 'wanna die', 'wanna di', 'going to die', 'gonna die', 'will die', 'feel like dying',
+    'about to die', 'about to di', 'about to kill', 'about to end', 'im about to die', "i'm about to die",
+    'i am about to die', 'i am about to di', 'ready to die', 'time to die', 'dying tonight',
+    'wish i was dead', 'wish i were dead', 'rather be dead', 'better off dead',
+    'take my life', 'take my own life', 'overdose', 'cut myself', 'hanging myself', 'hang myself',
+    'cant go on', "can't go on", 'cannot go on', 'cant take this anymore', "can't take this anymore",
+    'no reason to live', 'no point living', 'nothing to live for', 'self harm', 'self-harm',
+    'end it all', 'goodbye world', 'give up on life', 'tired of living', "don't want to live",
+    'marne ka man', 'mar jaunga', 'mar jaungi', 'jaan de dunga', 'khudkushi', 'aatmahatya'
+  ];
+  if (keywords.some((kw) => lower.includes(kw))) return true;
+  const patterns = [
+    /\b(suicid\w*|khudkushi|aatmahatya)\b/i,
+    /\b(kill|killing|hurt|harm|cut|slit|hang|hanging|poison)\s*(my\s*own\s*self|myself|my\s*wrist|my\s*life)\b/i,
+    /\b(about\s*to|going\s*to|gonna|want\s*to|wanna|planning\s*to|ready\s*to|will|feel\s*like)\s*(di|die|dying|end\s*it|end\s*my\s*life|kill\s*myself)\b/i,
+    /\bi\s*(am|'m|m)?\s*(about\s*to\s*di(e)?|dying|gonna\s*die|going\s*to\s*die)\b/i,
+    /\b(end\s*my\s*life|ending\s*my\s*life|end\s*it\s*all|take\s*my\s*life)\b/i,
+    /\b(cant|can't|cannot)\s*(go\s*on|take\s*(it|this)\s*anymore)\b/i,
+    /\b(no\s*reason\s*to\s*live|no\s*point\s*(in\s*)?living|nothing\s*to\s*live\s*for|tired\s*of\s*living|done\s*with\s*life)\b/i,
+  ];
+  return patterns.some((r) => r.test(lower));
+};
+
 // ── Breathing Widget Decision Helper ──────────────────────────────────────────
 // Strictly triggers ONLY when the user is experiencing anxiety, fear, or heavy breathing
 const shouldShowBreathingWidget = (
@@ -111,6 +140,16 @@ const shouldShowBreathingWidget = (
   }
 
   if (!userText && !userEmotion) return false;
+
+  // CRITICAL SAFETY RULE: Never display breathing widget during a crisis
+  if (
+    userEmotion === 'crisis' ||
+    currentMsg.emotion === 'crisis' ||
+    isCrisisText(userText) ||
+    isCrisisText(currentMsg.content)
+  ) {
+    return false;
+  }
 
   // 1. User's emotion detected as anxious or fear
   if (userEmotion === 'anxious' || userEmotion === 'fear') return true;
@@ -166,8 +205,14 @@ const AiSupport: React.FC = () => {
   const [loadingSession, setLoadingSession] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [dismissCrisisBanner, setDismissCrisisBanner] = useState(false);
 
-
+  const activeSession = sessions.find((s) => s._id === activeSessionId);
+  const isCrisisActive = Boolean(
+    activeSession?.isCrisisSession ||
+    messages.some((m) => m.emotion === 'crisis') ||
+    messages.some((m) => isCrisisText(m.content))
+  );
   // Breathing tool
   const [isBreathingActive, setIsBreathingActive] = useState(false);
   const [isBreathingDismissed, setIsBreathingDismissed] = useState(false);
@@ -329,11 +374,12 @@ const AiSupport: React.FC = () => {
       }
     }
 
-    // Optimistic user message
+    // Optimistic user message with instant crisis detection
+    const userIsCrisis = isCrisisText(text);
     const userMsg: Message = {
       role: 'user',
       content: text,
-      emotion: 'neutral',
+      emotion: userIsCrisis ? 'crisis' : 'neutral',
       timestamp: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, userMsg]);
@@ -342,6 +388,7 @@ const AiSupport: React.FC = () => {
     setIsBreathingDismissed(false);
     setIsBreathingActive(false);
     setErrorMsg(null);
+    if (userIsCrisis) setDismissCrisisBanner(false);
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
@@ -356,21 +403,37 @@ const AiSupport: React.FC = () => {
       const data = await res.json();
 
       if (data.success) {
-        setMessages((prev) => [...prev, {
-          role: data.message.role,
-          content: data.message.content,
-          emotion: data.message.emotion,
-          timestamp: data.message.timestamp,
-        }]);
+        const isCrisisResponse = Boolean(data.crisisDetected || data.message?.emotion === 'crisis' || userIsCrisis);
+        if (isCrisisResponse) setDismissCrisisBanner(false);
 
-        // Update session title in sidebar
-        if (data.sessionTitle) {
-          setSessions((prev) => prev.map((s) =>
-            s._id === sessionId
-              ? { ...s, title: data.sessionTitle, lastMessageAt: new Date().toISOString(), messageCount: s.messageCount + 2 }
-              : s
-          ));
-        }
+        setMessages((prev) => {
+          const updated = [...prev];
+          if (isCrisisResponse && updated.length > 0) {
+            const lastIdx = updated.length - 1;
+            if (updated[lastIdx].role === 'user') {
+              updated[lastIdx] = { ...updated[lastIdx], emotion: 'crisis' };
+            }
+          }
+          return [...updated, {
+            role: data.message.role,
+            content: data.message.content,
+            emotion: isCrisisResponse ? 'crisis' : data.message.emotion,
+            timestamp: data.message.timestamp,
+          }];
+        });
+
+        // Update session title & crisis flag in sidebar
+        setSessions((prev) => prev.map((s) =>
+          s._id === sessionId
+            ? {
+                ...s,
+                title: data.sessionTitle || s.title,
+                isCrisisSession: isCrisisResponse || s.isCrisisSession,
+                lastMessageAt: new Date().toISOString(),
+                messageCount: s.messageCount + 2
+              }
+            : s
+        ));
       } else {
         setErrorMsg(data.message || 'AI did not respond. Please try again.');
       }
@@ -508,6 +571,23 @@ const AiSupport: React.FC = () => {
 
 
         </div>
+
+        {/* ── Emergency Crisis Alert Banner ────────────────────────────────────── */}
+        {(isCrisisActive || messages.some((m) => isCrisisText(m.content))) && !dismissCrisisBanner && (
+          <div className="crisis-banner">
+            <span className="crisis-banner-icon">🆘</span>
+            <div className="crisis-banner-text">
+              <strong>Emergency Crisis Support:</strong> If you are in distress or feel like you can't go on, you are not alone. Free, confidential help is available right now:
+              <span className="crisis-numbers">
+                <a href="tel:14416" className="crisis-banner-pill-btn">📞 Tele-MANAS (14416)</a>
+                <a href="https://wa.me/919152987821" target="_blank" rel="noopener noreferrer" className="crisis-banner-pill-btn whatsapp">💬 iCall WhatsApp</a>
+                <a href="tel:18005990019" className="crisis-banner-pill-btn">📞 KIRAN (1800-599-0019)</a>
+                <a href="tel:112" className="crisis-banner-pill-btn emergency">🚨 112</a>
+              </span>
+            </div>
+            <button className="crisis-dismiss" onClick={() => setDismissCrisisBanner(true)} title="Dismiss banner">✕</button>
+          </div>
+        )}
 
         {/* Error message */}
         {errorMsg && (

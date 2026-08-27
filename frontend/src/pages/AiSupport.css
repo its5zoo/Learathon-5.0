@@ -462,12 +462,14 @@
 .crisis-banner {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   padding: 12px 24px;
-  background: linear-gradient(135deg, #fef2f2, #fff5f5);
-  border-bottom: 2px solid #fecaca;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-bottom: 2px solid #ef4444;
   flex-shrink: 0;
   animation: slideDown 0.3s ease;
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.12);
+  z-index: 10;
 }
 
 @keyframes slideDown {
@@ -475,7 +477,16 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-.crisis-banner-icon { font-size: 22px; flex-shrink: 0; }
+.crisis-banner-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+  animation: crisisPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes crisisPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
 
 .crisis-banner-text {
   flex: 1;
@@ -484,20 +495,77 @@
   line-height: 1.5;
 }
 
+.crisis-banner-text strong {
+  font-weight: 800;
+  color: #991b1b;
+  margin-right: 4px;
+}
+
 .crisis-numbers {
-  color: #dc2626;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 8px;
+  flex-wrap: wrap;
+}
+
+.crisis-banner-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #dc2626;
+  color: #ffffff !important;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
   font-weight: 700;
-  margin-left: 4px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);
+}
+
+.crisis-banner-pill-btn:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+
+.crisis-banner-pill-btn.whatsapp {
+  background: #16a34a;
+  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.25);
+}
+
+.crisis-banner-pill-btn.whatsapp:hover {
+  background: #15803d;
+}
+
+.crisis-banner-pill-btn.emergency {
+  background: #112d4e;
+  box-shadow: 0 2px 6px rgba(17, 45, 78, 0.25);
+}
+
+.crisis-banner-pill-btn.emergency:hover {
+  background: #1e3a8a;
 }
 
 .crisis-dismiss {
-  background: none;
-  border: none;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
   color: #991b1b;
   cursor: pointer;
-  font-size: 16px;
-  padding: 4px;
+  font-size: 14px;
+  font-weight: 700;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.crisis-dismiss:hover {
+  background: rgba(239, 68, 68, 0.2);
 }
 
 /* ── Error Bar ──────────────────────────────────────────────────────────── */

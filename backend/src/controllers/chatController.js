@@ -19,15 +19,21 @@ Please reach out — confidential online & phone support is available right now.
 // Comprehensive Crisis trigger keywords & patterns (English + Hinglish)
 const CRISIS_KEYWORDS = [
   'suicide', 'suicidal', 'kill myself', 'killing myself', 'end my life', 'ending my life',
-  'want to die', 'wanna die', 'going to die', 'gonna die', 'will die', 'feel like dying',
-  'wish i was dead', 'wish i were dead', 'rather be dead', 'better off dead',
-  'take my life', 'take my own life', 'overdose', 'cut myself', 'hanging myself',
-  'cant go on', "can't go on", 'no reason to live', 'no point living', 'nothing to live for',
+  'want to die', 'wanna die', 'wanna di', 'going to die', 'gonna die', 'will die', 'feel like dying',
+  'about to die', 'about to di', 'about to kill', 'about to end', 'im about to die', "i'm about to die",
+  'i am about to die', 'i am about to di', 'ready to die', 'time to die', 'dying tonight',
+  'wish i was dead', 'wish i were dead', 'rather be dead', 'better off dead', 'better if i was dead',
+  'take my life', 'take my own life', 'overdose', 'overdosing', 'cut myself', 'hanging myself', 'hang myself',
+  'slit my wrist', 'slit my throat', 'drink poison', 'jump off', 'jump from roof',
+  'cant go on', "can't go on", 'cannot go on', 'cant take this anymore', "can't take this anymore", 'cannot take this anymore',
+  'no reason to live', 'no point living', 'no point in living', 'nothing to live for',
   'self harm', 'self-harm', 'hurt myself', 'hurting myself', 'worthless', 'hopeless',
-  'end it all', 'end everything', 'not worth living', 'ready to die', 'goodbye world',
-  'give up on life', 'tired of living', "don't want to live", 'dont want to live', 'hate being alive',
+  'end it all', 'end everything', 'not worth living', 'goodbye world', 'final goodbye', 'my last words',
+  'give up on life', 'tired of living', "don't want to live", 'dont want to live', 'do not want to live', 'hate being alive',
+  'done with life', 'done living', 'done with this world',
   // Hinglish / Hindi triggers
-  'marne ka man', 'mar jaunga', 'mar jaungi', 'jaan de dunga', 'khudkushi', 'mar jana chahta', 'mar jana chahti', 'jeena nahi chahta'
+  'marne ka man', 'mar jaunga', 'mar jaungi', 'jaan de dunga', 'jaan dedu', 'khudkushi',
+  'aatmahatya', 'mar jana chahta', 'mar jana chahti', 'jeena nahi chahta', 'jeena nahi chahti', 'khud ko khatam'
 ];
 
 // Emotion detection patterns
@@ -50,12 +56,29 @@ const EMOTION_PATTERNS = {
 // ──────────────────────────────────────────────────────────────────────────────
 
 const isCrisis = (text) => {
-  const lower = text.toLowerCase();
-  // Direct keyword or phrase match
+  if (!text || typeof text !== 'string') return false;
+  const lower = text.toLowerCase().trim();
+
+  // 1. Direct keyword/phrase match
   if (CRISIS_KEYWORDS.some((kw) => lower.includes(kw))) return true;
-  // Regex pattern matching for variations like "i will die", "wanna die", "die tonight", etc.
-  const crisisRegex = /\b(suicid|kill\s*myself|end\s*my\s*life|going\s*to\s*die|gonna\s*die|want\s*to\s*die|wanna\s*die|feel\s*like\s*dying|harm\s*myself|hurt\s*myself)\b/i;
-  return crisisRegex.test(lower);
+
+  // 2. Comprehensive clinical crisis regex patterns
+  const crisisPatterns = [
+    /\b(suicid\w*|khudkushi|aatmahatya)\b/i,
+    /\b(kill|killing|hurt|harm|cut|slit|hang|hanging|poison|drown|shoot|strangle|asphyxiate)\s*(my\s*own\s*self|myself|my\s*wrist|my\s*throat|my\s*life)\b/i,
+    /\b(about\s*to|going\s*to|gonna|want\s*to|wanna|planning\s*to|ready\s*to|will|feel\s*like|time\s*to)\s*(di|die|dying|end\s*it|end\s*my\s*life|kill\s*myself|hang\s*myself|jump)\b/i,
+    /\bi\s*(am|'m|m)?\s*(about\s*to\s*di(e)?|dying|gonna\s*die|going\s*to\s*die)\b/i,
+    /\b(end\s*my\s*life|ending\s*my\s*life|end\s*it\s*all|end\s*everything|take\s*my\s*life|take\s*my\s*own\s*life)\b/i,
+    /\bfeel(ing)?\s*like\s*(ending\s*it|dying|giving\s*up)\b/i,
+    /\b(cant|can't|cannot)\s*(go\s*on|take\s*(it|this)\s*anymore|live\s*like\s*this|do\s*this\s*anymore)\b/i,
+    /\b(no\s*reason\s*to\s*live|no\s*point\s*(in\s*)?living|nothing\s*to\s*live\s*for|tired\s*of\s*living|done\s*with\s*life|done\s*living)\b/i,
+    /\b(wish\s*i\s*(was|were)\s*dead|better\s*off\s*dead|rather\s*be\s*dead)\b/i,
+    /\b(jump\s*(off|from|in\s*front\s*of))\b/i,
+    /\b(swallow\s*(all\s*)?pills|overdose|overdosing)\b/i,
+    /\b(mar\s*jaunga|mar\s*jaungi|jaan\s*de\s*dunga|marne\s*ka\s*man|jeena\s*nahi\s*chahta|jeena\s*nahi\s*chahti|khud\s*ko\s*khatam)\b/i,
+  ];
+
+  return crisisPatterns.some((regex) => regex.test(lower));
 };
 
 const detectEmotion = (text) => {
@@ -102,11 +125,12 @@ LANGUAGE:
 
 ${crisisDetected ? `
 🚨 CRITICAL CRISIS SAFETY PROTOCOL:
-- The user expressed thoughts of dying, suicide, or severe distress.
-- Respond in EXACTLY 2 caring, supportive sentences in English:
-  1. Acknowledge their deep pain with unconditional compassion and assure them they matter and are not alone.
-  2. Gently encourage them to stay safe and reach out to the verified helpline numbers listed below right away.
-- Do NOT lecture, minimize, or give complex advice.
+- The user expressed thoughts of dying, suicide, or acute severe distress.
+- You are in EMERGENCY CRISIS INTERVENTION MODE.
+- Strictly DO NOT suggest breathing exercises, relaxation techniques, or casual grounding.
+- Respond in 2 compassionate, caring sentences:
+  1. Acknowledge their deep pain with unconditional empathy and reassure them that their life matters and they are not alone.
+  2. Urge them to stay safe and connect immediately with crisis support professionals.
 ` : ''}
 `.trim();
 
@@ -305,9 +329,17 @@ export const sendMessage = async (req, res) => {
       aiContent = "I'm having a bit of trouble connecting right now — please try sending your message again in a moment. If you're in distress, you can call **iCall at 9152987821** anytime (free, 24/7). 💙";
     }
 
-    // Append crisis helplines if detected and not already in the response
-    if (crisisDetected && !aiContent.includes('Tele-MANAS') && !aiContent.includes('iCall')) {
-      aiContent = aiContent + '\n\n' + CRISIS_HELPLINES;
+    // Clinical crisis handling & safety override
+    if (crisisDetected) {
+      session.isCrisisSession = true;
+      // Prevent LLM hallucinating casual relaxation exercises during acute suicide crisis
+      const containsInappropriateAdvice = /breathing exercise|muscle relaxation|box breathing|focusing on your senses|grounding exercise|take a walk|drink cold water/i.test(aiContent);
+      if (containsInappropriateAdvice || !aiContent || aiContent.length < 20) {
+        aiContent = "I hear how much pain you are experiencing right now, and I want you to know that you are not alone and your life deeply matters. Please stay safe — immediate confidential support is available right now. You don't have to carry this alone.";
+      }
+      if (!aiContent.includes('Tele-MANAS') && !aiContent.includes('iCall')) {
+        aiContent = aiContent + '\n\n' + CRISIS_HELPLINES;
+      }
     }
 
     const aiEmotion = crisisDetected ? 'crisis' : detectEmotion(aiContent);
