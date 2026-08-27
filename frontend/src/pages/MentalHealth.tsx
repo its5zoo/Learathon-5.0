@@ -24,7 +24,7 @@ interface Assessment {
   timeEstimate: string;
   badge: string;
   color: string;
-  icon: string;
+  icon?: string;
   description: string;
   questions: Question[];
   getResult: (score: number) => { level: string; color: string; advice: string; emoji: string };
@@ -41,7 +41,6 @@ const assessmentsData: Assessment[] = [
     timeEstimate: '5 mins',
     badge: 'Clinical Gold Standard',
     color: '#6366f1',
-    icon: '🌧️',
     description:
       'Assesses the presence and severity of depressive symptoms over the past two weeks. Widely used by psychiatrists and GPs globally.',
     questions: [
@@ -148,7 +147,6 @@ const assessmentsData: Assessment[] = [
     timeEstimate: '4 mins',
     badge: 'High Precision',
     color: '#8b5cf6',
-    icon: '⚡',
     description:
       'Measures the severity of generalized anxiety, restlessness, and excessive worrying in daily life. Standard tool used in clinical settings worldwide.',
     questions: [
@@ -235,7 +233,6 @@ const assessmentsData: Assessment[] = [
     timeEstimate: '6 mins',
     badge: 'Research Validated',
     color: '#ec4899',
-    icon: '🌀',
     description:
       'The most widely used psychological instrument to measure how unpredictable, uncontrollable, and overloading you perceive your life over the past month.',
     questions: [
@@ -357,7 +354,6 @@ const assessmentsData: Assessment[] = [
     timeEstimate: '7 mins',
     badge: 'WHO Endorsed',
     color: '#06b6d4',
-    icon: '✨',
     description:
       'The Warwick–Edinburgh Mental Wellbeing Scale measures positive aspects of mental health including positive feelings and functioning — not just absence of illness.',
     questions: [
@@ -788,7 +784,6 @@ const MentalHealth: React.FC = () => {
                 </div>
 
                 <div className="card-icon-row">
-                  <span className="card-emoji">{item.icon}</span>
                   <span className="card-category">{item.category}</span>
                 </div>
 
@@ -838,7 +833,6 @@ const MentalHealth: React.FC = () => {
             {/* Modal Header */}
             <div className="modal-header" style={{ borderBottom: `3px solid ${activeAssessment.color}22` }}>
               <div className="modal-header-left">
-                <span className="modal-emoji">{activeAssessment.icon}</span>
                 <div>
                   <span className="modal-code-tag" style={{ color: activeAssessment.color, background: activeAssessment.color + '15' }}>
                     {activeAssessment.code}
