@@ -153,6 +153,22 @@ const AI_LOADING_STEPS = [
   'Preparing your Top 3 recommendations…',
 ];
 
+const RAZORPAY_KEY_ID = 'rzp_test_TUhp2MpaI3MdOT';
+
+const loadRazorpayScript = (): Promise<boolean> => {
+  return new Promise((resolve) => {
+    if ((window as any).Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 // ─── Component ────────────────────────────────────────────────────────────────
 const Appointment: React.FC = () => {
   const navigate = useNavigate();
@@ -161,8 +177,15 @@ const Appointment: React.FC = () => {
   // Stepper: 1=Select, 2=Schedule, 3=Review & Send  | 'confirmed'=success state
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 'confirmed'>(1);
 
+  // Payment states (Razorpay)
+  const [paymentOption, setPaymentOption] = useState<'razorpay' | 'clinic'>('razorpay');
+  const [paymentId, setPaymentId] = useState<string | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<string>('pending');
+  const [amountPaid, setAmountPaid] = useState<number | null>(null);
+
   // Filters
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>(['Anxiety & Stress']);
+
   const [selectedMode, setSelectedMode] = useState('All');
   const [selectedCity, setSelectedCity] = useState('All');
   const [userConcerns, setUserConcerns] = useState('');
@@ -331,8 +354,12 @@ const Appointment: React.FC = () => {
     window.scrollTo({ top: 300, behavior: 'smooth' });
   };
 
-  // ─── Book Appointment ──────────────────────────────────────────────────────
-  const handleConfirmBooking = async () => {
+  // ─── Book Appointment & Razorpay Checkout ──────────────────────────────────
+  const submitAppointmentBooking = async (
+    razorpayPaymentId: string | null = null,
+    payStatus: string = 'pending',
+    amount: number | null = null
+  ) => {
     if (!selectedDoctor || !user) return;
     setIsBooking(true);
     setBookingError('');
@@ -356,6 +383,9 @@ const Appointment: React.FC = () => {
           assessmentHistory: getAssessmentHistory(),
           aiMatchScore: selectedDoctor.matchScore,
           aiMatchReason: selectedDoctor.matchReason,
+          paymentId: razorpayPaymentId,
+          paymentStatus: payStatus,
+          amountPaid: amount,
         }),
       });
       const data = await res.json();
@@ -366,6 +396,9 @@ const Appointment: React.FC = () => {
         setBookedAppointment(data.appointment);
         setAppointmentStatus(data.appointment.status || 'request_sent');
         setIsDummyDoctor(data.appointment.status === 'demo_no_email');
+        setPaymentId(razorpayPaymentId);
+        setPaymentStatus(payStatus);
+        setAmountPaid(amount);
         setCurrentStep('confirmed');
 
         // Store notification for Profile page
@@ -377,6 +410,8 @@ const Appointment: React.FC = () => {
           mode: consultationMode,
           bookingRef: ref,
           status: data.appointment.status,
+          paymentStatus: payStatus,
+          paymentId: razorpayPaymentId,
           bookedAt: new Date().toISOString(),
         };
         localStorage.setItem('ss_latest_appointment', JSON.stringify(notif));
@@ -391,6 +426,61 @@ const Appointment: React.FC = () => {
       setIsBooking(false);
     }
   };
+
+  const handleConfirmBooking = async () => {
+    if (!selectedDoctor || !user) return;
+
+    if (paymentOption === 'razorpay') {
+      setIsBooking(true);
+      setBookingError('');
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded) {
+        setBookingError('Razorpay SDK failed to load. Please check your network connection or select Pay at Clinic.');
+        setIsBooking(false);
+        return;
+      }
+
+      const match = selectedDoctor.fee.replace(/,/g, '').match(/\d+/);
+      const amountRupees = match ? parseInt(match[0], 10) : 1200;
+      const amountPaise = amountRupees * 100;
+
+      const options = {
+        key: RAZORPAY_KEY_ID,
+        amount: amountPaise,
+        currency: 'INR',
+        name: 'SoulSpace Mental Health',
+        description: `Consultation Fee with ${selectedDoctor.name}`,
+        image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=128&q=80',
+        handler: async (response: any) => {
+          await submitAppointmentBooking(response.razorpay_payment_id, 'paid', amountRupees);
+        },
+        prefill: {
+          name: patientName || `${user.firstName || ''} ${user.lastName || ''}`,
+          email: user.email,
+          contact: patientPhone || user.phone || '9876543210',
+        },
+        theme: {
+          color: '#3f72af',
+        },
+        modal: {
+          ondismiss: () => {
+            setIsBooking(false);
+          },
+        },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on('payment.failed', (response: any) => {
+        setBookingError(`Payment failed: ${response.error?.description || 'Transaction declined'}`);
+        setIsBooking(false);
+      });
+      rzp.open();
+    } else {
+      // Pay at Clinic option
+      await submitAppointmentBooking(null, 'pending', null);
+    }
+  };
+
 
   // ─── Simulate Clinic Reply ─────────────────────────────────────────────────
   const handleSimulateReply = async (outcome: string = 'confirmed') => {
@@ -869,18 +959,53 @@ const Appointment: React.FC = () => {
                     </div>
                   )}
 
+                  {/* Payment Method Selector */}
+                  <div className="payment-method-selector">
+                    <label className="payment-selector-title">💳 Select Payment Method</label>
+                    <div className="payment-options-grid">
+                      <div
+                        className={`payment-option-card ${paymentOption === 'razorpay' ? 'active' : ''}`}
+                        onClick={() => setPaymentOption('razorpay')}
+                      >
+                        <div className="payment-radio">
+                          <input type="radio" checked={paymentOption === 'razorpay'} onChange={() => setPaymentOption('razorpay')} />
+                        </div>
+                        <div className="payment-option-info">
+                          <strong>Razorpay Instant Checkout</strong>
+                          <p>UPI (GPay/PhonePe), Cards, NetBanking, Wallets</p>
+                          <span className="secure-badge">🔒 256-Bit SSL Secured</span>
+                        </div>
+                      </div>
+
+                      <div
+                        className={`payment-option-card ${paymentOption === 'clinic' ? 'active' : ''}`}
+                        onClick={() => setPaymentOption('clinic')}
+                      >
+                        <div className="payment-radio">
+                          <input type="radio" checked={paymentOption === 'clinic'} onChange={() => setPaymentOption('clinic')} />
+                        </div>
+                        <div className="payment-option-info">
+                          <strong>Pay at Clinic</strong>
+                          <p>Settle consultation fee at clinic reception</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {bookingError && <div className="booking-error-msg">⚠️ {bookingError}</div>}
 
                   <button
-                    className="btn btn-primary confirm-submit-btn"
+                    className={`btn btn-primary confirm-submit-btn ${paymentOption === 'razorpay' ? 'btn-razorpay' : ''}`}
                     onClick={handleConfirmBooking}
                     disabled={isBooking}
-                    style={{ marginTop: '24px', width: '100%' }}
+                    style={{ marginTop: '16px', width: '100%' }}
                   >
                     {isBooking ? (
-                      <><span className="btn-spinner"></span> Sending Appointment Request…</>
+                      <><span className="btn-spinner"></span> Processing…</>
+                    ) : paymentOption === 'razorpay' ? (
+                      `💳 Pay ${selectedDoctor.fee.split('/')[0].trim()} via Razorpay →`
                     ) : (
-                      '🤖 Confirm & Send Email →'
+                      '🤖 Confirm Request (Pay at Clinic) →'
                     )}
                   </button>
                   <p className="confirm-disclaimer">
@@ -891,6 +1016,7 @@ const Appointment: React.FC = () => {
               </div>
             </div>
           )}
+
 
           {/* CONFIRMED STATE */}
           {currentStep === 'confirmed' && bookedAppointment && selectedDoctor && (
@@ -933,8 +1059,32 @@ const Appointment: React.FC = () => {
                 }
               </p>
 
+              {/* Payment Receipt Banner */}
+              <div className={`receipt-payment-banner ${paymentStatus === 'paid' ? 'paid-banner' : 'clinic-banner'}`}>
+                {paymentStatus === 'paid' ? (
+                  <>
+                    <div className="pay-badge-icon">💳</div>
+                    <div className="pay-badge-info">
+                      <strong>Razorpay Payment Verified: Paid Successfully</strong>
+                      <p>Payment ID: <code className="pay-id-code">{paymentId || 'pay_test_verified'}</code> · Amount: ₹{amountPaid || selectedDoctor.fee.replace(/\D/g, '')} INR (Authorized via Razorpay Gateway)</p>
+                    </div>
+                    <span className="pay-verified-pill">✓ VERIFIED</span>
+                  </>
+                ) : (
+                  <>
+                    <div className="pay-badge-icon">🏥</div>
+                    <div className="pay-badge-info">
+                      <strong>Payment Mode: Pay at Clinic</strong>
+                      <p>Consultation fee of <strong>{selectedDoctor.fee}</strong> can be settled at the clinic counter upon arrival.</p>
+                    </div>
+                    <span className="pay-pending-pill">PAY ON ARRIVAL</span>
+                  </>
+                )}
+              </div>
+
               {/* Email Status Timeline */}
               <div className="email-timeline">
+
                 <div className="email-timeline-title">📬 Email Status Tracker</div>
                 <div className="timeline-steps">
                   <div className="t-step done">

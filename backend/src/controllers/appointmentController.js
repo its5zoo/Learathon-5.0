@@ -265,6 +265,7 @@ export const bookAppointment = async (req, res) => {
       patientName, patientPhone,
       concerns, attachReport, assessmentHistory,
       aiMatchScore, aiMatchReason,
+      paymentId, paymentStatus, amountPaid,
     } = req.body;
     const user = req.user;
 
@@ -309,8 +310,12 @@ export const bookAppointment = async (req, res) => {
       assessmentSummary,
       aiMatchScore,
       aiMatchReason,
+      paymentId: paymentId || null,
+      paymentStatus: paymentStatus || (paymentId ? 'paid' : 'pending'),
+      amountPaid: amountPaid || null,
       status: 'pending_email',
     });
+
 
     // Send email to clinic (skip for dummy @soulspace.demo addresses)
     let emailPreviewUrl = null;
