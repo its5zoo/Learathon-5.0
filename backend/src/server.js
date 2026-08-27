@@ -86,6 +86,14 @@ app.use((req, res) => {
   res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
 });
 
+app.use((err, req, res, next) => {
+  console.error('Unhandled server error:', err);
+  res.status(500).json({
+    success: false,
+    message: err.message || 'Internal Server Error',
+  });
+});
+
 if (!isServerless && isDirectRun) {
   app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
