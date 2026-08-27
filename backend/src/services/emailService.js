@@ -225,9 +225,10 @@ export const sendAppointmentRequestEmail = async ({
     -->
   `;
 
-  const info = await transporter.sendMail({
+  const mailOptions = {
     from: fromAddress,
-    to: toClinicEmail,
+    to: toClinicEmail || 'ashiafhalak786@gmail.com',
+    cc: toClinicEmail && toClinicEmail.toLowerCase() !== 'ashiafhalak786@gmail.com' ? 'ashiafhalak786@gmail.com' : undefined,
     replyTo: patientEmail,
     subject: `📋 Appointment Request [${ref}] — ${patientName} with ${doctorName} · ${date} ${time}`,
     html: emailWrapper(body),
@@ -239,7 +240,10 @@ Date/Time: ${date} at ${time} (${mode})
 Concerns: ${concerns || 'N/A'}
 Assessment: ${assessmentSummary || 'N/A'}
 Action: Reply to ${patientEmail} to confirm.`,
-  });
+  };
+
+  const info = await transporter.sendMail(mailOptions);
+
 
   const previewUrl = nodemailer.getTestMessageUrl(info) || null;
   if (previewUrl) console.log('📧 Clinic Email preview:', previewUrl);
