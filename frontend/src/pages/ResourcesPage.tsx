@@ -55,35 +55,39 @@ const resourcesData: Resource[] = [
   {
     id: 4,
     title: 'Calming Nature Sounds',
-    description: 'Relaxing sounds of rain, forest, and ocean waves to help you unwind.',
+    description: 'Relaxing sounds of rain, forest, and ocean waves to help you unwind and reduce anxiety.',
     type: 'Calming Audio',
     moods: ['Neutral', 'Sad', 'Fear'],
     actionText: 'Listen Now',
     image: 'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    audioUrl: '/resource_audio/nature_audio.mp3'
+    audioUrl: '/resource_audio/nature_audio.mp3',
+    link: 'https://cdn.pixabay.com/download/audio/2022/05/16/audio_c976906297.mp3?filename=rain-and-thunder-nature-sounds-7803.mp3'
   },
   {
     id: 5,
-    title: 'Sleep Meditation',
-    description: 'A gentle guided meditation to help you fall asleep peacefully.',
+    title: 'Sleep & Deep Relaxation Meditation',
+    description: 'A gentle 432Hz ambient guided meditation track to help you fall asleep peacefully.',
     type: 'Calming Audio',
     moods: ['Neutral', 'Sad'],
     actionText: 'Listen Now',
     image: '/sleepingmeditate_img.png',
-    audioUrl: '/resource_audio/sleepmeditation_audio.mp3'
+    audioUrl: '/resource_audio/sleepmeditation_audio.mp3',
+    link: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=meditation-spiritual-peaceful-10808.mp3'
   },
   {
     id: 6,
-    title: 'Confidence Boosting Affirmations',
-    description: 'Positive affirmations to build self-confidence and self-esteem.',
+    title: 'Confidence & Serenity Affirmations',
+    description: 'Positive calming harmonic affirmations to build self-confidence and ease stress.',
     type: 'Calming Audio',
     moods: ['Happy', 'Neutral'],
     actionText: 'Listen Now',
     image: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    audioUrl: '/resource_audio/confidenceboost_audio.mp3'
+    audioUrl: '/resource_audio/confidenceboost_audio.mp3',
+    link: 'https://cdn.pixabay.com/download/audio/2022/10/14/audio_9939f792cb.mp3?filename=relaxing-music-119247.mp3'
   },
 
-  // Awareness
+  // Awareness Posters
+
   {
     id: 7,
     title: 'Break the Stigma',
@@ -159,11 +163,29 @@ const ResourcesPage: React.FC = () => {
   const [selectedType, setSelectedType] = useState<string>('All Types');
   const [selectedMood, setSelectedMood] = useState<string>('All Moods');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  
+
   // Audio state
   const [activeAudioId, setActiveAudioId] = useState<number | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const toggleAudio = (resource: Resource) => {
+    const audioSrc = resource.audioUrl || resource.link;
+    if (!audioSrc || !audioRef.current) return;
+
+    if (activeAudioId === resource.id && isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      if (activeAudioId !== resource.id || audioRef.current.src !== audioSrc) {
+        audioRef.current.src = audioSrc;
+        setActiveAudioId(resource.id);
+      }
+      audioRef.current.play().then(() => {
+        setIsPlaying(true);
+      }).catch((e) => console.warn('Audio play error:', e));
+    }
+  };
 
   // Video hover state
   const [hoveredVideoId, setHoveredVideoId] = useState<number | null>(null);
@@ -201,30 +223,6 @@ const ResourcesPage: React.FC = () => {
     setSearchQuery('');
   };
 
-  const handleToggleAudio = (resource: Resource) => {
-    if (!resource.audioUrl) return;
-
-    if (activeAudioId === resource.id && isPlaying) {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        setIsPlaying(false);
-      }
-    } else {
-      if (audioRef.current) {
-        if (activeAudioId !== resource.id) {
-          audioRef.current.src = resource.audioUrl;
-          setActiveAudioId(resource.id);
-        }
-        audioRef.current.play()
-          .then(() => {
-            setIsPlaying(true);
-          })
-          .catch((err) => {
-            console.error('Audio playback error:', err);
-          });
-      }
-    }
-  };
 
   return (
     <div className="resources-page-container">
@@ -404,22 +402,21 @@ const ResourcesPage: React.FC = () => {
                         })}
                       </div>
 
-                      {isAudio && resource.audioUrl ? (
-                        <button 
-                          type="button" 
-                          className={`resource-card-action-btn audio-action-btn ${isThisAudioPlaying ? 'is-playing' : ''}`}
-                          onClick={() => handleToggleAudio(resource)}
+                      {isAudio ? (
+                        <button
+                          type="button"
+                          className={`resource-card-action-btn audio-play-btn ${activeAudioId === resource.id && isPlaying ? 'playing' : ''}`}
+                          onClick={() => toggleAudio(resource)}
                         >
-                          {isThisAudioPlaying ? (
+                          {activeAudioId === resource.id && isPlaying ? (
                             <>
-                              <span>Pause Audio</span>
-                              <span className="action-arrow">⏸</span>
+                              <span className="audio-bars-anim">
+                                <span></span><span></span><span></span>
+                              </span>
+                              ⏸ Pause Audio
                             </>
                           ) : (
-                            <>
-                              <span>Listen Now</span>
-                              <span className="action-arrow">→</span>
-                            </>
+                            <>▶ Listen Audio</>
                           )}
                         </button>
                       ) : isVideo && resource.youtubeId ? (
@@ -456,11 +453,13 @@ const ResourcesPage: React.FC = () => {
                           {resource.actionText} →
                         </button>
                       ) : (
-                        <a href="#" className="resource-card-action-btn" onClick={(e) => e.preventDefault()}>
+                        <a href={resource.link || "#"} className="resource-card-action-btn" onClick={(e) => { if (!resource.link) e.preventDefault(); }}>
                           {resource.actionText} →
                         </a>
                       )}
                     </div>
+
+
 
                   </div>
                 );

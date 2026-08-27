@@ -265,6 +265,7 @@ export const bookAppointment = async (req, res) => {
       patientName, patientPhone,
       concerns, attachReport, assessmentHistory,
       aiMatchScore, aiMatchReason,
+      paymentId, paymentStatus, amountPaid,
     } = req.body;
     const user = req.user;
 
@@ -309,8 +310,12 @@ export const bookAppointment = async (req, res) => {
       assessmentSummary,
       aiMatchScore,
       aiMatchReason,
+      paymentId: paymentId || null,
+      paymentStatus: paymentStatus || (paymentId ? 'paid' : 'pending'),
+      amountPaid: amountPaid || null,
       status: 'pending_email',
     });
+
 
     // Send email to clinic (skip for dummy @soulspace.demo addresses)
     let emailPreviewUrl = null;
@@ -393,30 +398,44 @@ export const bookAppointment = async (req, res) => {
 export const simulateClinicReply = async (req, res) => {
   try {
     const { id } = req.params;
+    const { outcome } = req.body || {}; // 'confirmed' | 'rejected' | 'rescheduled' | 'expired'
     const appointment = await Appointment.findOne({ _id: id, userId: req.user._id });
     if (!appointment) return res.status(404).json({ success: false, message: 'Appointment not found.' });
 
-    // Generate a realistic clinic reply
-    const replyTemplates = [
-      `Dear ${appointment.patientName},\n\nThank you for reaching out to ${appointment.clinicName} through the SoulSpace platform. We are pleased to confirm your appointment with ${appointment.doctorName}.\n\nYour appointment is confirmed for ${appointment.date} at ${appointment.time} (${appointment.mode}).\n\nPlease arrive 10 minutes early for registration. Bring a valid photo ID. For video consultations, you will receive a secure link 15 minutes before your session.\n\nWarm regards,\n${appointment.clinicName} Reception Team\nTel: +91-80-4567-8901`,
+    // Generate realistic clinic reply templates
+    const templates = {
+      confirmed: `Dear ${appointment.patientName},\n\nThank you for reaching out to ${appointment.clinicName} through the SoulSpace platform. We are pleased to confirm your appointment with ${appointment.doctorName}.\n\nYour appointment is confirmed for ${appointment.date} at ${appointment.time} (${appointment.mode}).\n\nPlease arrive 10 minutes early for registration. Bring a valid photo ID. For video consultations, you will receive a secure link 15 minutes before your session.\n\nWarm regards,\n${appointment.clinicName} Reception Team\nTel: +91-80-4567-8901`,
       
-      `Dear ${appointment.patientName},\n\nWe have received your appointment request for ${appointment.doctorName} at ${appointment.clinicName}. We regret to inform you that the requested slot (${appointment.date}, ${appointment.time}) is currently occupied.\n\nWe would like to offer you an alternative slot: ${appointment.date === 'Today (Earliest)' ? 'Tomorrow' : 'Day After Tomorrow'} at 11:00 AM. Please confirm if this works for you.\n\nWe look forward to supporting your wellness journey.\n\nBest regards,\n${appointment.clinicName} Scheduling Team`,
-    ];
+      rejected: `Dear ${appointment.patientName},\n\nThank you for contacting ${appointment.clinicName}. We regret to inform you that Dr. ${appointment.doctorName} is fully booked and there are no slots left for ${appointment.date} at ${appointment.time}.\n\nWe cannot accept new bookings for this specific time window. We recommend checking back next week or booking another specialist on the SoulSpace platform.\n\nSincerely,\n${appointment.clinicName} Scheduling Desk`,
 
-    // 70% chance confirmed, 30% rescheduled (for demo variety)
-    const clinicReplyRaw = replyTemplates[Math.random() < 0.7 ? 0 : 1];
-    const isConfirmed = clinicReplyRaw.includes('pleased to confirm');
+      rescheduled: `Dear ${appointment.patientName},\n\nWe have received your appointment request for ${appointment.doctorName} at ${appointment.clinicName}. The requested slot (${appointment.date}, ${appointment.time}) is currently unavailable due to an ongoing clinical emergency.\n\nWe would like to propose an alternative slot: ${appointment.date === 'Today (Earliest)' ? 'Tomorrow' : 'Next Working Day'} at 04:30 PM. Please reply to confirm if this works for you.\n\nBest regards,\n${appointment.clinicName} Scheduling Team`,
 
-    // Ask Gemini to summarize the clinic reply
+      expired: `[SYSTEM NOTICE]: 24-Hour SLA Window Expired. No reply was received from ${appointment.clinicName} within 24 hours of dispatch. The request has been automatically suspended to prevent indefinite patient waiting.`
+    };
+
+    const chosenOutcome = outcome || (Math.random() < 0.6 ? 'confirmed' : Math.random() < 0.5 ? 'rescheduled' : 'rejected');
+    const clinicReplyRaw = templates[chosenOutcome] || templates.confirmed;
+
+    // AI summary
     let clinicReplySummary = '';
     try {
-      const summaryPrompt = `You are the SoulSpace AI concierge. Summarize this clinic's email reply for the patient in 2–3 clear, friendly bullet points. Start each bullet with an emoji. Focus on: (1) whether appointment is confirmed or rescheduled, (2) key action items for the patient, (3) any important details (time, instructions).`;
-      clinicReplySummary = await callGemmaModel(summaryPrompt, `Clinic email:\n\n${clinicReplyRaw}`);
+      if (chosenOutcome === 'expired') {
+        clinicReplySummary = `⏳ 24-Hour SLA Expired: The clinic did not respond within the 24-hour response window.\n🚫 Request automatically suspended to protect your time.\n🩺 Please rebook with another available top specialist.`;
+      } else {
+        const summaryPrompt = `You are the SoulSpace AI concierge. Summarize this clinic's email reply for the patient in 2–3 clear, friendly bullet points. Start each bullet with an emoji. Focus on: (1) whether appointment is confirmed, rejected (no slots), or rescheduled, (2) key action items for the patient, (3) any important details.`;
+        clinicReplySummary = await callGemmaModel(summaryPrompt, `Clinic email:\n\n${clinicReplyRaw}`);
+      }
     } catch (aiErr) {
       console.warn('Reply summarization AI failed:', aiErr.message);
-      clinicReplySummary = isConfirmed
-        ? `✅ Appointment confirmed for ${appointment.date} at ${appointment.time}\n📍 Arrive 10 min early with photo ID\n📧 Video link will be shared before session`
-        : `🔄 Requested slot unavailable — clinic suggests an alternative time\n📞 Please reply to the clinic email to confirm the new slot`;
+      if (chosenOutcome === 'confirmed') {
+        clinicReplySummary = `✅ Appointment confirmed for ${appointment.date} at ${appointment.time}\n📍 Arrive 10 min early with photo ID\n📧 Video link will be shared before session`;
+      } else if (chosenOutcome === 'rejected') {
+        clinicReplySummary = `❌ Requested slot unavailable (No slots left)\n👨‍⚕️ Dr. ${appointment.doctorName} is fully booked for this date\n🔄 Please select another date or book another top specialist`;
+      } else if (chosenOutcome === 'rescheduled') {
+        clinicReplySummary = `🔄 Requested slot unavailable — alternative time proposed\n📞 Reply to the clinic's email to lock the new slot`;
+      } else {
+        clinicReplySummary = `⏳ 24-Hour SLA Expired without response from clinic\n🚫 Request suspended\n🩺 Please select another specialist`;
+      }
     }
 
     // Update appointment in DB
@@ -424,17 +443,18 @@ export const simulateClinicReply = async (req, res) => {
       clinicReplyRaw,
       clinicReplySummary,
       replyReceivedAt: new Date(),
-      status: isConfirmed ? 'confirmed' : 'rescheduled',
-      ...(isConfirmed && { confirmedDateTime: `${appointment.date}, ${appointment.time}` }),
+      status: chosenOutcome,
+      ...(chosenOutcome === 'confirmed' && { confirmedDateTime: `${appointment.date}, ${appointment.time}` }),
     });
 
     return res.json({
       success: true,
       clinicReplyRaw,
       clinicReplySummary,
-      isConfirmed,
-      status: isConfirmed ? 'confirmed' : 'rescheduled',
+      isConfirmed: chosenOutcome === 'confirmed',
+      status: chosenOutcome,
     });
+
 
   } catch (err) {
     console.error('simulateClinicReply error:', err);

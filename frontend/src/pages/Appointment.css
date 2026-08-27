@@ -1922,3 +1922,365 @@
   70%  { transform: scale(1.1);  box-shadow: 0 0 0 8px rgba(34,197,94,0); }
   100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(34,197,94,0); }
 }
+
+/* ==========================================================================
+   DOCTOR CARD EMAIL BADGE & VERIFIED DISPATCH STYLES
+   ========================================================================== */
+.doc-email-row-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  padding: 6px 12px;
+  border-radius: 8px;
+  margin: 8px 0;
+  font-size: 12.5px;
+  color: #334155;
+}
+
+.doc-email-badge-icon {
+  font-size: 14px;
+}
+
+.doc-email-addr-text {
+  flex: 1;
+  font-family: 'SF Mono', Consolas, Monaco, monospace;
+  font-size: 12px;
+  color: #1e293b;
+}
+
+.doc-badge-pill {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.doc-badge-pill.live-pill {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.doc-badge-pill.demo-pill {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}
+
+.summary-doc-email-line {
+  font-size: 12.5px;
+  color: #1d4ed8;
+  font-family: 'SF Mono', Consolas, Monaco, monospace;
+  margin-top: 4px;
+}
+
+/* ==========================================================================
+   MULTI-OUTCOME BADGES & DEMO SIMULATION SHORTCUTS
+   ========================================================================== */
+.success-icon-badge.status-rejected-badge {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 2px solid #ef4444;
+}
+
+.success-icon-badge.status-expired-badge {
+  background: #f1f5f9;
+  color: #475569;
+  border: 2px solid #94a3b8;
+}
+
+.success-icon-badge.status-rescheduled-badge {
+  background: #fef3c7;
+  color: #b45309;
+  border: 2px solid #f59e0b;
+}
+
+.clinic-reply-card.rejected {
+  background: #fff1f2;
+  border: 1.5px solid #f87171;
+}
+
+.clinic-reply-card.expired {
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+}
+
+.reply-status-pill.pill-rejected {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.reply-status-pill.pill-expired {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+/* Demo simulation toolbar */
+.demo-simulation-toolbar {
+  margin-top: 16px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 12px 16px;
+  width: 100%;
+  max-width: 540px;
+}
+
+.demo-sim-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.demo-sim-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.demo-sim-btn {
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.demo-sim-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.btn-sim-confirm {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #86efac;
+}
+
+.btn-sim-reject {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fca5a5;
+}
+
+.btn-sim-resched {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+
+.btn-sim-expire {
+  background: #f1f5f9;
+  color: #334155;
+  border-color: #cbd5e1;
+}
+
+/* ─── Razorpay Payment Selector & Banners ──────────────────────────────────── */
+.payment-method-selector {
+  margin-top: 18px;
+  margin-bottom: 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.payment-selector-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 10px;
+}
+
+.payment-options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.payment-option-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.payment-option-card:hover {
+  border-color: #3f72af;
+}
+
+.payment-option-card.active {
+  border-color: #3f72af;
+  background: #f0f7ff;
+  box-shadow: 0 0 0 1px #3f72af;
+}
+
+.payment-radio {
+  margin-top: 2px;
+}
+
+.payment-radio input {
+  cursor: pointer;
+  accent-color: #3f72af;
+}
+
+.payment-option-info {
+  flex: 1;
+}
+
+.payment-option-info strong {
+  display: block;
+  font-size: 13px;
+  color: #0f172a;
+  margin-bottom: 2px;
+}
+
+.payment-option-info p {
+  font-size: 11.5px;
+  color: #64748b;
+  margin: 0 0 4px 0;
+}
+
+.secure-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #059669;
+  background: #ecfdf5;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.btn-razorpay {
+  background: linear-gradient(135deg, #0c2340 0%, #1e40af 100%) !important;
+  border: none !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 14px rgba(30, 64, 175, 0.3) !important;
+  transition: all 0.2s ease !important;
+}
+
+.btn-razorpay:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4) !important;
+}
+
+/* Receipt Payment Banner */
+.receipt-payment-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  margin: 16px 0 24px 0;
+  text-align: left;
+}
+
+.receipt-payment-banner.paid-banner {
+  background: #f0fdf4;
+  border: 1.5px solid #86efac;
+}
+
+.receipt-payment-banner.clinic-banner {
+  background: #eff6ff;
+  border: 1.5px solid #bfdbfe;
+}
+
+.pay-badge-icon {
+  font-size: 24px;
+}
+
+.pay-badge-info {
+  flex: 1;
+}
+
+.pay-badge-info strong {
+  display: block;
+  font-size: 13.5px;
+  color: #0f172a;
+  margin-bottom: 2px;
+}
+
+.pay-badge-info p {
+  font-size: 12px;
+  color: #475569;
+  margin: 0;
+}
+
+.pay-id-code {
+  font-family: monospace;
+  background: rgba(0, 0, 0, 0.06);
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: #0f766e;
+  font-weight: 700;
+}
+
+.pay-verified-pill {
+  font-size: 11px;
+  font-weight: 800;
+  color: #15803d;
+  background: #dcfce7;
+  border: 1px solid #86efac;
+  padding: 4px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+}
+
+.pay-pending-pill {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #1e40af;
+  background: #dbeafe;
+  border: 1px solid #93c5fd;
+  padding: 4px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.btn-invoice-btn {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border: 1px solid #334155 !important;
+  padding: 10px 18px !important;
+  border-radius: 10px !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease !important;
+}
+
+.btn-invoice-btn:hover {
+  background: #1e293b !important;
+  border-color: #475569 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25) !important;
+}
+
+
+

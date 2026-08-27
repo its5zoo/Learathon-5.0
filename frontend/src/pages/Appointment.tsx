@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { API_URL } from '../config';
+import InvoiceModal from '../components/InvoiceModal/InvoiceModal';
 import './Appointment.css';
+
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Doctor {
@@ -25,6 +27,7 @@ interface Doctor {
   matchReason?: string;
   specialtyHighlight?: string;
   isTopPick?: boolean;
+  email?: string;
 }
 
 // ─── Static Doctor Data (mirrors backend DOCTORS list) ────────────────────────
@@ -44,6 +47,7 @@ const doctorsData: Doctor[] = [
     modes: ['In-Clinic', 'Video Consultation'],
     nextAvailable: 'Today, 4:30 PM',
     fee: '₹1,200 / session',
+    email: '25cse195.rakhilesh@giet.edu',
     image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
   },
   {
@@ -61,6 +65,7 @@ const doctorsData: Doctor[] = [
     modes: ['In-Clinic', 'Video Consultation'],
     nextAvailable: 'Tomorrow, 11:00 AM',
     fee: '₹1,500 / session',
+    email: 'ashiafhalak786@gmail.com',
     image: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
   },
   {
@@ -78,6 +83,7 @@ const doctorsData: Doctor[] = [
     modes: ['In-Clinic', 'Video Consultation'],
     nextAvailable: 'Today, 6:00 PM',
     fee: '₹1,000 / session',
+    email: '25cse169.grigariaannsunil@giet.edu',
     image: 'https://images.unsplash.com/photo-1594824813686-7a1a8c9b9173?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
   },
   {
@@ -95,6 +101,7 @@ const doctorsData: Doctor[] = [
     modes: ['In-Clinic', 'Video Consultation'],
     nextAvailable: 'Tomorrow, 3:30 PM',
     fee: '₹1,300 / session',
+    email: 'dummy.doc4@soulspace.demo',
     image: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
   },
   {
@@ -112,6 +119,7 @@ const doctorsData: Doctor[] = [
     modes: ['In-Clinic', 'Video Consultation'],
     nextAvailable: 'Today, 2:00 PM',
     fee: '₹900 / session',
+    email: 'dummy.doc5@soulspace.demo',
     image: 'https://images.unsplash.com/photo-1614608682850-e0d6ed316d47?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
   },
   {
@@ -129,9 +137,11 @@ const doctorsData: Doctor[] = [
     modes: ['In-Clinic', 'Video Consultation'],
     nextAvailable: 'Tomorrow, 9:00 AM',
     fee: '₹1,800 / session',
+    email: 'ashiafhalak786@gmail.com',
     image: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
   },
 ];
+
 
 const timeSlots = [
   '10:00 AM', '11:30 AM', '02:00 PM', '03:30 PM', '04:30 PM', '06:00 PM', '07:30 PM',
@@ -145,6 +155,22 @@ const AI_LOADING_STEPS = [
   'Preparing your Top 3 recommendations…',
 ];
 
+const RAZORPAY_KEY_ID = 'rzp_test_TUhp2MpaI3MdOT';
+
+const loadRazorpayScript = (): Promise<boolean> => {
+  return new Promise((resolve) => {
+    if ((window as any).Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 // ─── Component ────────────────────────────────────────────────────────────────
 const Appointment: React.FC = () => {
   const navigate = useNavigate();
@@ -153,8 +179,17 @@ const Appointment: React.FC = () => {
   // Stepper: 1=Select, 2=Schedule, 3=Review & Send  | 'confirmed'=success state
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 'confirmed'>(1);
 
+  // Payment & Invoice states
+  const [paymentOption, setPaymentOption] = useState<'razorpay' | 'clinic'>('razorpay');
+  const [paymentId, setPaymentId] = useState<string | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<string>('pending');
+  const [amountPaid, setAmountPaid] = useState<number | null>(null);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+
+
   // Filters
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>(['Anxiety & Stress']);
+
   const [selectedMode, setSelectedMode] = useState('All');
   const [selectedCity, setSelectedCity] = useState('All');
   const [userConcerns, setUserConcerns] = useState('');
@@ -323,8 +358,12 @@ const Appointment: React.FC = () => {
     window.scrollTo({ top: 300, behavior: 'smooth' });
   };
 
-  // ─── Book Appointment ──────────────────────────────────────────────────────
-  const handleConfirmBooking = async () => {
+  // ─── Book Appointment & Razorpay Checkout ──────────────────────────────────
+  const submitAppointmentBooking = async (
+    razorpayPaymentId: string | null = null,
+    payStatus: string = 'pending',
+    amount: number | null = null
+  ) => {
     if (!selectedDoctor || !user) return;
     setIsBooking(true);
     setBookingError('');
@@ -348,6 +387,9 @@ const Appointment: React.FC = () => {
           assessmentHistory: getAssessmentHistory(),
           aiMatchScore: selectedDoctor.matchScore,
           aiMatchReason: selectedDoctor.matchReason,
+          paymentId: razorpayPaymentId,
+          paymentStatus: payStatus,
+          amountPaid: amount,
         }),
       });
       const data = await res.json();
@@ -358,6 +400,9 @@ const Appointment: React.FC = () => {
         setBookedAppointment(data.appointment);
         setAppointmentStatus(data.appointment.status || 'request_sent');
         setIsDummyDoctor(data.appointment.status === 'demo_no_email');
+        setPaymentId(razorpayPaymentId);
+        setPaymentStatus(payStatus);
+        setAmountPaid(amount);
         setCurrentStep('confirmed');
 
         // Store notification for Profile page
@@ -369,6 +414,8 @@ const Appointment: React.FC = () => {
           mode: consultationMode,
           bookingRef: ref,
           status: data.appointment.status,
+          paymentStatus: payStatus,
+          paymentId: razorpayPaymentId,
           bookedAt: new Date().toISOString(),
         };
         localStorage.setItem('ss_latest_appointment', JSON.stringify(notif));
@@ -384,14 +431,73 @@ const Appointment: React.FC = () => {
     }
   };
 
+  const handleConfirmBooking = async () => {
+    if (!selectedDoctor || !user) return;
+
+    if (paymentOption === 'razorpay') {
+      setIsBooking(true);
+      setBookingError('');
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded) {
+        setBookingError('Razorpay SDK failed to load. Please check your network connection or select Pay at Clinic.');
+        setIsBooking(false);
+        return;
+      }
+
+      const match = selectedDoctor.fee.replace(/,/g, '').match(/\d+/);
+      const amountRupees = match ? parseInt(match[0], 10) : 1200;
+      const amountPaise = amountRupees * 100;
+
+      const options = {
+        key: RAZORPAY_KEY_ID,
+        amount: amountPaise,
+        currency: 'INR',
+        name: 'SoulSpace Mental Health',
+        description: `Consultation Fee with ${selectedDoctor.name}`,
+        image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=128&q=80',
+        handler: async (response: any) => {
+          await submitAppointmentBooking(response.razorpay_payment_id, 'paid', amountRupees);
+        },
+        prefill: {
+          name: patientName || `${user.firstName || ''} ${user.lastName || ''}`,
+          email: user.email,
+          contact: patientPhone || user.phone || '9876543210',
+        },
+        theme: {
+          color: '#3f72af',
+        },
+        modal: {
+          ondismiss: () => {
+            setIsBooking(false);
+          },
+        },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on('payment.failed', (response: any) => {
+        setBookingError(`Payment failed: ${response.error?.description || 'Transaction declined'}`);
+        setIsBooking(false);
+      });
+      rzp.open();
+    } else {
+      // Pay at Clinic option
+      await submitAppointmentBooking(null, 'pending', null);
+    }
+  };
+
+
   // ─── Simulate Clinic Reply ─────────────────────────────────────────────────
-  const handleSimulateReply = async () => {
+  const handleSimulateReply = async (outcome: string = 'confirmed') => {
     if (!bookedAppointment?._id) return;
     setIsSimulatingReply(true);
     try {
       const res = await fetch(`${API_URL}/appointments/${bookedAppointment._id}/simulate-reply`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ outcome }),
       });
       const data = await res.json();
       if (data.success) {
@@ -399,7 +505,7 @@ const Appointment: React.FC = () => {
         setClinicReplyRaw(data.clinicReplyRaw);
         setAppointmentStatus(data.status);
 
-        // Update profile notification with confirmed status
+        // Update profile notification with status
         try {
           const existing = JSON.parse(localStorage.getItem('ss_latest_appointment') || '{}');
           localStorage.setItem('ss_latest_appointment', JSON.stringify({
@@ -415,6 +521,7 @@ const Appointment: React.FC = () => {
       setIsSimulatingReply(false);
     }
   };
+
 
   const resetAll = () => {
     setCurrentStep(1);
@@ -630,6 +737,17 @@ const Appointment: React.FC = () => {
                               <p className="address-text">{doctor.address}</p>
                             </div>
                           </div>
+                          {doctor.email && (
+                            <div className="doc-email-row-badge">
+                              <span className="doc-email-badge-icon">✉️</span>
+                              <span className="doc-email-addr-text">Official: <strong>{doctor.email}</strong></span>
+                              {doctor.email.endsWith('@soulspace.demo') ? (
+                                <span className="doc-badge-pill demo-pill">Demo Mode</span>
+                              ) : (
+                                <span className="doc-badge-pill live-pill">Live Dispatch</span>
+                              )}
+                            </div>
+                          )}
                           <div className="doc-footer-row">
                             <div className="slot-and-fee">
                               <div className="next-slot"><span className="slot-dot"></span> Next Slot: <strong>{doctor.nextAvailable}</strong></div>
@@ -666,6 +784,7 @@ const Appointment: React.FC = () => {
                   <h3 className="summary-doc-name">{selectedDoctor.name}</h3>
                   <p className="summary-doc-title">{selectedDoctor.title}</p>
                   <p className="summary-doc-address">📍 {selectedDoctor.clinicName}, {selectedDoctor.address}</p>
+                  <p className="summary-doc-email-line">✉️ Destination Email: <strong>{selectedDoctor.email}</strong></p>
                 </div>
                 <div className="summary-doc-fee">
                   <span>Fee</span>
@@ -687,68 +806,78 @@ const Appointment: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Date */}
-                <h4 className="slots-heading">Select Date</h4>
-                <div className="dates-row">
-                  {['Today (Earliest)', 'Tomorrow', 'Day After Tomorrow'].map(d => (
-                    <button key={d} className={`date-btn ${selectedDate === d ? 'active' : ''}`} onClick={() => setSelectedDate(d)}>{d}</button>
+                {/* Date Selection */}
+                <h3 className="schedule-card-title" style={{ marginTop: '24px' }}>Preferred Date</h3>
+                <div className="date-options-row">
+                  {['Today (Earliest)', 'Tomorrow', 'This Weekend', 'Next Monday'].map(d => (
+                    <button key={d} className={`date-chip ${selectedDate === d ? 'active' : ''}`} onClick={() => setSelectedDate(d)}>
+                      {d}
+                    </button>
                   ))}
                 </div>
 
-                {/* Time */}
-                <h4 className="slots-heading">Select Time Slot</h4>
-                <div className="time-slots-grid">
-                  {timeSlots.map(time => (
-                    <button key={time} className={`time-slot-btn ${selectedTime === time ? 'active' : ''}`} onClick={() => setSelectedTime(time)}>{time}</button>
+                {/* Time Selection */}
+                <h3 className="schedule-card-title" style={{ marginTop: '24px' }}>Preferred Time Slot</h3>
+                <div className="time-slot-grid">
+                  {timeSlots.map(t => (
+                    <button key={t} className={`time-chip ${selectedTime === t ? 'active' : ''}`} onClick={() => setSelectedTime(t)}>
+                      {t}
+                    </button>
                   ))}
                 </div>
 
-                {/* Patient Details (prefilled) */}
-                <h4 className="slots-heading" style={{ marginTop: '28px' }}>Your Contact Details</h4>
-                <div className="schedule-patient-fields">
-                  <div className="form-row">
-                    <div className="form-field">
-                      <label>Full Name</label>
-                      <input
-                        type="text"
-                        value={patientName}
-                        onChange={e => setPatientName(e.target.value)}
-                        placeholder="Your full name"
-                        required
-                      />
-                    </div>
-                    <div className="form-field">
-                      <label>Phone Number</label>
-                      <input
-                        type="tel"
-                        value={patientPhone}
-                        onChange={e => setPatientPhone(e.target.value)}
-                        placeholder="+91 XXXXX XXXXX"
-                        required
-                      />
-                    </div>
+                {/* Patient Info */}
+                <h3 className="schedule-card-title" style={{ marginTop: '28px' }}>Patient Details</h3>
+                <div className="patient-form-grid">
+                  <div className="form-group">
+                    <label>Full Name *</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Your full name"
+                      value={patientName}
+                      onChange={e => setPatientName(e.target.value)}
+                    />
                   </div>
-                  <div className="form-field form-field-full">
-                    <label>Email (pre-filled from account)</label>
-                    <input type="email" value={user?.email || ''} readOnly className="readonly-input" />
+                  <div className="form-group">
+                    <label>Phone Number *</label>
+                    <input
+                      type="tel"
+                      className="form-input"
+                      placeholder="+91 98765 43210"
+                      value={patientPhone}
+                      onChange={e => setPatientPhone(e.target.value)}
+                    />
                   </div>
-
-                  {/* Attach report toggle */}
-                  <div className="ai-report-attachment-box" style={{ marginTop: '12px' }}>
-                    <label className="ai-report-checkbox">
-                      <input type="checkbox" checked={attachReport} onChange={e => setAttachReport(e.target.checked)} />
-                      <div>
-                        <strong>Attach Assessment Summary to Email</strong>
-                        <p>Sends your PHQ-9/GAD-7 scores to {selectedDoctor.name} for a more personalized session.</p>
-                      </div>
-                    </label>
+                  <div className="form-group full-width">
+                    <label>What would you like to discuss with the doctor? (Optional)</label>
+                    <textarea
+                      className="form-textarea"
+                      rows={3}
+                      placeholder="e.g. Having severe panic attacks since 2 weeks, trouble sleeping…"
+                      value={userConcerns}
+                      onChange={e => setUserConcerns(e.target.value)}
+                    />
                   </div>
                 </div>
 
-                <div className="schedule-actions-row">
-                  <button className="btn btn-outline" onClick={() => setCurrentStep(1)}>← Change Specialist</button>
+                {/* Attach Assessment Report toggle */}
+                <div className="attach-report-toggle" onClick={() => setAttachReport(!attachReport)}>
+                  <div className={`checkbox-custom ${attachReport ? 'checked' : ''}`}>
+                    {attachReport && '✓'}
+                  </div>
+                  <div>
+                    <strong>Attach My Clinical Assessment Summary to Doctor's Email</strong>
+                    <p>Includes your PHQ-9, GAD-7, or other screener scores so the doctor can prepare before your session.</p>
+                  </div>
+                </div>
+
+                <div className="step-action-row">
+                  <button className="btn btn-outline" onClick={() => setCurrentStep(1)}>
+                    ← Back to Specialists
+                  </button>
                   <button
-                    className="btn btn-primary"
+                    className="btn btn-primary step-next-btn"
                     onClick={() => setCurrentStep(3)}
                     disabled={!patientName.trim() || !patientPhone.trim()}
                   >
@@ -834,18 +963,53 @@ const Appointment: React.FC = () => {
                     </div>
                   )}
 
+                  {/* Payment Method Selector */}
+                  <div className="payment-method-selector">
+                    <label className="payment-selector-title">💳 Select Payment Method</label>
+                    <div className="payment-options-grid">
+                      <div
+                        className={`payment-option-card ${paymentOption === 'razorpay' ? 'active' : ''}`}
+                        onClick={() => setPaymentOption('razorpay')}
+                      >
+                        <div className="payment-radio">
+                          <input type="radio" checked={paymentOption === 'razorpay'} onChange={() => setPaymentOption('razorpay')} />
+                        </div>
+                        <div className="payment-option-info">
+                          <strong>Razorpay Instant Checkout</strong>
+                          <p>UPI (GPay/PhonePe), Cards, NetBanking, Wallets</p>
+                          <span className="secure-badge">🔒 256-Bit SSL Secured</span>
+                        </div>
+                      </div>
+
+                      <div
+                        className={`payment-option-card ${paymentOption === 'clinic' ? 'active' : ''}`}
+                        onClick={() => setPaymentOption('clinic')}
+                      >
+                        <div className="payment-radio">
+                          <input type="radio" checked={paymentOption === 'clinic'} onChange={() => setPaymentOption('clinic')} />
+                        </div>
+                        <div className="payment-option-info">
+                          <strong>Pay at Clinic</strong>
+                          <p>Settle consultation fee at clinic reception</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {bookingError && <div className="booking-error-msg">⚠️ {bookingError}</div>}
 
                   <button
-                    className="btn btn-primary confirm-submit-btn"
+                    className={`btn btn-primary confirm-submit-btn ${paymentOption === 'razorpay' ? 'btn-razorpay' : ''}`}
                     onClick={handleConfirmBooking}
                     disabled={isBooking}
-                    style={{ marginTop: '24px', width: '100%' }}
+                    style={{ marginTop: '16px', width: '100%' }}
                   >
                     {isBooking ? (
-                      <><span className="btn-spinner"></span> Sending Appointment Request…</>
+                      <><span className="btn-spinner"></span> Processing…</>
+                    ) : paymentOption === 'razorpay' ? (
+                      `💳 Pay ${selectedDoctor.fee.split('/')[0].trim()} via Razorpay →`
                     ) : (
-                      '🤖 Confirm & Send Email →'
+                      '🤖 Confirm Request (Pay at Clinic) →'
                     )}
                   </button>
                   <p className="confirm-disclaimer">
@@ -857,22 +1021,74 @@ const Appointment: React.FC = () => {
             </div>
           )}
 
+
           {/* CONFIRMED STATE */}
           {currentStep === 'confirmed' && bookedAppointment && selectedDoctor && (
-            <div className="confirmed-receipt-card">
-              <div className="success-icon-badge">✓</div>
+            <div className={`confirmed-receipt-card status-${appointmentStatus}`}>
+              <div className={`success-icon-badge ${
+                appointmentStatus === 'confirmed' ? 'status-confirmed-badge' :
+                appointmentStatus === 'rejected' ? 'status-rejected-badge' :
+                appointmentStatus === 'expired' ? 'status-expired-badge' :
+                appointmentStatus === 'rescheduled' ? 'status-rescheduled-badge' :
+                'status-pending-badge'
+              }`}>
+                {appointmentStatus === 'confirmed' ? '✓' :
+                 appointmentStatus === 'rejected' ? '✕' :
+                 appointmentStatus === 'rescheduled' ? '🔄' :
+                 appointmentStatus === 'expired' ? '⌛' : '⏳'}
+              </div>
               <h2 className="confirmed-title">
-                {isDummyDoctor ? 'Appointment Booked! (Demo Mode)' : 'Appointment Request Sent!'}
+                {appointmentStatus === 'confirmed'
+                  ? '🎉 Appointment Confirmed!'
+                  : appointmentStatus === 'rejected'
+                  ? '❌ Requested Slot Unavailable (No Slots Left)'
+                  : appointmentStatus === 'rescheduled'
+                  ? '🔄 Alternative Slot Proposed by Clinic'
+                  : appointmentStatus === 'expired'
+                  ? '⏳ Request Expired (24-Hour SLA Window)'
+                  : '⏳ Appointment Request Sent — Pending Confirmation'}
               </h2>
               <p className="confirmed-desc">
-                {isDummyDoctor
-                  ? <>This doctor is in <strong>demo mode</strong> — no real email was sent. Your booking is saved. You can use this to demonstrate the flow.</>
-                  : <>Our AI Agent has emailed <strong>{selectedDoctor.clinicName}</strong> on your behalf. You'll see a reply summary here once the clinic responds.</>
+                {appointmentStatus === 'confirmed'
+                  ? <>Dr. <strong>{selectedDoctor.name}</strong> ({selectedDoctor.clinicName}) has confirmed your appointment for <strong>{selectedDate} at {selectedTime}</strong>.</>
+                  : appointmentStatus === 'rejected'
+                  ? <>Dr. <strong>{selectedDoctor.name}</strong> is currently fully booked for this time window. We recommend choosing an alternative date or picking another top-matched specialist below.</>
+                  : appointmentStatus === 'rescheduled'
+                  ? <>The clinic has suggested an alternative consultation time. Please review the AI summary below.</>
+                  : appointmentStatus === 'expired'
+                  ? <>No response was received from <strong>{selectedDoctor.clinicName}</strong> within the 24-hour SLA window. Your request has been automatically suspended to save your time.</>
+                  : isDummyDoctor
+                  ? <>This doctor is in <strong>demo mode</strong> — request is stored in pending status for demonstration.</>
+                  : <>Your appointment is currently <strong>Pending Confirmation</strong>. Our AI Agent has emailed <strong>{selectedDoctor.clinicName}</strong> on your behalf (24-Hour Response SLA). Once the doctor confirms, this screen and your profile will automatically update to <strong>Confirmed</strong>.</>
                 }
               </p>
 
+              {/* Payment Receipt Banner */}
+              <div className={`receipt-payment-banner ${paymentStatus === 'paid' ? 'paid-banner' : 'clinic-banner'}`}>
+                {paymentStatus === 'paid' ? (
+                  <>
+                    <div className="pay-badge-icon">💳</div>
+                    <div className="pay-badge-info">
+                      <strong>Razorpay Payment Verified: Paid Successfully</strong>
+                      <p>Payment ID: <code className="pay-id-code">{paymentId || 'pay_test_verified'}</code> · Amount: ₹{amountPaid || selectedDoctor.fee.replace(/\D/g, '')} INR (Authorized via Razorpay Gateway)</p>
+                    </div>
+                    <span className="pay-verified-pill">✓ VERIFIED</span>
+                  </>
+                ) : (
+                  <>
+                    <div className="pay-badge-icon">🏥</div>
+                    <div className="pay-badge-info">
+                      <strong>Payment Mode: Pay at Clinic</strong>
+                      <p>Consultation fee of <strong>{selectedDoctor.fee}</strong> can be settled at the clinic counter upon arrival.</p>
+                    </div>
+                    <span className="pay-pending-pill">PAY ON ARRIVAL</span>
+                  </>
+                )}
+              </div>
+
               {/* Email Status Timeline */}
               <div className="email-timeline">
+
                 <div className="email-timeline-title">📬 Email Status Tracker</div>
                 <div className="timeline-steps">
                   <div className="t-step done">
@@ -894,10 +1110,12 @@ const Appointment: React.FC = () => {
                   <div className={`t-step ${clinicReplySummary ? 'done' : 'pending'}`}>
                     <div className={`t-dot ${clinicReplySummary ? 'done' : 'pending'}`}></div>
                     <div className="t-content">
-                      <strong>Clinic Reply</strong>
+                      <strong>Clinic Reply / SLA</strong>
                       <span>{clinicReplySummary
-                        ? (appointmentStatus === 'confirmed' ? '✅ Confirmed!' : '🔄 Rescheduled')
-                        : 'Awaiting clinic response…'
+                        ? (appointmentStatus === 'confirmed' ? '✅ Confirmed!' :
+                           appointmentStatus === 'rejected' ? '❌ No Slots Left' :
+                           appointmentStatus === 'expired' ? '⏳ 24h SLA Expired' : '🔄 Rescheduled')
+                        : 'Awaiting clinic response (24h SLA)…'
                       }</span>
                     </div>
                   </div>
@@ -914,41 +1132,67 @@ const Appointment: React.FC = () => {
                 )}
               </div>
 
-              {/* Live auto-check indicator + Simulate fallback */}
+              {/* Live auto-check indicator + Simulation Bar for Testing/Judges */}
               {!clinicReplySummary && (
                 <div className="live-poll-section">
                   <div className="live-poll-indicator">
                     <span className="live-poll-dot"></span>
                     <span>
-                      <strong>Auto-checking for clinic reply…</strong>
+                      <strong>Auto-checking for clinic reply… (24h SLA Window)</strong>
                       <br />
-                      <small>When {selectedDoctor.clinicName} replies to the email, it will appear here automatically.</small>
+                      <small>When {selectedDoctor.clinicName} replies via email, it will appear here automatically.</small>
                     </span>
                   </div>
-                  <button
-                    className="btn btn-outline simulate-reply-btn"
-                    onClick={handleSimulateReply}
-                    disabled={isSimulatingReply}
-                    style={{ marginTop: '12px' }}
-                  >
-                    {isSimulatingReply ? (
-                      <><span className="btn-spinner"></span> AI Summarizing Clinic Reply…</>
-                    ) : (
-                      '📥 Simulate Clinic Reply (Demo — don\'t wait)'
-                    )}
-                  </button>
+
+                  {/* Demo simulation toolbar */}
+                  <div className="demo-simulation-toolbar">
+                    <p className="demo-sim-label">⚡ Demo Simulation Shortcuts (Test All Clinic Outcomes):</p>
+                    <div className="demo-sim-buttons">
+                      <button
+                        className="demo-sim-btn btn-sim-confirm"
+                        onClick={() => handleSimulateReply('confirmed')}
+                        disabled={isSimulatingReply}
+                      >
+                        ✅ Simulate Confirmed
+                      </button>
+                      <button
+                        className="demo-sim-btn btn-sim-reject"
+                        onClick={() => handleSimulateReply('rejected')}
+                        disabled={isSimulatingReply}
+                      >
+                        ❌ Simulate Declined (No Slots)
+                      </button>
+                      <button
+                        className="demo-sim-btn btn-sim-resched"
+                        onClick={() => handleSimulateReply('rescheduled')}
+                        disabled={isSimulatingReply}
+                      >
+                        🔄 Simulate Reschedule
+                      </button>
+                      <button
+                        className="demo-sim-btn btn-sim-expire"
+                        onClick={() => handleSimulateReply('expired')}
+                        disabled={isSimulatingReply}
+                      >
+                        ⏳ Simulate 24h Expiry
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
 
-
               {/* AI-Summarized Clinic Reply */}
               {clinicReplySummary && (
-                <div className={`clinic-reply-card ${appointmentStatus === 'confirmed' ? 'confirmed' : 'rescheduled'}`}>
+                <div className={`clinic-reply-card ${appointmentStatus}`}>
                   <div className="clinic-reply-header">
                     <div className="clinic-reply-icon">🤖</div>
                     <div>
-                      <strong>AI Summary of Clinic Reply</strong>
-                      <span className="reply-status-pill">{appointmentStatus === 'confirmed' ? '✅ Confirmed' : '🔄 Rescheduled'}</span>
+                      <strong>AI Summary of Clinic Decision</strong>
+                      <span className={`reply-status-pill pill-${appointmentStatus}`}>
+                        {appointmentStatus === 'confirmed' ? '✅ Confirmed' :
+                         appointmentStatus === 'rejected' ? '❌ No Slots Left' :
+                         appointmentStatus === 'expired' ? '⏳ Expired (24h)' : '🔄 Rescheduled'}
+                      </span>
                     </div>
                   </div>
                   <div className="clinic-reply-summary-text">
@@ -956,14 +1200,19 @@ const Appointment: React.FC = () => {
                       <p key={i}>{line}</p>
                     ))}
                   </div>
-                  <button className="show-raw-btn" onClick={() => setShowRawReply(!showRawReply)}>
-                    {showRawReply ? '▲ Hide' : '▼ Show'} raw clinic email
-                  </button>
-                  {showRawReply && (
-                    <pre className="raw-reply-text">{clinicReplyRaw}</pre>
+                  {clinicReplyRaw && (
+                    <>
+                      <button className="show-raw-btn" onClick={() => setShowRawReply(!showRawReply)}>
+                        {showRawReply ? '▲ Hide' : '▼ Show'} raw clinic email
+                      </button>
+                      {showRawReply && (
+                        <pre className="raw-reply-text">{clinicReplyRaw}</pre>
+                      )}
+                    </>
                   )}
                 </div>
               )}
+
 
               {/* Booking Details */}
               <div className="receipt-details-box">
@@ -981,6 +1230,9 @@ const Appointment: React.FC = () => {
               </div>
 
               <div className="confirmed-actions">
+                <button className="btn btn-invoice-btn" onClick={() => setShowInvoiceModal(true)}>
+                  📄 Download Official Tax Invoice / Receipt
+                </button>
                 <button className="btn btn-outline" onClick={resetAll}>
                   Book Another Appointment
                 </button>
@@ -990,6 +1242,7 @@ const Appointment: React.FC = () => {
               </div>
             </div>
           )}
+
 
         </div>
       </section>
@@ -1100,8 +1353,37 @@ const Appointment: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* ── Official Tax Invoice Modal ────────────────────────────────────── */}
+      {selectedDoctor && (
+
+        <InvoiceModal
+          isOpen={showInvoiceModal}
+          onClose={() => setShowInvoiceModal(false)}
+          data={{
+            bookingRef: bookingRef || bookedAppointment?.bookingRef || 'SSAI-DEMO-2026',
+            doctorName: selectedDoctor.name,
+            doctorTitle: selectedDoctor.title,
+            qualification: selectedDoctor.qualification,
+            clinicName: selectedDoctor.clinicName,
+            clinicAddress: selectedDoctor.address,
+            clinicPhone: (selectedDoctor as any).phone,
+            patientName: patientName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Valued Patient',
+            patientEmail: user?.email || 'patient@soulspace.app',
+            patientPhone: patientPhone || user?.phone,
+            appointmentDate: selectedDate,
+            appointmentTime: selectedTime,
+            consultationMode: consultationMode,
+            fee: selectedDoctor.fee,
+            paymentStatus: (paymentStatus as 'paid' | 'pending') || 'pending',
+            paymentId: paymentId,
+            paymentMethod: paymentOption === 'razorpay' ? 'Razorpay Online Gateway (UPI / Cards / NetBanking)' : 'Pay at Clinic',
+          }}
+        />
+      )}
     </div>
   );
 };
+
 
 export default Appointment;

@@ -462,11 +462,265 @@
 .dot-neutral { border-color: #bfdbfe; background: #eff6ff; color: #1d4ed8; }
 .dot-sad { border-color: #e2e8f0; background: #f8fafc; color: #475569; }
 
+/* Educational Quick KPIs Grid */
+.mood-kpi-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.kpi-metric-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kpi-metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.kpi-icon-box {
+  font-size: 26px;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid #e2e8f0;
+}
+
+.kpi-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.kpi-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 2px;
+}
+
+.kpi-val {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.kpi-max {
+  font-size: 13px;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.kpi-sub-tag {
+  font-size: 11px;
+  font-weight: 700;
+  color: #3b82f6;
+  margin-top: 4px;
+}
+
+.kpi-sub-tag.tag-steady {
+  color: #10b981;
+}
+
+.kpi-sub-tag.tag-stable {
+  color: #06b6d4;
+}
+
+/* Chart Header Actions & Guide Toggle */
+.chart-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.btn-guide-toggle {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-guide-toggle:hover,
+.btn-guide-toggle.active {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+}
+
+/* Educational Guide Drawer */
+.chart-educational-guide {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  animation: fadeInGuide 0.2s ease-out;
+}
+
+.guide-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 12px;
+}
+
+.guide-levels-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.guide-level-item {
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 12px 14px;
+  border-left: 4px solid #cbd5e1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+}
+
+.guide-level-item.tier-high {
+  border-left-color: #10b981;
+}
+
+.guide-level-item.tier-mid {
+  border-left-color: #3b82f6;
+}
+
+.guide-level-item.tier-low {
+  border-left-color: #ef4444;
+}
+
+.guide-level-item strong {
+  display: block;
+  font-size: 12.5px;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+
+.guide-level-item p {
+  font-size: 11.5px;
+  color: #64748b;
+  line-height: 1.45;
+  margin: 0;
+}
+
+@keyframes fadeInGuide {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Clinical AI Insight Banner */
+.chart-ai-insight-banner {
+  margin-top: 45px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%);
+  border: 1px solid #bae6fd;
+  border-radius: 14px;
+  padding: 16px 20px;
+}
+
+.insight-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.insight-pill-tag {
+  font-size: 11px;
+  font-weight: 800;
+  color: #0284c7;
+  background: #e0f2fe;
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.insight-status-pill {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #047857;
+  background: #d1fae5;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.insight-text {
+  font-size: 13.5px;
+  color: #1e293b;
+  line-height: 1.55;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.insight-action-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.75);
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #93c5fd;
+  font-size: 12px;
+}
+
+.action-lightbulb {
+  font-weight: 800;
+  color: #0284c7;
+  white-space: nowrap;
+}
+
+.action-text {
+  color: #334155;
+  font-weight: 500;
+}
+
+@media (max-width: 900px) {
+  .mood-kpi-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .guide-levels-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 500px) {
+  .mood-kpi-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ==========================================================================
    INTERACTIVE 7-DAY MOOD TREND CHART
    ========================================================================== */
 
 .mood-trend-chart-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.mood-chart-wrapper {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -796,6 +1050,81 @@
     font-size: 11px;
   }
 }
+
+.x-label.active-x-label {
+  color: #0284c7;
+  transform: scale(1.1);
+}
+
+/* Floating Chart Tooltip */
+.chart-floating-tooltip {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(8px);
+  color: #ffffff;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  pointer-events: none;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  z-index: 50;
+  min-width: 150px;
+  animation: fadeInTooltip 0.15s ease-out;
+}
+
+.tooltip-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 3px;
+  font-size: 13px;
+}
+
+.tooltip-emoji {
+  font-size: 15px;
+}
+
+.tooltip-score {
+  color: #38bdf8;
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: auto;
+}
+
+.tooltip-sub {
+  font-size: 10.5px;
+  color: #cbd5e1;
+  margin-bottom: 4px;
+}
+
+.tooltip-note {
+  font-size: 11px;
+  color: #f8fafc;
+  font-style: italic;
+  margin-bottom: 4px;
+  border-left: 2px solid #38bdf8;
+  padding-left: 6px;
+}
+
+.tooltip-tag {
+  display: inline-block;
+  font-size: 9.5px;
+  font-weight: 800;
+  background: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+  padding: 1px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+@keyframes fadeInTooltip {
+  from { opacity: 0; transform: translate(-50%, -90%); }
+  to { opacity: 1; transform: translate(-50%, -100%); }
+}
+
 
 /* Recent Entries Right Card */
 .entry-count-pill {

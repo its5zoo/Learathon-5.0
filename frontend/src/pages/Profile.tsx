@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ClinicalReportModal from '../components/ClinicalReport/ClinicalReportModal';
+import InvoiceModal from '../components/InvoiceModal/InvoiceModal';
 import { API_URL } from '../config';
 import './Profile.css';
+
 
 interface AppointmentRecord {
   _id: string;
@@ -49,6 +51,9 @@ const Profile: React.FC = () => {
   // Appointment notification from localStorage
   const [latestAppt, setLatestAppt] = useState<any>(null);
   const [showApptNotif, setShowApptNotif] = useState(false);
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
+  const [selectedInvoiceData, setSelectedInvoiceData] = useState<any>(null);
+
 
   useEffect(() => {
     try {
@@ -238,23 +243,51 @@ const Profile: React.FC = () => {
 
       {/* Appointment Notification Banner */}
       {showApptNotif && latestAppt && (
-        <div className="appt-notif-banner">
+        <div className={`appt-notif-banner ${latestAppt.status === 'confirmed' ? 'banner-confirmed' : 'banner-pending'}`}>
           <div className="appt-notif-icon">
-            {latestAppt.status === 'confirmed' ? '✅' : latestAppt.status === 'demo_no_email' ? '⚪' : '📬'}
+            {latestAppt.status === 'confirmed' ? '✅' : '⏳'}
           </div>
           <div className="appt-notif-content">
             <strong>
               {latestAppt.status === 'confirmed'
-                ? 'Appointment Confirmed!'
-                : latestAppt.status === 'demo_no_email'
-                ? 'Appointment Booked (Demo Mode)'
-                : 'Appointment Request Sent'}
+                ? `✅ Appointment Confirmed with ${latestAppt.doctorName}!`
+                : `⏳ Appointment Status: Pending Clinic Confirmation`}
             </strong>
             <span>
-              {latestAppt.doctorName} · {latestAppt.clinicName} · {latestAppt.date} at {latestAppt.time} ({latestAppt.mode})
+              {latestAppt.status === 'confirmed'
+                ? `Your appointment is fixed for ${latestAppt.date} at ${latestAppt.time} (${latestAppt.mode}) at ${latestAppt.clinicName}.`
+                : `Request sent to ${latestAppt.doctorName} (${latestAppt.clinicName}) for ${latestAppt.date} at ${latestAppt.time}. Awaiting confirmation email.`}
               &nbsp;·&nbsp; Ref: <em>#{latestAppt.bookingRef}</em>
             </span>
+            <div style={{ marginTop: '8px' }}>
+              <button
+                type="button"
+                className="btn-profile-invoice"
+                onClick={() => {
+                  setSelectedInvoiceData({
+                    bookingRef: latestAppt.bookingRef || 'SSAI-DEMO-2026',
+                    doctorName: latestAppt.doctorName,
+                    clinicName: latestAppt.clinicName,
+                    patientName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Patient',
+                    patientEmail: user.email,
+                    patientPhone: user.phone,
+                    appointmentDate: latestAppt.date,
+                    appointmentTime: latestAppt.time,
+                    consultationMode: latestAppt.mode,
+                    fee: '₹1,200 / session',
+                    paymentStatus: latestAppt.paymentStatus || 'pending',
+                    paymentId: latestAppt.paymentId,
+                    paymentMethod: latestAppt.paymentStatus === 'paid' ? 'Razorpay Online Gateway' : 'Pay at Clinic',
+                  });
+                  setIsInvoiceModalOpen(true);
+                }}
+              >
+                📄 View Tax Invoice &amp; Receipt
+              </button>
+            </div>
           </div>
+
+
           <button
             className="appt-notif-dismiss"
             onClick={() => {
@@ -855,7 +888,17 @@ const Profile: React.FC = () => {
         moodLogs={moodLogs}
         appointments={appointments}
       />
+
+      {/* Official Tax Invoice Modal */}
+      {selectedInvoiceData && (
+        <InvoiceModal
+          isOpen={isInvoiceModalOpen}
+          onClose={() => setIsInvoiceModalOpen(false)}
+          data={selectedInvoiceData}
+        />
+      )}
     </div>
+
   );
 };
 

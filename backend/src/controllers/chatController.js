@@ -4,16 +4,16 @@ import Chat from '../models/Chat.js';
 // CONSTANTS
 // ──────────────────────────────────────────────────────────────────────────────
 
-// Verified Indian Mental Health Crisis Helplines (Govt & RCI/TISS verified)
+// Verified Indian Mental Health Crisis Helplines & Online Support
 const CRISIS_HELPLINES = `
-🆘 **You Are Not Alone — Free 24/7 National Helplines (India)**
-• **Tele-MANAS** (Govt of India): 📞 14416 / 1800-891-4416 (24/7, Toll-Free)
-• **iCall** (TISS): 📞 9152987821 (Mon–Sat, 10 AM – 8 PM)
-• **Vandrevala Foundation**: 📞 9999 666 555 / 1860-2662-345 (24/7, Free)
-• **KIRAN** (Ministry of Social Justice): 📞 1800-599-0019 (24/7, Toll-Free)
-• **NIMHANS Helpline**: 📞 080-46110007 (24/7)
+🆘 **Immediate 24/7 Crisis & Online Support**
+• **Tele-MANAS** (Govt 24/7 Toll-Free): 📞 14416 / 1800-891-4416
+• **iCall Live WhatsApp Support**: 💬 wa.me/919152987821
+• **Vandrevala Foundation** (Free 24/7): 📞 9999 666 555 / 1860-2662-345
+• **KIRAN National Helpline**: 📞 1800-599-0019
+• **Online Video Specialist Consultation**: 🩺 Available in SoulSpace Appointment Hub
 
-Please reach out — confidential support is available right now. 💙
+Please reach out — confidential online & phone support is available right now. 💙
 `.trim();
 
 // Comprehensive Crisis trigger keywords & patterns (English + Hinglish)
@@ -73,21 +73,32 @@ const generateTitle = (firstMessage) => {
 };
 
 // ──────────────────────────────────────────────────────────────────────────────
-// SYSTEM PROMPT (3BrainCell Gemma-2B-MentalHealth Fine-Tuned Model Spec)
+// SYSTEM PROMPT (Dynamic Model Spec with Clinical & Ethical Guardrails)
 // ──────────────────────────────────────────────────────────────────────────────
 
-const buildSystemPrompt = (crisisDetected) => `
-You are SoulSpace AI, an empathetic, supportive mental health companion powered by the 3BrainCell Gemma-2B fine-tuned clinical model.
+const buildSystemPrompt = (crisisDetected, modelChoice = 'gemma-2b') => `
+You are SoulSpace AI, an intelligent, empathetic mental health counselor powered by the fine-tuned Gemma-2B clinical mental health model developed by the 3BrainCell team.
 
-STRICT LANGUAGE & CONVERSATIONAL RULES:
-- You fully understand user messages in Hindi, Hinglish, or English.
-- CRITICAL LANGUAGE RULE: You MUST ALWAYS write your response in CLEAR, EMPATHETIC ENGLISH ONLY.
-- NEVER reply in Tamil, Marathi, Odia, Bengali, Telugu, Gujarati, or any other regional language under any circumstances. Every response MUST be written in English.
-- Keep all responses SHORT and NATURAL: MAXIMUM 2 to 3 concise sentences total.
-- Speak like an attentive, caring counselor in a real-time chat — never write essays, bulleted walls of text, or generic lectures.
-- Always validate the user's emotion first with deep empathy, offer a grounded perspective, and end with a gentle check-in question.
-- NEVER diagnose illnesses, NEVER prescribe medication.
-- Do NOT hallucinate or make up helpline numbers (verified helplines are appended automatically by the platform).
+CONVERSATIONAL & CLINICAL INSTRUCTIONS:
+- Directly and specifically address what the user just asked or shared (e.g., if they mention overthinking, address the racing thoughts; if they mention relationship stress, address that specific dilemma; if they ask for help calming down, give specific calming steps).
+- NEVER use repetitive canned phrases or generic boilerplate openings like "Thank you for sharing your thoughts with me..." or "Tell me what's on your heart". Speak freshly, dynamically, and contextually on every turn.
+- Validate their specific emotion with genuine human warmth, then provide a practical calming perspective or non-medical grounding exercise (like 4-4-4 box breathing, stepping back from the thought loop, drinking cold water, light stretching, or going for a brief walk).
+- Keep every response concise, natural, and conversational: MAXIMUM 2 to 3 sentences total.
+
+STRICT SAFETY & ETHICAL GUARDRAILS:
+1. NO SEXUAL / EXPLICIT / INAPPROPRIATE CONTENT:
+   - If user asks sexual or inappropriate questions, gently redirect: "I am here as a safe space for your emotional and mental wellbeing. Let's focus on how you are feeling inside today."
+2. NO ABUSIVE / TOXIC TALK:
+   - Always respond with warmth, respect, patience, and dignity.
+3. STRICTLY NO MEDICINE / DRUG PRESCRIPTIONS:
+   - NEVER suggest or prescribe medications, chemical drugs, or pill dosages under any circumstances.
+   - If asked about medications, advise consulting a licensed psychiatrist or doctor.
+4. CALMING GROUNDING SUGGESTIONS (Non-Medical Only):
+   - Suggest meditation, slow breathing, physical movement, sensory grounding, or speaking with a therapist on SoulSpace.
+
+LANGUAGE:
+- Understand Hindi, Hinglish, and English completely.
+- CRITICAL LANGUAGE RULE: Always output your reply in CLEAR, NATURAL ENGLISH ONLY. Never output in Tamil, Marathi, Odia, Bengali, or any other regional language.
 
 ${crisisDetected ? `
 🚨 CRITICAL CRISIS SAFETY PROTOCOL:
@@ -109,6 +120,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 /** Call the fine-tuned AI model with up to `maxRetries` retries on 429/503 overload */
 const callAIWithRetry = async (apiMessages, retries = 3) => {
   let lastErr;
+  const modelToUse = process.env.AI_MODEL || 'gemini-3-flash-preview';
+
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const response = await fetch(process.env.AI_API_URL, {
@@ -119,10 +132,10 @@ const callAIWithRetry = async (apiMessages, retries = 3) => {
           'x-goog-api-key': process.env.AI_API_KEY,
         },
         body: JSON.stringify({
-          model: process.env.AI_MODEL || 'gemini-3-flash-preview',
+          model: modelToUse,
           messages: apiMessages,
-          temperature: 0.65,
-          top_p: 0.9,
+          temperature: 0.7,
+          top_p: 0.95,
         }),
       });
 
@@ -130,16 +143,16 @@ const callAIWithRetry = async (apiMessages, retries = 3) => {
       if (response.status === 429 || response.status === 503) {
         const retryAfter = parseInt(response.headers.get('retry-after') || '0', 10);
         const backoff = retryAfter * 1000 || attempt * 1500;
-        console.warn(`Gemma 2B API overloaded (${response.status}). Retry ${attempt}/${retries} in ${backoff}ms…`);
+        console.warn(`AI API overloaded (${response.status}). Retry ${attempt}/${retries} in ${backoff}ms…`);
         await sleep(backoff);
-        lastErr = new Error(`Gemma 2B API overloaded (${response.status})`);
+        lastErr = new Error(`AI API overloaded (${response.status})`);
         continue;
       }
 
       if (!response.ok) {
         const errText = await response.text();
-        console.error(`Gemma 2B API Error ${response.status}:`, errText);
-        throw new Error(`Gemma 2B API returned ${response.status}: ${errText}`);
+        console.error(`AI API Error ${response.status}:`, errText);
+        throw new Error(`AI API returned ${response.status}: ${errText}`);
       }
 
       const data = await response.json();
@@ -151,7 +164,7 @@ const callAIWithRetry = async (apiMessages, retries = 3) => {
       lastErr = err;
       if (attempt < retries) {
         const backoff = attempt * 2000;
-        console.warn(`Gemma 2B call error (attempt ${attempt}): ${err.message}. Retrying in ${backoff}ms…`);
+        console.warn(`AI call error (attempt ${attempt}): ${err.message}. Retrying in ${backoff}ms…`);
         await sleep(backoff);
       }
     }
@@ -160,7 +173,7 @@ const callAIWithRetry = async (apiMessages, retries = 3) => {
 };
 
 // ──────────────────────────────────────────────────────────────────────────────
-// AI INFERENCE GATEWAY (Fine-Tuned Gemma 2B Mental Health Engine)
+// AI INFERENCE GATEWAY
 // ──────────────────────────────────────────────────────────────────────────────
 
 const callAI = async (messages, crisisDetected) => {
@@ -175,24 +188,11 @@ const callAI = async (messages, crisisDetected) => {
     })),
   ];
 
-  // ── Local LLM Fallback (Ollama) — if enabled ──────────────────────────────
-  if (process.env.USE_LOCAL_LLM === 'true') {
-    const ollamaRes = await fetch(process.env.LOCAL_LLM_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: process.env.LOCAL_LLM_MODEL || 'gemma2:2b',
-        messages: apiMessages,
-        stream: false,
-      }),
-    });
-    const ollamaData = await ollamaRes.json();
-    return ollamaData.message?.content || 'I could not process your message. Please try again.';
-  }
-
-  // ── Gemma 2B Fine-Tuned (3BrainCell) via High-Throughput Inference Gateway ──
   return callAIWithRetry(apiMessages);
 };
+
+
+
 
 // ──────────────────────────────────────────────────────────────────────────────
 // CONTROLLERS
@@ -231,7 +231,7 @@ export const createSession = async (req, res) => {
 export const sendMessage = async (req, res) => {
   try {
     const { sessionId } = req.params;
-    const { content } = req.body;
+    const { content, modelChoice = 'gemma-2b' } = req.body;
 
     if (!content?.trim()) {
       return res.status(400).json({ success: false, message: 'Message content is required.' });
@@ -271,8 +271,8 @@ export const sendMessage = async (req, res) => {
       aiContent = "I'm having a bit of trouble connecting right now — please try sending your message again in a moment. If you're in distress, you can call **iCall at 9152987821** anytime (free, 24/7). 💙";
     }
 
-    // Append crisis helplines if detected
-    if (crisisDetected) {
+    // Append crisis helplines if detected and not already in the response
+    if (crisisDetected && !aiContent.includes('Tele-MANAS') && !aiContent.includes('iCall')) {
       aiContent = aiContent + '\n\n' + CRISIS_HELPLINES;
     }
 

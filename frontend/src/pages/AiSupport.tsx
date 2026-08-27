@@ -10,6 +10,7 @@ interface Message {
   content: string;
   emotion: string;
   timestamp: string;
+  model?: string;
 }
 
 interface ChatSession {
@@ -34,10 +35,36 @@ const EMOTION_META: Record<string, { emoji: string; label: string; color: string
   neutral:  { emoji: '💬', label: 'Neutral',   color: '#64748b' },
 };
 
-// ── Markdown renderer ─────────────────────────────────────────────────────────
+// ── Markdown & Link renderer ──────────────────────────────────────────────────
 const renderContent = (text: string) => {
   return text.split('\n').map((line, i) => {
     if (!line.trim()) return <div key={i} className="msg-spacer" />;
+    
+    // Check if line contains WhatsApp link
+    if (line.includes('wa.me/')) {
+      const parts = line.split(/(wa\.me\/\d+)/g);
+      return (
+        <p key={i} className="msg-bullet">
+          {parts.map((part, idx) => {
+            if (part.startsWith('wa.me/')) {
+              return (
+                <a
+                  key={idx}
+                  href={`https://${part}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="chat-whatsapp-link"
+                >
+                  💬 Open Live WhatsApp Chat →
+                </a>
+              );
+            }
+            return part;
+          })}
+        </p>
+      );
+    }
+
     const parts = line.split(/(\*\*.*?\*\*)/g);
     const content = parts.map((p, j) =>
       p.startsWith('**') && p.endsWith('**')
@@ -136,10 +163,10 @@ const AiSupport: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [crisisActive, setCrisisActive] = useState(false);
   const [loadingSession, setLoadingSession] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
 
   // Breathing tool
   const [isBreathingActive, setIsBreathingActive] = useState(false);
@@ -149,6 +176,16 @@ const AiSupport: React.FC = () => {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const handleStopGeneration = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsTyping(false);
+  };
+
 
   // ── Auth headers ───────────────────────────────────────────────────────────
   const authHeaders = useCallback(() => ({
@@ -206,13 +243,11 @@ const AiSupport: React.FC = () => {
   const loadSession = async (sessionId: string) => {
     setLoadingSession(true);
     setActiveSessionId(sessionId);
-    setCrisisActive(false);
     try {
       const res = await fetch(`${API}/chat/session/${sessionId}`, { headers: authHeaders() });
       const data = await res.json();
       if (data.success) {
         setMessages(data.session.messages);
-        if (data.session.isCrisisSession) setCrisisActive(true);
       }
     } catch (e) {
       console.error('loadSession error', e);
@@ -233,7 +268,6 @@ const AiSupport: React.FC = () => {
         setSessions((prev) => [data.session, ...prev]);
         setActiveSessionId(data.session._id);
         setMessages([]);
-        setCrisisActive(false);
         inputRef.current?.focus();
         return data.session._id;
       }
@@ -309,11 +343,15 @@ const AiSupport: React.FC = () => {
     setIsBreathingActive(false);
     setErrorMsg(null);
 
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     try {
       const res = await fetch(`${API}/chat/session/${sessionId}/message`, {
         method: 'POST',
         headers: authHeaders(),
         body: JSON.stringify({ content: text }),
+        signal: controller.signal,
       });
       const data = await res.json();
 
@@ -324,7 +362,7 @@ const AiSupport: React.FC = () => {
           emotion: data.message.emotion,
           timestamp: data.message.timestamp,
         }]);
-        if (data.crisisDetected) setCrisisActive(true);
+
         // Update session title in sidebar
         if (data.sessionTitle) {
           setSessions((prev) => prev.map((s) =>
@@ -336,19 +374,29 @@ const AiSupport: React.FC = () => {
       } else {
         setErrorMsg(data.message || 'AI did not respond. Please try again.');
       }
-    } catch (e) {
+    } catch (e: any) {
+      if (e?.name === 'AbortError') {
+        // User stopped generation manually
+        return;
+      }
       setErrorMsg('Connection error. Please check backend is running.');
     } finally {
       setIsTyping(false);
+      abortControllerRef.current = null;
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape' && isTyping) {
+      handleStopGeneration();
+      return;
+    }
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
   };
+
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -457,25 +505,9 @@ const AiSupport: React.FC = () => {
               </button>
             )}
           </div>
-        </div>
 
-        {/* Crisis Banner */}
-        {crisisActive && (
-          <div className="crisis-banner">
-            <div className="crisis-banner-icon">🚨</div>
-            <div className="crisis-banner-text">
-              <div className="crisis-banner-heading">EMERGENCY SUPPORT ACTIVATED — YOU ARE NOT ALONE</div>
-              <div className="crisis-banner-sub">Confidential 24/7 National Helplines are available right now:</div>
-              <div className="crisis-banner-pills">
-                <a href="tel:14416" className="crisis-pill-btn">📞 Tele-MANAS: 14416</a>
-                <a href="tel:9152987821" className="crisis-pill-btn">📞 iCall: 9152987821</a>
-                <a href="tel:9999666555" className="crisis-pill-btn">📞 Vandrevala: 9999 666 555</a>
-                <a href="tel:18005990019" className="crisis-pill-btn">📞 KIRAN: 1800-599-0019</a>
-              </div>
-            </div>
-            <button className="crisis-dismiss" onClick={() => setCrisisActive(false)}>✕</button>
-          </div>
-        )}
+
+        </div>
 
         {/* Error message */}
         {errorMsg && (
@@ -682,21 +714,29 @@ const AiSupport: React.FC = () => {
                 />
                 <div className="input-actions">
                   <span className="char-counter">{inputText.length}/1000</span>
-                  <button
-                    className={`send-btn ${inputText.trim() && !isTyping ? 'active' : ''}`}
-                    onClick={() => handleSend()}
-                    disabled={!inputText.trim() || isTyping}
-                    title="Send message"
-                  >
-                    {isTyping ? (
-                      <span className="send-spinner"></span>
-                    ) : (
+                  {isTyping ? (
+                    <button
+                      className="stop-gen-btn active-stop"
+                      onClick={handleStopGeneration}
+                      title="Stop generating reply (Esc)"
+                    >
+                      <span className="stop-sq-icon"></span>
+                      <span className="stop-btn-text">Stop</span>
+                    </button>
+                  ) : (
+                    <button
+                      className={`send-btn ${inputText.trim() ? 'active' : ''}`}
+                      onClick={() => handleSend()}
+                      disabled={!inputText.trim()}
+                      title="Send message (Enter)"
+                    >
                       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5">
                         <line x1="22" y1="2" x2="11" y2="13"></line>
                         <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                       </svg>
-                    )}
-                  </button>
+                    </button>
+                  )}
+
                 </div>
               </div>
               <p className="input-disclaimer">

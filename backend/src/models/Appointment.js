@@ -40,12 +40,23 @@ const appointmentSchema = new mongoose.Schema(
     // Booking status
     status: {
       type: String,
-      enum: ['pending_email', 'request_sent', 'confirmed', 'rescheduled', 'cancelled'],
+      enum: ['pending_email', 'request_sent', 'confirmed', 'rescheduled', 'rejected', 'expired', 'cancelled'],
       default: 'pending_email',
     },
     confirmedDateTime: { type: String },
+
+    // Payment fields (Razorpay)
+    paymentStatus: {
+      type: String,
+      enum: ['paid', 'pending', 'failed', 'refunded'],
+      default: 'pending',
+    },
+    paymentId:     { type: String },
+    amountPaid:    { type: Number },
+    currency:      { type: String, default: 'INR' },
   },
   { timestamps: true }
 );
+
 
 export default mongoose.model('Appointment', appointmentSchema);
