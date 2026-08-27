@@ -188,7 +188,41 @@ const callAI = async (messages, crisisDetected) => {
     })),
   ];
 
-  return callAIWithRetry(apiMessages);
+  // ── 1. Local Fine-Tuned Gemma 2B Inference Server (Port 11434) ─────────────
+  if (process.env.USE_LOCAL_LLM === 'true') {
+    const localUrl = process.env.LOCAL_LLM_URL || 'http://localhost:11434/api/chat';
+    try {
+      console.log(`🧠 [SoulSpace] Connecting with Local Fine-Tuned Gemma 2B at ${localUrl}...`);
+      const response = await fetch(localUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: process.env.LOCAL_LLM_MODEL || 'gemma-mentalhealth',
+          messages: apiMessages,
+          stream: false,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const content = data.message?.content?.trim();
+        if (content) {
+          console.log('✅ [SoulSpace] Local Gemma 2B response generated successfully.');
+          return content;
+        }
+      }
+      console.warn(`Local LLM returned status ${response.status}. Attempting cloud fallback...`);
+    } catch (localErr) {
+      console.warn(`⚠️ Could not reach Local LLM (${localErr.message}). Attempting cloud fallback...`);
+    }
+  }
+
+  // ── 2. Cloud AI Fallback ───────────────────────────────────────────────────
+  if (process.env.AI_API_URL) {
+    return callAIWithRetry(apiMessages);
+  }
+
+  throw new Error('No AI inference service available. Please ensure the local LLM server is running on port 11434 or configure AI_API_URL in .env.');
 };
 
 
