@@ -676,18 +676,13 @@ const Appointment: React.FC = () => {
                   <div className="results-count">
                     <strong>{filteredDoctors.length} Verified Specialists</strong> available
                   </div>
-                  <div className="auth-status-pill-wrapper">
-                    {isLoggedIn ? (
-                      <div className="logged-in-badge">
-                        <span className="user-dot"></span>
-                        <span>Welcome, {user?.firstName}</span>
-                      </div>
-                    ) : (
+                  {!isLoggedIn && (
+                    <div className="auth-status-pill-wrapper">
                       <button className="btn btn-primary auth-btn-compact" onClick={() => navigate('/login')}>
                         🔒 Login to Book
                       </button>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
 
                 {!isLoggedIn ? (
