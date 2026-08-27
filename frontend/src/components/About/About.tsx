@@ -12,8 +12,9 @@ const About: React.FC = () => {
             <h3 className="about-subtitle">Empowering Mental Wellness</h3>
             
             <p className="about-text">
-              SoulSpace is a comprehensive mental health platform dedicated to supporting individuals across India. Founded in 2021, we bridge the gap between people facing mental health challenges and professional support systems.
+              SoulSpace is a comprehensive mental health platform dedicated to supporting individuals across India. Founded in 2026, we bridge the gap between people facing mental health challenges and professional support systems.
             </p>
+
             
             <p className="about-text">
               Our mission is to create a stigma-free environment where everyone can access quality mental health resources, counseling services, and peer support. We believe that mental well-being is essential for daily life and personal growth.
