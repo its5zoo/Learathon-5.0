@@ -1,0 +1,14 @@
+FROM "C:\Users\OMEN\OneDrive\Desktop\llm\gemma-mentalhealth-trained-by-three-brain-cell-2026-learathon.gguf"
+
+TEMPLATE """<start_of_turn>user
+{{ if .System }}{{ .System }}
+
+{{ end }}{{ .Prompt }}<end_of_turn>
+<start_of_turn>model
+{{ .Response }}<end_of_turn>"""
+
+PARAMETER stop "<start_of_turn>"
+PARAMETER stop "<end_of_turn>"
+PARAMETER temperature 0.7
+PARAMETER top_p 0.9
+PARAMETER repeat_penalty 1.1

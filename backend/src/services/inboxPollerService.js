@@ -88,6 +88,11 @@ const pollInbox = async () => {
     logger: false, // Suppress verbose IMAP logs
   });
 
+  // Prevent uncaught EventEmitter errors from crashing Node.js on socket reset
+  client.on('error', (err) => {
+    console.warn('⚠️  IMAP client socket error:', err.message);
+  });
+
   try {
     await client.connect();
 
@@ -195,10 +200,10 @@ Focus on: (1) whether the appointment is confirmed or needs rescheduling, (2) ke
         }
       }
     } finally {
-      lock.release();
+      try { lock?.release(); } catch {}
     }
 
-    await client.logout();
+    try { await client.logout(); } catch {}
   } catch (err) {
     console.error('📬 IMAP Poller error:', err.message);
     // Graceful — polling will retry next interval

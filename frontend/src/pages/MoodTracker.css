@@ -404,213 +404,397 @@
   overflow: hidden;
 }
 
-.analytics-card-header {
+/* Card Header Styling */
+.card-header-flex {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
   margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #f1f5f9;
 }
 
-.chart-main-title {
+.card-title {
   font-size: 20px;
   font-weight: 800;
-  color: #1e293b;
-  margin-bottom: 6px;
+  color: #0f172a;
+  letter-spacing: -0.3px;
+  margin-bottom: 4px;
 }
 
-.chart-date-filter-row {
+.card-subtitle {
+  font-size: 13.5px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.chart-legend-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
-  color: #64748b;
-  margin-bottom: 6px;
+  flex-wrap: wrap;
 }
 
-.date-input-field {
-  padding: 4px 10px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  font-size: 12.5px;
-  color: #1e293b;
-  background: #ffffff;
-  font-family: inherit;
-}
-
-.date-hint-tag {
-  font-size: 12px;
-  color: #94a3b8;
-}
-
-.chart-sub-desc {
-  font-size: 13.5px;
-  color: #64748b;
-}
-
-.chart-legend-badge {
-  display: flex;
+.legend-dot {
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   font-size: 12px;
   font-weight: 600;
-  color: #3f72af;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
   padding: 4px 10px;
-  border-radius: 50px;
+  border-radius: 20px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  transition: all 0.2s ease;
 }
 
-.legend-indicator {
-  width: 12px;
-  height: 4px;
-  background: #3f72af;
-  border-radius: 2px;
+.legend-dot:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
-/* Mood Chart Area */
-.mood-chart-wrapper {
+.dot-happy { border-color: #a7f3d0; background: #ecfdf5; color: #047857; }
+.dot-calm { border-color: #a5f3fc; background: #ecfeff; color: #0e7490; }
+.dot-neutral { border-color: #bfdbfe; background: #eff6ff; color: #1d4ed8; }
+.dot-sad { border-color: #e2e8f0; background: #f8fafc; color: #475569; }
+
+/* ==========================================================================
+   INTERACTIVE 7-DAY MOOD TREND CHART
+   ========================================================================== */
+
+.mood-trend-chart-card {
   position: relative;
-  min-height: 280px;
-  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
 }
 
-.mood-chart-grid-container {
-  display: grid;
-  grid-template-columns: 80px 1fr;
-  gap: 12px;
-  transition: filter 0.3s ease;
+.trend-chart-body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  margin-top: 4px;
 }
 
-.mood-chart-grid-container.blurred {
-  filter: blur(4px);
+/* Row containing Y-Axis + Plot Viewport */
+.trend-chart-row {
+  display: flex;
+  align-items: stretch;
+  height: 280px;
+  position: relative;
+}
+
+/* Y-Axis Column: Perfectly aligned with each grid line */
+.trend-y-axis {
+  position: relative;
+  width: 105px;
+  min-width: 105px;
+  height: 280px;
   user-select: none;
-  pointer-events: none;
+  flex-shrink: 0;
 }
 
-.chart-locked-backdrop {
+.trend-y-tick {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  right: 12px;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(3px);
-  z-index: 10;
-  border-radius: 12px;
-}
-
-.locked-card-prompt {
-  text-align: center;
-  max-width: 320px;
-  padding: 20px;
-}
-
-.lock-icon-circle {
-  font-size: 24px;
-  margin-bottom: 8px;
-}
-
-.locked-card-prompt h4 {
-  font-size: 16px;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 6px;
-}
-
-.locked-card-prompt p {
-  font-size: 13px;
+  justify-content: flex-end;
+  gap: 8px;
   color: #64748b;
-  margin-bottom: 14px;
-  line-height: 1.5;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  cursor: default;
 }
 
-/* Y-Axis */
-.chart-y-axis {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 240px;
-  padding: 5px 0;
+.trend-y-tick:hover {
+  color: #0f172a;
 }
 
-.y-axis-label-row {
-  display: flex;
-  align-items: center;
-}
-
-.y-mood-name {
-  font-size: 12px;
+.y-mood-label {
+  font-size: 12.5px;
   font-weight: 600;
-  color: #64748b;
+  letter-spacing: -0.1px;
 }
 
-/* Plot Area */
-.chart-plot-area {
-  position: relative;
-  height: 240px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+.y-mood-emoji {
+  font-size: 16px;
+  line-height: 1;
+  display: inline-block;
+  transform-origin: center;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.chart-grid-lines {
+.trend-y-tick:hover .y-mood-emoji {
+  transform: scale(1.35);
+}
+
+/* Precise tick connector pointing directly into the SVG grid line */
+.y-tick-line {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  pointer-events: none;
-}
-
-.grid-horizontal-line {
-  width: 100%;
+  right: -12px;
+  width: 8px;
   height: 1px;
-  background: #f1f5f9;
+  background: #cbd5e1;
 }
 
-.mood-line-svg {
+/* Plot Viewport */
+.trend-plot-viewport {
+  position: relative;
+  flex: 1;
+  height: 280px;
+  border-left: 1.5px solid #cbd5e1;
+  border-bottom: 1.5px solid #cbd5e1;
+  background: linear-gradient(to bottom, rgba(248, 250, 252, 0.5) 0%, rgba(255, 255, 255, 1) 100%);
+  border-radius: 0 8px 0 0;
+}
+
+.trend-svg {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
-  height: 240px;
+  height: 100%;
   overflow: visible;
 }
 
-.chart-node-circle {
-  fill: #3f72af;
-  stroke: #ffffff;
-  stroke-width: 2.5;
-  transition: transform 0.2s ease;
+/* SVG Chart Elements */
+.trend-point-group {
   cursor: pointer;
 }
 
-.chart-point-group:hover .chart-node-circle {
-  transform: scale(1.4);
-  transform-origin: center;
-  fill: #1e3a8a;
+.point-halo {
+  transition: r 0.25s ease, opacity 0.25s ease;
 }
 
-/* X-Axis */
-.chart-x-axis {
+.point-core {
+  transition: r 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), stroke-width 0.2s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.12));
+}
+
+.trend-point-group:hover .point-core {
+  r: 8.5px;
+  stroke-width: 3px;
+}
+
+.trend-point-group:hover .point-halo {
+  r: 16px;
+  opacity: 0.45;
+}
+
+/* Interactive Floating Tooltip */
+.chart-hover-tooltip {
   position: absolute;
-  bottom: -30px;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: space-around;
+  transform: translate(-50%, -125%);
+  background: #0f172a;
+  color: #ffffff;
+  padding: 8px 12px;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.3);
+  pointer-events: none;
+  z-index: 30;
+  white-space: nowrap;
+  font-size: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  animation: tooltipFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.x-axis-day {
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -115%) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -125%) scale(1);
+  }
+}
+
+.chart-hover-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #0f172a;
+}
+
+.tooltip-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+
+.tooltip-emoji {
+  font-size: 15px;
+}
+
+.tooltip-mood {
+  font-weight: 700;
+  color: #38bdf8;
+}
+
+.tooltip-level {
+  font-size: 10.5px;
+  background: rgba(255, 255, 255, 0.16);
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.tooltip-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.tooltip-date {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.tooltip-note {
+  font-size: 11px;
+  color: #e2e8f0;
+  font-style: italic;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* X-Axis Row */
+.trend-x-axis-row {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 8px;
+  padding-bottom: 4px;
+  user-select: none;
+}
+
+.x-axis-spacer {
+  width: 105px;
+  min-width: 105px;
+  flex-shrink: 0;
+}
+
+.x-axis-track {
+  position: relative;
+  flex: 1;
+  height: 52px;
+}
+
+.x-axis-day-slot {
+  position: absolute;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.x-tick-mark {
+  width: 1.5px;
+  height: 6px;
+  background: #cbd5e1;
+  margin-bottom: 2px;
+  transition: background 0.2s ease;
+}
+
+.x-day-name {
   font-size: 12px;
   font-weight: 600;
-  color: #94a3b8;
+  color: #64748b;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.x-day-emoji-badge {
+  font-size: 13px;
+  background: #f8fafc;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.x-axis-day-slot:hover .x-day-name,
+.x-axis-day-slot.is-hovered .x-day-name {
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.x-axis-day-slot:hover .x-tick-mark,
+.x-axis-day-slot.is-hovered .x-tick-mark {
+  background: #2563eb;
+  height: 8px;
+}
+
+.x-axis-day-slot:hover .x-day-emoji-badge,
+.x-axis-day-slot.is-hovered .x-day-emoji-badge {
+  transform: scale(1.28);
+  background: #eff6ff;
+  border-color: #93c5fd;
+  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.25);
+}
+
+.x-axis-day-slot.is-today .x-day-name {
+  color: #2563eb;
+  font-weight: 800;
+}
+
+.x-axis-day-slot.is-today .x-day-emoji-badge {
+  border-color: #3b82f6;
+  background: #dbeafe;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+@media (max-width: 768px) {
+  .trend-y-axis {
+    width: 65px;
+    min-width: 65px;
+  }
+  .x-axis-spacer {
+    width: 65px;
+    min-width: 65px;
+  }
+  .y-mood-label {
+    display: none;
+  }
+  .y-mood-emoji {
+    font-size: 18px;
+  }
+  .trend-y-tick {
+    right: 8px;
+  }
+  .y-tick-line {
+    right: -8px;
+    width: 6px;
+  }
+  .x-day-name {
+    font-size: 10.5px;
+  }
+  .x-day-emoji-badge {
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+  }
 }
 
 /* Recent Entries Right Card */

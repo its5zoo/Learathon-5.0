@@ -60,6 +60,70 @@ const fmtDate = (d: string) => {
   return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
 };
 
+// ── Breathing Widget Decision Helper ──────────────────────────────────────────
+// Strictly triggers ONLY when the user is experiencing anxiety, fear, or heavy breathing
+const shouldShowBreathingWidget = (
+  currentIdx: number,
+  allMessages: Message[],
+  isDismissed: boolean
+): boolean => {
+  if (isDismissed) return false;
+  if (currentIdx !== allMessages.length - 1) return false;
+  const currentMsg = allMessages[currentIdx];
+  if (currentMsg.role !== 'assistant') return false;
+
+  // Find the immediate preceding user message that prompted this response
+  let userText = '';
+  let userEmotion = '';
+  for (let i = currentIdx - 1; i >= 0; i--) {
+    if (allMessages[i].role === 'user') {
+      userText = allMessages[i].content.toLowerCase();
+      userEmotion = (allMessages[i].emotion || '').toLowerCase();
+      break;
+    }
+  }
+
+  if (!userText && !userEmotion) return false;
+
+  // 1. User's emotion detected as anxious or fear
+  if (userEmotion === 'anxious' || userEmotion === 'fear') return true;
+
+  // 2. Anxiety & Panic patterns in user's prompt
+  const anxietyPatterns = [
+    /\b(anxi(ety|ous)|panic|panicking|panicky|panic\s*attack|overwhelm(ed)?|freak(ing)?\s*out)\b/i,
+    /\b(nervous\s*breakdown|heart\s*(racing|pounding)|chest\s*pounding|palpitations)\b/i,
+    /\b(ghabrahat|ghabra|bechaini)\b/i,
+  ];
+
+  // 3. Fear & Terror patterns in user's prompt
+  const fearPatterns = [
+    /\b(fear|scared|terrifi(ed|ying)|terror|afraid|fright(ened)?|petrified)\b/i,
+    /\b(shak(ing|y)|trembl(ing)?|darr?|dar\s*lag)\b/i,
+  ];
+
+  // 4. Heavy Breathing / Respiratory distress patterns in user's prompt
+  const breathingDistressPatterns = [
+    /\b(heavy\s*breath(ing)?|breath(ing)?\s*heavily|breath(ing)?\s*hard)\b/i,
+    /\b(can'?t\s*breath(e)?|cannot\s*breath(e)?|hard\s*to\s*breath(e)?|trouble\s*breath(ing)?)\b/i,
+    /\b(difficult(y)?\s*(to|in)?\s*breath(ing|e)?|short(ness)?\s*of\s*breath|out\s*of\s*breath)\b/i,
+    /\b(hyperventilat(ing|e|ion)|suffocat(ing|e|ion)|gasping(\s*for\s*air)?)\b/i,
+    /\b(chest\s*tight(ness)?|tight\s*chest|choking\s*up)\b/i,
+    /\b(saans?\s*nahi|dam\s*ghut)\b/i,
+  ];
+
+  // 5. Explicit user request for breathing exercise
+  const explicitBreathingPatterns = [
+    /\b(box\s*breath(ing)?|4-4-4|help\s*me\s*breath(e)?|breath(e)?\s*with\s*me|breathing\s*exercise)\b/i,
+  ];
+
+  return (
+    anxietyPatterns.some((r) => r.test(userText)) ||
+    fearPatterns.some((r) => r.test(userText)) ||
+    breathingDistressPatterns.some((r) => r.test(userText)) ||
+    explicitBreathingPatterns.some((r) => r.test(userText))
+  );
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 const AiSupport: React.FC = () => {
   const navigate = useNavigate();
@@ -79,6 +143,7 @@ const AiSupport: React.FC = () => {
 
   // Breathing tool
   const [isBreathingActive, setIsBreathingActive] = useState(false);
+  const [isBreathingDismissed, setIsBreathingDismissed] = useState(false);
   const [breathingPhase, setBreathingPhase] = useState<'Inhale' | 'Hold' | 'Exhale' | 'Rest'>('Inhale');
   const [breathingCount, setBreathingCount] = useState(4);
 
@@ -240,6 +305,8 @@ const AiSupport: React.FC = () => {
     setMessages((prev) => [...prev, userMsg]);
     setInputText('');
     setIsTyping(true);
+    setIsBreathingDismissed(false);
+    setIsBreathingActive(false);
     setErrorMsg(null);
 
     try {
@@ -508,14 +575,26 @@ const AiSupport: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Inline breathing widget */}
-                  {msg.role === 'assistant' && (msg.emotion === 'anxious' || msg.content.toLowerCase().includes('breath')) && idx === messages.length - 1 && (
+                  {/* Inline breathing widget - strictly triggers when user experiences anxiety, fear, or heavy breathing */}
+                  {shouldShowBreathingWidget(idx, messages, isBreathingDismissed) && (
                     <div className="inline-breathing-card">
                       <div className="breathing-card-header">
                         <span>🧘 4-4-4 Box Breathing</span>
-                        <button className="btn-start-breathing" onClick={() => setIsBreathingActive(!isBreathingActive)}>
-                          {isBreathingActive ? '⏹ Stop' : '▶ Start'}
-                        </button>
+                        <div className="breathing-card-actions">
+                          <button className="btn-start-breathing" onClick={() => setIsBreathingActive(!isBreathingActive)}>
+                            {isBreathingActive ? '⏹ Stop' : '▶ Start'}
+                          </button>
+                          <button
+                            className="btn-dismiss-breathing"
+                            onClick={() => {
+                              setIsBreathingActive(false);
+                              setIsBreathingDismissed(true);
+                            }}
+                            title="Dismiss exercise"
+                          >
+                            ✕
+                          </button>
+                        </div>
                       </div>
                       {isBreathingActive && (
                         <div className="breathing-display">

@@ -28,6 +28,38 @@ const moodLevelsMap: Record<string, { level: number; emoji: string; color: strin
   Disgust:  { level: 2, emoji: '🤢', color: '#14b8a6', desc: 'Unsettled & Distressed' }
 };
 
+// 7 Discrete Emotional Levels for the Chart Y-Axis (aligned with SVG coordinates)
+export const Y_AXIS_LEVELS = [
+  { level: 7, mood: 'Surprise', emoji: '😲', color: '#8b5cf6', y: 20 },
+  { level: 6, mood: 'Happy',    emoji: '😄', color: '#10b981', y: 60 },
+  { level: 5, mood: 'Calm',     emoji: '😌', color: '#06b6d4', y: 100 },
+  { level: 4, mood: 'Neutral',  emoji: '😐', color: '#3b82f6', y: 140 },
+  { level: 3, mood: 'Sad',      emoji: '😢', color: '#64748b', y: 180 },
+  { level: 2, mood: 'Fear',     emoji: '😨', color: '#f59e0b', y: 220 },
+  { level: 1, mood: 'Angry',    emoji: '😡', color: '#ef4444', y: 260 },
+];
+
+// Helper to generate a smooth Catmull-Rom / Bézier spline through all points
+const generateSmoothPath = (pts: { x: number; y: number }[]) => {
+  if (pts.length === 0) return '';
+  if (pts.length === 1) return `M ${pts[0].x} ${pts[0].y}`;
+  let d = `M ${pts[0].x} ${pts[0].y}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i === 0 ? 0 : i - 1];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2 < pts.length ? i + 2 : i + 1];
+
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+    d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x} ${p2.y}`;
+  }
+  return d;
+};
+
 const initialSampleEntries: MoodEntry[] = [
   {
     id: 'entry-1',
@@ -127,6 +159,19 @@ const MoodTracker: React.FC = () => {
   const [manualNote, setManualNote] = useState('');
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+
+  // ── Interactive Chart State ─────────────────────────────────────────────────
+  const [hoveredPoint, setHoveredPoint] = useState<{
+    day: string;
+    x: number;
+    y: number;
+    level: number;
+    mood: string;
+    emoji: string;
+    color: string;
+    time: string;
+    note: string;
+  } | null>(null);
 
   // ── Initialize MediaPipe Vision Tasks on Mount ──────────────────────────────
   useEffect(() => {
@@ -444,6 +489,38 @@ const MoodTracker: React.FC = () => {
     setTimeout(() => setShowSuccessToast(false), 2500);
   };
 
+  // ── Dynamic 7-Day Chart Point Calculations ──────────────────────────────────
+  const chartPoints = past7Days.map((day, i) => {
+    const x = 50 + i * 100;
+    let entry: MoodEntry | undefined;
+    if (day === 'Today') {
+      entry = [...moodEntries].reverse().find((e) => e.date === 'Today') || moodEntries[moodEntries.length - 1];
+    } else {
+      entry = moodEntries.find((e) => e.date === day);
+    }
+
+    const defaultLevels = [4, 3, 4, 6, 5, 6, 6];
+    const level = entry ? entry.level : defaultLevels[i];
+    const matchingLevel = Y_AXIS_LEVELS.find((l) => l.level === level) || Y_AXIS_LEVELS[3];
+
+    return {
+      day,
+      x,
+      y: matchingLevel.y,
+      level,
+      mood: entry?.mood || matchingLevel.mood,
+      emoji: entry?.emoji || matchingLevel.emoji,
+      color: matchingLevel.color,
+      time: entry?.time || 'Recorded',
+      note: entry?.note || `${matchingLevel.mood} mood baseline for ${day}.`,
+    };
+  });
+
+  const smoothLinePath = generateSmoothPath(chartPoints);
+  const areaFillPath = chartPoints.length > 0
+    ? `${smoothLinePath} L ${chartPoints[chartPoints.length - 1].x} 275 L ${chartPoints[0].x} 275 Z`
+    : '';
+
   return (
     <div className="mood-tracker-page">
       {/* Toast Notification */}
@@ -601,7 +678,7 @@ const MoodTracker: React.FC = () => {
           <div className="mood-analytics-grid">
 
             {/* Left: 7-Day Interactive Mood Trend Chart */}
-            <div className="analytics-card mood-history-chart-card">
+            <div className="analytics-card mood-history-chart-card mood-trend-chart-card">
               <div className="card-header-flex">
                 <div>
                   <h2 className="card-title">7-Day Emotional Trend Chart</h2>
@@ -615,51 +692,162 @@ const MoodTracker: React.FC = () => {
                 </div>
               </div>
 
-              <div className="chart-wrapper">
-                <div className="chart-y-axis">
-                  <span className="y-label">Surprise 😲</span>
-                  <span className="y-label">Happy 😄</span>
-                  <span className="y-label">Calm 😌</span>
-                  <span className="y-label">Neutral 😐</span>
-                  <span className="y-label">Sad 😢</span>
-                  <span className="y-label">Fear 😨</span>
-                  <span className="y-label">Angry 😡</span>
+              <div className="trend-chart-body">
+                {/* Main Row: Y-Axis + SVG Plot Viewport */}
+                <div className="trend-chart-row">
+                  {/* Perfectly aligned Y-Axis column */}
+                  <div className="trend-y-axis" aria-label="Y-Axis: Mood Intensity Levels">
+                    {Y_AXIS_LEVELS.map((lvl) => (
+                      <div
+                        key={lvl.level}
+                        className="trend-y-tick"
+                        style={{ top: `${(lvl.y / 280) * 100}%` }}
+                        title={`${lvl.mood}: Level ${lvl.level}`}
+                      >
+                        <span className="y-mood-label">{lvl.mood}</span>
+                        <span className="y-mood-emoji">{lvl.emoji}</span>
+                        <span className="y-tick-line"></span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* SVG Line Graph & Grid Viewport */}
+                  <div className="trend-plot-viewport">
+                    <svg className="trend-svg" viewBox="0 0 700 280" preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient id="moodTrendGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.28" />
+                          <stop offset="60%" stopColor="#3b82f6" stopOpacity="0.08" />
+                          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.0" />
+                        </linearGradient>
+                        <filter id="lineGlow" x="-10%" y="-10%" width="120%" height="120%">
+                          <feDropShadow dx="0" dy="3" stdDeviation="3" floodColor="#2563eb" floodOpacity="0.25" />
+                        </filter>
+                      </defs>
+
+                      {/* Horizontal Grid Lines for every emotional level */}
+                      {Y_AXIS_LEVELS.map((lvl) => (
+                        <line
+                          key={lvl.level}
+                          x1="0"
+                          y1={lvl.y}
+                          x2="700"
+                          y2={lvl.y}
+                          stroke={lvl.level === 4 ? "#cbd5e1" : "#e2e8f0"}
+                          strokeWidth={lvl.level === 4 ? "1.5" : "1"}
+                          strokeDasharray={lvl.level === 4 ? undefined : "4,4"}
+                          opacity={lvl.level === 4 ? 0.9 : 0.65}
+                        />
+                      ))}
+
+                      {/* Vertical Grid Guidelines for each of the 7 days */}
+                      {chartPoints.map((pt, i) => (
+                        <line
+                          key={i}
+                          x1={pt.x}
+                          y1="20"
+                          x2={pt.x}
+                          y2="260"
+                          stroke="#f1f5f9"
+                          strokeWidth="1"
+                        />
+                      ))}
+
+                      {/* Subtle Area Fill Under Trend Curve */}
+                      {areaFillPath && (
+                        <path d={areaFillPath} fill="url(#moodTrendGradient)" />
+                      )}
+
+                      {/* Smooth Trend Polyline / Spline */}
+                      <path
+                        d={smoothLinePath}
+                        fill="none"
+                        stroke="#3b82f6"
+                        strokeWidth="3.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        filter="url(#lineGlow)"
+                      />
+
+                      {/* Interactive Data Point Nodes */}
+                      {chartPoints.map((pt, i) => (
+                        <g
+                          key={i}
+                          className="trend-point-group"
+                          onMouseEnter={() => setHoveredPoint(pt)}
+                          onMouseLeave={() => setHoveredPoint(null)}
+                        >
+                          {/* Invisible expanded hit target */}
+                          <circle cx={pt.x} cy={pt.y} r="18" fill="transparent" cursor="pointer" />
+
+                          {/* Outer Halo Ring */}
+                          <circle
+                            cx={pt.x}
+                            cy={pt.y}
+                            r={hoveredPoint?.day === pt.day ? 14 : 9}
+                            fill={pt.color}
+                            opacity={hoveredPoint?.day === pt.day ? 0.45 : 0.2}
+                            className="point-halo"
+                          />
+
+                          {/* Crisp Inner Node */}
+                          <circle
+                            cx={pt.x}
+                            cy={pt.y}
+                            r={hoveredPoint?.day === pt.day ? 7.5 : 6}
+                            fill={pt.color}
+                            stroke="#ffffff"
+                            strokeWidth="2.5"
+                            className="point-core"
+                          />
+                        </g>
+                      ))}
+                    </svg>
+
+                    {/* Interactive Floating Tooltip */}
+                    {hoveredPoint && (
+                      <div
+                        className="chart-hover-tooltip"
+                        style={{
+                          left: `${(hoveredPoint.x / 700) * 100}%`,
+                          top: `${(hoveredPoint.y / 280) * 100}%`,
+                        }}
+                      >
+                        <div className="tooltip-header">
+                          <span className="tooltip-emoji">{hoveredPoint.emoji}</span>
+                          <strong className="tooltip-mood">{hoveredPoint.mood}</strong>
+                          <span className="tooltip-level">Lvl {hoveredPoint.level}</span>
+                        </div>
+                        <div className="tooltip-body">
+                          <span className="tooltip-date">{hoveredPoint.day} • {hoveredPoint.time}</span>
+                          <span className="tooltip-note">{hoveredPoint.note}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* SVG Line Graph */}
-                <div className="chart-plot-area">
-                  <svg className="mood-line-svg" viewBox="0 0 700 240" preserveAspectRatio="none">
-                    <line x1="0" y1="34" x2="700" y2="34" stroke="#f1f5f9" strokeWidth="1" />
-                    <line x1="0" y1="68" x2="700" y2="68" stroke="#f1f5f9" strokeWidth="1" />
-                    <line x1="0" y1="102" x2="700" y2="102" stroke="#f1f5f9" strokeWidth="1" />
-                    <line x1="0" y1="136" x2="700" y2="136" stroke="#f1f5f9" strokeWidth="1" />
-                    <line x1="0" y1="170" x2="700" y2="170" stroke="#f1f5f9" strokeWidth="1" />
-                    <line x1="0" y1="204" x2="700" y2="204" stroke="#f1f5f9" strokeWidth="1" />
-
-                    <path
-                      d="M 50 136 L 150 170 L 250 136 L 350 68 L 450 102 L 550 68 L 650 68"
-                      fill="none"
-                      stroke="#3b82f6"
-                      strokeWidth="3.5"
-                      strokeLinecap="round"
-                    />
-
-                    {/* Data Points */}
-                    <circle cx="50" cy="136" r="6" fill="#3b82f6" stroke="#fff" strokeWidth="2" />
-                    <circle cx="150" cy="170" r="6" fill="#64748b" stroke="#fff" strokeWidth="2" />
-                    <circle cx="250" cy="136" r="6" fill="#3b82f6" stroke="#fff" strokeWidth="2" />
-                    <circle cx="350" cy="68" r="6" fill="#10b981" stroke="#fff" strokeWidth="2" />
-                    <circle cx="450" cy="102" r="6" fill="#06b6d4" stroke="#fff" strokeWidth="2" />
-                    <circle cx="550" cy="68" r="6" fill="#10b981" stroke="#fff" strokeWidth="2" />
-                    <circle cx="650" cy="68" r="7" fill="#10b981" stroke="#fff" strokeWidth="3" />
-                  </svg>
+                {/* Clearly aligned X-Axis Row */}
+                <div className="trend-x-axis-row" aria-label="X-Axis: Timeline of Last 7 Days">
+                  <div className="x-axis-spacer"></div>
+                  <div className="x-axis-track">
+                    {chartPoints.map((pt, i) => (
+                      <div
+                        key={i}
+                        className={`x-axis-day-slot ${pt.day === 'Today' ? 'is-today' : ''} ${hoveredPoint?.day === pt.day ? 'is-hovered' : ''}`}
+                        style={{ left: `${(pt.x / 700) * 100}%` }}
+                        onMouseEnter={() => setHoveredPoint(pt)}
+                        onMouseLeave={() => setHoveredPoint(null)}
+                      >
+                        <div className="x-tick-mark"></div>
+                        <span className="x-day-name">{pt.day}</span>
+                        <span className="x-day-emoji-badge" title={`${pt.day}: ${pt.mood} ${pt.emoji}`}>
+                          {pt.emoji}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-
-              <div className="chart-x-axis">
-                {past7Days.map((d, i) => (
-                  <span key={i} className="x-label">{d}</span>
-                ))}
               </div>
             </div>
 

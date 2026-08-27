@@ -817,6 +817,12 @@
   margin-bottom: 10px;
 }
 
+.breathing-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .btn-start-breathing {
   background: #3f72af;
   color: #fff;
@@ -827,6 +833,31 @@
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
+  transition: background 0.2s ease;
+}
+
+.btn-start-breathing:hover {
+  background: #28558a;
+}
+
+.btn-dismiss-breathing {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px 7px;
+  border-radius: 6px;
+  line-height: 1;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-dismiss-breathing:hover {
+  background: rgba(30, 64, 175, 0.1);
+  color: #1e40af;
 }
 
 .breathing-display {

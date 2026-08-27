@@ -33,7 +33,11 @@ const CRISIS_KEYWORDS = [
 // Emotion detection patterns
 const EMOTION_PATTERNS = {
   crisis:   CRISIS_KEYWORDS,
-  anxious:  ['anxious', 'anxiety', 'panic', 'overthink', 'worry', 'nervous', 'scared', 'fear', 'dread', 'frightened'],
+  anxious:  [
+    'anxious', 'anxiety', 'panic', 'overthink', 'worry', 'nervous', 'scared', 'fear', 'dread', 'frightened',
+    'heavy breathing', 'shortness of breath', 'hyperventilating', 'cannot breathe', "can't breathe", 'cant breathe',
+    'trouble breathing', 'suffocating', 'heart racing', 'palpitations', 'shaking', 'terrified', 'ghabrahat'
+  ],
   sad:      ['sad', 'crying', 'cry', 'depressed', 'depression', 'lonely', 'alone', 'miss', 'grief', 'heartbroken', 'hopeless'],
   angry:    ['angry', 'anger', 'frustrated', 'furious', 'rage', 'hate', 'annoyed', 'irritated'],
   stressed: ['stressed', 'stress', 'overwhelmed', 'burnout', 'exhausted', 'tired', 'pressure', 'deadline', 'burdened'],
@@ -295,6 +299,7 @@ export const sendMessage = async (req, res) => {
         timestamp: lastAiMsg.timestamp,
       },
       crisisDetected,
+      userEmotion,
       sessionTitle: session.title,
     });
   } catch (err) {
