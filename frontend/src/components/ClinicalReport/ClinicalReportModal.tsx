@@ -49,10 +49,10 @@ export const ClinicalReportModal: React.FC<ClinicalReportModalProps> = ({
 
   // Default assessments values if none taken yet
   const defaultScreeners = [
-    { code: 'PHQ-9', title: 'Patient Health Questionnaire (Depression)', score: '8 / 27', severity: 'Mild Depression', range: '0–4 Minimal, 5–9 Mild, 10–14 Moderate, 15+ Severe' },
-    { code: 'GAD-7', title: 'Generalized Anxiety Disorder Screener', score: '6 / 21', severity: 'Mild Anxiety', range: '0–4 Minimal, 5–9 Mild, 10–14 Moderate, 15+ Severe' },
+    { code: 'PHQ-9', title: 'Patient Health Questionnaire (Depression)', score: '8 / 27', severity: 'Mild Depression', range: '0-4 Minimal, 5-9 Mild, 10-14 Moderate, 15+ Severe' },
+    { code: 'GAD-7', title: 'Generalized Anxiety Disorder Screener', score: '6 / 21', severity: 'Mild Anxiety', range: '0-4 Minimal, 5-9 Mild, 10-14 Moderate, 15+ Severe' },
     { code: 'PCL-5', title: 'Post-Traumatic Stress Checklist (DSM-5)', score: '12 / 80', severity: 'Non-Clinical Threshold', range: 'Score < 33 indicates sub-clinical' },
-    { code: 'ISI', title: 'Insomnia Severity Index', score: '5 / 28', severity: 'No Clinically Significant Insomnia', range: '0–7 No insomnia, 8–14 Subthreshold' },
+    { code: 'ISI', title: 'Insomnia Severity Index', score: '5 / 28', severity: 'No Clinically Significant Insomnia', range: '0-7 No insomnia, 8-14 Subthreshold' },
   ];
 
   const screenersList = assessments.length > 0

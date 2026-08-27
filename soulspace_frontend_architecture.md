@@ -1,4 +1,4 @@
-# 🏗️ SoulSpace — Frontend Architecture Flowchart
+# 🏗️ SoulSpace - Frontend Architecture Flowchart
 ### Technical Blueprint & System Design (React 19 + TypeScript + Vite)
 
 ---
@@ -45,7 +45,7 @@ flowchart TD
         ROUTES -->|"/ai-support"| P_AI["💬 AiSupport.tsx<br/>• Conversational CBT Engine<br/>• 20-turn Sliding Memory<br/>• Keyword Crisis Trigger (9152987821)<br/>• Multi-session Management"]
 
         %% Page 3: Mental Health
-        ROUTES -->|"/mental-health"| P_MH["📋 MentalHealth.tsx<br/>• 4 Validated DSM-5 Tests:<br/>  - PHQ-9 (Depression: 9 Qs)<br/>  - GAD-7 (Anxiety: 7 Qs)<br/>  - PCL-5 (PTSD: 20 Qs)<br/>  - ISI (Insomnia: 7 Qs)<br/>• Instant Score & Severity Calculation"]
+        ROUTES -->|"/mental-health"| P_MH["📋 MentalHealth.tsx<br/>• 4 Validated DSM-5 Tests:<br/> - PHQ-9 (Depression: 9 Qs)<br/> - GAD-7 (Anxiety: 7 Qs)<br/> - PCL-5 (PTSD: 20 Qs)<br/> - ISI (Insomnia: 7 Qs)<br/>• Instant Score & Severity Calculation"]
 
         %% Page 4: Appointments
         ROUTES -->|"/appointment"| P_APT["📅 Appointment.tsx<br/>• AI Doctor Recommender (Gemini)<br/>• Specialty & City Filters<br/>• 4-Step Interactive Booking Wizard<br/>• Nodemailer SMTP Email Dispatcher<br/>• Realtime Status Tracker"]
@@ -54,7 +54,7 @@ flowchart TD
         ROUTES -->|"/mood-tracker"| P_MOOD["🎭 MoodTracker.tsx<br/>• AI Biometric Face Scan (7 Emotions)<br/>• Confidence Score Engine (85-99%)<br/>• Hand-coded SVG Trend Line Graph<br/>• Daily Mood Log Timeline"]
 
         %% Page 6: Profile Hub
-        ROUTES -->|"/profile"| P_PROF["👤 Profile.tsx<br/>• User Identity & @Handle<br/>• 4 Vital Wellbeing Cards<br/>• 4-Tab Activity Track Record:<br/>  - Assessments History<br/>  - Mood Timeline<br/>  - Doctor Bookings<br/>  - Safety & Contact Modal"]
+        ROUTES -->|"/profile"| P_PROF["👤 Profile.tsx<br/>• User Identity & @Handle<br/>• 4 Vital Wellbeing Cards<br/>• 4-Tab Activity Track Record:<br/> - Assessments History<br/> - Mood Timeline<br/> - Doctor Bookings<br/> - Safety & Contact Modal"]
 
         %% Page 7: Resources
         ROUTES -->|"/resources"| P_RES["📚 ResourcesPage.tsx<br/>• Curated Mental Wellness Library<br/>• Realtime Search & Category Filters"]
@@ -127,4 +127,4 @@ flowchart TD
 
 ## 🎤 30-Second Elevator Pitch for Judges (Presentation Script)
 
-> *"SoulSpace’s frontend is engineered with **React 19 and TypeScript**, built for speed, privacy, and clinical reliability. It features a clean **5-layer modular architecture**: from our **Auth & Session Context** to a **responsive App Shell**, branching into **7 core modules** including AI Therapy Chat (powered by Team 3BrainCell's Fine-Tuned Gemma 2B Clinical Model), DSM-5 Screeners, and Biometric Mood Tracking. Everything communicates through a secure **JWT-authenticated REST gateway** connected to our Node.js AI backend. Zero heavy third-party UI libraries — fully custom, ultra-fast, and accessible."*
+> *"SoulSpace’s frontend is engineered with **React 19 and TypeScript**, built for speed, privacy, and clinical reliability. It features a clean **5-layer modular architecture**: from our **Auth & Session Context** to a **responsive App Shell**, branching into **7 core modules** including AI Therapy Chat (powered by Team 3BrainCell's Fine-Tuned Gemma 2B Clinical Model), DSM-5 Screeners, and Biometric Mood Tracking. Everything communicates through a secure **JWT-authenticated REST gateway** connected to our Node.js AI backend. Zero heavy third-party UI libraries - fully custom, ultra-fast, and accessible."*

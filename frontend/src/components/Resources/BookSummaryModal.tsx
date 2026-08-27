@@ -23,7 +23,7 @@ export const BookSummaryModal: React.FC<BookSummaryModalProps> = ({ isOpen, onCl
             <em>The Body Keeps the Score</em> explores how trauma can affect the brain, body, emotions, memory, relationships, and sense of self.
           </p>
           <p>
-            Psychiatrist <strong>Bessel van der Kolk</strong> argues that traumatic experiences are not simply memories stored in the mind—they can also influence how the body responds to the world long after the original danger has passed.
+            Psychiatrist <strong>Bessel van der Kolk</strong> argues that traumatic experiences are not simply memories stored in the mind - they can also influence how the body responds to the world long after the original danger has passed.
           </p>
           <div className="book-callout-card">
             💡 <strong>The Central Message:</strong> Healing requires more than simply understanding what happened. People also need ways to feel safe in their bodies, reconnect with themselves, and develop healthier relationships.
@@ -229,7 +229,7 @@ export const BookSummaryModal: React.FC<BookSummaryModalProps> = ({ isOpen, onCl
           <div className="core-insight-box">
             <h3>🌟 The Core Insight</h3>
             <p>
-              Trauma affects both the mind and the body—so true healing requires reconnecting with both. Understanding trauma intellectually is valuable, but recovery also requires regulating the nervous system, experiencing safety, and reconnecting with community.
+              Trauma affects both the mind and the body - so true healing requires reconnecting with both. Understanding trauma intellectually is valuable, but recovery also requires regulating the nervous system, experiencing safety, and reconnecting with community.
             </p>
           </div>
 

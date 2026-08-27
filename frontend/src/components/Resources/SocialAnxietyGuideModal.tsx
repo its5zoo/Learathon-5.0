@@ -69,9 +69,9 @@ export const SocialAnxietyGuideModal: React.FC<SocialAnxietyGuideModalProps> = (
                 <h4>Activities</h4>
                 <ul className="guide-checklist">
                   {[
-                    'd1_1: Write down 3–5 social situations that make you uncomfortable.',
+                    'd1_1: Write down 3-5 social situations that make you uncomfortable.',
                     'd1_2: For each situation, note what you fear might happen.',
-                    'd1_3: Rate your anxiety from 1–10 for each situation.',
+                    'd1_3: Rate your anxiety from 1-10 for each situation.',
                     'd1_4: Take 5 minutes for slow, steady breathing.',
                     'd1_5: Remind yourself: "Feeling anxious does not mean I am incapable."'
                   ].map((item, idx) => {
@@ -88,7 +88,7 @@ export const SocialAnxietyGuideModal: React.FC<SocialAnxietyGuideModalProps> = (
               </div>
 
               <div className="day-reflection-box">
-                <h4>💭 Reflection — Ask yourself:</h4>
+                <h4>💭 Reflection - Ask yourself:</h4>
                 <ul>
                   <li>What situations trigger my anxiety most?</li>
                   <li>What thoughts appear when I feel anxious?</li>
@@ -108,7 +108,7 @@ export const SocialAnxietyGuideModal: React.FC<SocialAnxietyGuideModalProps> = (
                 <ul className="guide-checklist">
                   {[
                     'd2_1: Make eye contact and smile at someone.',
-                    'd2_2: Say "Hello" or "Good morning" to 2–3 people.',
+                    'd2_2: Say "Hello" or "Good morning" to 2-3 people.',
                     'd2_3: Ask someone a simple question, such as "How was your day?"',
                     'd2_4: Spend a few minutes in a social environment instead of avoiding it.',
                     'd2_5: Record your anxiety level before and after each interaction.'
@@ -127,7 +127,7 @@ export const SocialAnxietyGuideModal: React.FC<SocialAnxietyGuideModalProps> = (
 
               <div className="day-challenge-box">
                 <h4>🔥 Day 2 Challenge</h4>
-                <p>Have <strong>one short conversation</strong> lasting at least 1–2 minutes.</p>
+                <p>Have <strong>one short conversation</strong> lasting at least 1-2 minutes.</p>
                 <small><strong>Reminder:</strong> You do not need to be interesting or impressive. Simply participating is progress.</small>
               </div>
             </div>
@@ -279,7 +279,7 @@ export const SocialAnxietyGuideModal: React.FC<SocialAnxietyGuideModalProps> = (
               </div>
 
               <div className="day-challenge-box">
-                <h4>🔥 Day 6 Challenge: 5–10 Minute Conversation</h4>
+                <h4>🔥 Day 6 Challenge: 5-10 Minute Conversation</h4>
                 <p>Try using the loop: <strong>Ask ➔ Listen ➔ Respond ➔ Ask again</strong></p>
                 <div className="example-dialogue">
                   <p><strong>You:</strong> “What kind of music do you like?”</p>
@@ -297,7 +297,7 @@ export const SocialAnxietyGuideModal: React.FC<SocialAnxietyGuideModalProps> = (
               <div className="day-goal">🎯 <strong>Goal:</strong> Recognize your progress and continue practicing.</div>
               
               <div className="day-section">
-                <h4>Review Your Week (Rate 1–10):</h4>
+                <h4>Review Your Week (Rate 1-10):</h4>
                 <div className="ratings-table-wrapper">
                   <table className="guide-table">
                     <thead>
@@ -397,7 +397,7 @@ export const SocialAnxietyGuideModal: React.FC<SocialAnxietyGuideModalProps> = (
                     <th>Day</th>
                     <th>Main Goal</th>
                     <th>Done?</th>
-                    <th>Anxiety (1–10)</th>
+                    <th>Anxiety (1-10)</th>
                     <th>What I Learned</th>
                   </tr>
                 </thead>

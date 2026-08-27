@@ -9,7 +9,7 @@ const CRISIS_HELPLINES = `
 • **KIRAN National Helpline**: 📞 1800-599-0019
 • **Online Video Specialist Consultation**: 🩺 Available in SoulSpace Appointment Hub
 
-Please reach out — confidential online & phone support is available right now. 💙
+Please reach out - confidential online & phone support is available right now. 💙
 `.trim();
 
 const CRISIS_KEYWORDS = [
@@ -173,14 +173,14 @@ const callAIWithRetry = async (apiMessages, retries = 2) => {
 
 const getEmpatheticFallback = (userContent, emotion, crisisDetected) => {
   if (crisisDetected) {
-    return "I hear how much pain you are experiencing right now, and I want you to know that you are not alone and your life deeply matters. Please stay safe — immediate confidential support is available right now.\n\n" + CRISIS_HELPLINES;
+    return "I hear how much pain you are experiencing right now, and I want you to know that you are not alone and your life deeply matters. Please stay safe - immediate confidential support is available right now.\n\n" + CRISIS_HELPLINES;
   }
 
   switch (emotion) {
     case 'anxious':
       return "I hear the anxiety in your words, and it is completely okay to pause right now. Let's take one slow, deep breath in... and let it out gently. What is one small thing around you that brings a sense of comfort?";
     case 'sad':
-      return "I'm really sorry things feel so heavy for you right now. It takes strength to open up when you're feeling down. I am right here with you — would you like to share what triggered this?";
+      return "I'm really sorry things feel so heavy for you right now. It takes strength to open up when you're feeling down. I am right here with you - would you like to share what triggered this?";
     case 'stressed':
       return "That sounds like a heavy load you've been carrying today. Remember to be gentle with yourself and take things one step at a time. What would feel most supportive for you right now?";
     case 'angry':

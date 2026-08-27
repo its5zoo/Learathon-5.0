@@ -88,7 +88,7 @@ const assessmentsData: Assessment[] = [
         ],
       },
       {
-        text: 'Feeling bad about yourself — or that you are a failure or have let yourself or your family down?',
+        text: 'Feeling bad about yourself - or that you are a failure or have let yourself or your family down?',
         options: [
           { text: 'Not at all', score: 0 },
           { text: 'Several days', score: 1 },
@@ -106,7 +106,7 @@ const assessmentsData: Assessment[] = [
         ],
       },
       {
-        text: 'Moving or speaking so slowly that others noticed? Or the opposite — fidgety or restless?',
+        text: 'Moving or speaking so slowly that others noticed? Or the opposite - fidgety or restless?',
         options: [
           { text: 'Not at all', score: 0 },
           { text: 'Several days', score: 1 },
@@ -133,7 +133,7 @@ const assessmentsData: Assessment[] = [
         return { level: 'Moderate Depression', color: '#f97316', emoji: '😔', advice: 'Your results indicate moderate depression. We recommend connecting with a counselor or therapist for a personalized care plan.' };
       if (score <= 19)
         return { level: 'Moderately Severe Depression', color: '#ef4444', emoji: '😞', advice: 'Moderately severe symptoms detected. Please consider reaching out to a mental health professional soon. You are not alone in this.' };
-      return { level: 'Severe Depression', color: '#dc2626', emoji: '🆘', advice: 'Severe depressive symptoms. Please reach out immediately — contact Tele-MANAS (14416) or speak with a licensed mental health professional today.' };
+      return { level: 'Severe Depression', color: '#dc2626', emoji: '🆘', advice: 'Severe depressive symptoms. Please reach out immediately - contact Tele-MANAS (14416) or speak with a licensed mental health professional today.' };
     },
   },
   {
@@ -353,7 +353,7 @@ const assessmentsData: Assessment[] = [
     badge: 'WHO Endorsed',
     color: '#06b6d4',
     description:
-      'The Warwick–Edinburgh Mental Wellbeing Scale measures positive aspects of mental health including positive feelings and functioning — not just absence of illness.',
+      'The Warwick-Edinburgh Mental Wellbeing Scale measures positive aspects of mental health including positive feelings and functioning - not just absence of illness.',
     questions: [
       {
         text: "I've been feeling optimistic about the future.",
@@ -498,7 +498,7 @@ const assessmentsData: Assessment[] = [
     ],
     getResult: (score) => {
       if (score <= 32)
-        return { level: 'Low Wellbeing', color: '#dc2626', emoji: '💙', advice: 'Your wellbeing score is below average. Focus on small daily joys — gratitude journaling, nature walks, and connecting with loved ones can help rebuild positivity.' };
+        return { level: 'Low Wellbeing', color: '#dc2626', emoji: '💙', advice: 'Your wellbeing score is below average. Focus on small daily joys - gratitude journaling, nature walks, and connecting with loved ones can help rebuild positivity.' };
       if (score <= 40)
         return { level: 'Below Average Wellbeing', color: '#f97316', emoji: '🌱', advice: 'Some positive mental health elements present, but there is meaningful room for growth. Try fostering new hobbies and purposeful social activities.' };
       if (score <= 59)
@@ -708,7 +708,7 @@ const MentalHealth: React.FC = () => {
                 {
                   key: 'quietSpace' as const,
                   title: 'Quiet & Private Environment',
-                  desc: 'Ensure you are in a quiet, comfortable space where you won\'t be interrupted for 5–10 minutes.',
+                  desc: 'Ensure you are in a quiet, comfortable space where you won\'t be interrupted for 5-10 minutes.',
                   icon: '🏠',
                 },
                 {
@@ -761,7 +761,7 @@ const MentalHealth: React.FC = () => {
                 </div>
                 <span className="prereq-progress-label">
                   {Object.values(prereqs).filter(Boolean).length}/3 completed
-                  {allPrereqsMet && ' — Ready! ✓'}
+                  {allPrereqsMet && ' - Ready! ✓'}
                 </span>
               </div>
             )}
@@ -781,7 +781,7 @@ const MentalHealth: React.FC = () => {
               {!isLoggedIn ? (
                 <span className="status-locked">🔒 Login to Unlock</span>
               ) : allPrereqsMet ? (
-                <span className="status-ready">✓ All Set — Assessments Unlocked</span>
+                <span className="status-ready">✓ All Set - Assessments Unlocked</span>
               ) : (
                 <span className="status-pending">⚠️ Complete Prerequisites First</span>
               )}
@@ -909,7 +909,7 @@ const MentalHealth: React.FC = () => {
                 <div className="empty-history-icon">📋</div>
                 <h3 className="empty-history-title">No Assessments Completed Yet</h3>
                 <p className="empty-history-text">
-                  Complete any clinical screener above — your score, severity classification, and date will be tracked here automatically.
+                  Complete any clinical screener above - your score, severity classification, and date will be tracked here automatically.
                 </p>
               </div>
             ) : (

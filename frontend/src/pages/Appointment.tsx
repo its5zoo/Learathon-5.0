@@ -277,7 +277,7 @@ const Appointment: React.FC = () => {
 
           clearInterval(pollerId);
         }
-      } catch { /* silent fail — will retry */ }
+      } catch { /* silent fail - will retry */ }
     };
 
     const pollerId = setInterval(pollStatus, 30000); // every 30 seconds
@@ -574,7 +574,7 @@ const Appointment: React.FC = () => {
                 </svg>
               </div>
               <div className="ai-agent-text">
-                <strong>AI Concierge — Personalized Top 3 Matches:</strong>
+                <strong>AI Concierge - Personalized Top 3 Matches:</strong>
                 <span> Our AI reads your assessment scores &amp; finds the best-fit specialists for your mental health profile.</span>
               </div>
               <button className="btn btn-primary ai-book-btn" onClick={handleAIConcierge}>
@@ -840,7 +840,7 @@ const Appointment: React.FC = () => {
                       🕒 {selectedTime}
                     </span>
                   </div>
-                  <p className="section-hint">Consultations are scheduled strictly during active clinical shifts: Morning (10:00 AM – 12:00 PM) and Evening (04:00 PM – 06:00 PM).</p>
+                  <p className="section-hint">Consultations are scheduled strictly during active clinical shifts: Morning (10:00 AM - 12:00 PM) and Evening (04:00 PM - 06:00 PM).</p>
                 </div>
 
                 <div className="time-shifts-wrapper">
@@ -851,7 +851,7 @@ const Appointment: React.FC = () => {
                         <span className="shift-emoji">🌅</span>
                         <div>
                           <strong className="shift-name">Morning Clinical Hours</strong>
-                          <span className="shift-timing">10:00 AM — 12:00 PM</span>
+                          <span className="shift-timing">10:00 AM - 12:00 PM</span>
                         </div>
                       </div>
                       <span className="shift-pill morning-pill">Morning Shift</span>
@@ -882,7 +882,7 @@ const Appointment: React.FC = () => {
                         <span className="shift-emoji">🌆</span>
                         <div>
                           <strong className="shift-name">Evening Consultation Hours</strong>
-                          <span className="shift-timing">04:00 PM — 06:00 PM</span>
+                          <span className="shift-timing">04:00 PM - 06:00 PM</span>
                         </div>
                       </div>
                       <span className="shift-pill evening-pill">Evening Shift</span>
@@ -984,7 +984,7 @@ const Appointment: React.FC = () => {
                   <div className="email-preview-header">
                     <span className="email-preview-icon">📧</span>
                     <div>
-                      <strong>Email Preview — Sent from SoulSpace AI</strong>
+                      <strong>Email Preview - Sent from SoulSpace AI</strong>
                       <p className="email-preview-meta">
                         <span>To: <em>{selectedDoctor.name}</em> at {selectedDoctor.clinicName}</span><br />
                         <span>From: <em>iamrevenent007@gmail.com</em> (SoulSpace AI Concierge)</span>
@@ -994,7 +994,7 @@ const Appointment: React.FC = () => {
 
                   <div className="email-preview-body">
                     <div className="email-preview-subject">
-                      📋 Subject: Appointment Request — {patientName} via SoulSpace AI
+                      📋 Subject: Appointment Request - {patientName} via SoulSpace AI
                     </div>
                     <div className="email-preview-content">
                       <p>Dear <strong>{selectedDoctor.name}</strong>,</p>
@@ -1127,7 +1127,7 @@ const Appointment: React.FC = () => {
                   ? '🔄 Alternative Slot Proposed by Clinic'
                   : appointmentStatus === 'expired'
                   ? '⏳ Request Expired (24-Hour SLA Window)'
-                  : '⏳ Appointment Request Sent — Pending Confirmation'}
+                  : '⏳ Appointment Request Sent - Pending Confirmation'}
               </h2>
               <p className="confirmed-desc">
                 {appointmentStatus === 'confirmed'
@@ -1139,7 +1139,7 @@ const Appointment: React.FC = () => {
                   : appointmentStatus === 'expired'
                   ? <>No response was received from <strong>{selectedDoctor.clinicName}</strong> within the 24-hour SLA window. Your request has been automatically suspended to save your time.</>
                   : isDummyDoctor
-                  ? <>This doctor is in <strong>demo mode</strong> — request is stored in pending status for demonstration.</>
+                  ? <>This doctor is in <strong>demo mode</strong> - request is stored in pending status for demonstration.</>
                   : <>Your appointment is currently <strong>Pending Confirmation</strong>. Our AI Agent has emailed <strong>{selectedDoctor.clinicName}</strong> on your behalf (24-Hour Response SLA). Once the doctor confirms, this screen and your profile will automatically update to <strong>Confirmed</strong>.</>
                 }
               </p>
@@ -1176,7 +1176,7 @@ const Appointment: React.FC = () => {
                     <div className="t-dot done"></div>
                     <div className="t-content">
                       <strong>Appointment Request</strong>
-                      <span>{isDummyDoctor ? '⚪ Demo mode — no real email' : `AI Agent emailed ${selectedDoctor.clinicName}`}</span>
+                      <span>{isDummyDoctor ? '⚪ Demo mode - no real email' : `AI Agent emailed ${selectedDoctor.clinicName}`}</span>
                     </div>
                   </div>
                   <div className="t-line"></div>

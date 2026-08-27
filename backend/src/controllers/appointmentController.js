@@ -158,17 +158,17 @@ export const getAIRecommendations = async (req, res) => {
     if (assessmentHistory && assessmentHistory.length > 0) {
       const latest = assessmentHistory.slice(-4);
       assessmentContext = latest
-        .map(a => `${a.assessmentName}: Score ${a.score}/${a.maxScore} — ${a.severity} (${a.interpretation})`)
+        .map(a => `${a.assessmentName}: Score ${a.score}/${a.maxScore} - ${a.severity} (${a.interpretation})`)
         .join('\n');
     }
 
     const systemPrompt = `You are the SoulSpace AI Appointment Concierge. Your job is to analyze a patient's mental health profile and match them with the best available therapists.
     
-You MUST respond with ONLY valid JSON — no markdown, no code blocks, just raw JSON.
+You MUST respond with ONLY valid JSON - no markdown, no code blocks, just raw JSON.
 The JSON must be an array of exactly 3 objects, each with these fields:
 - doctorId (string): one of the doctor IDs provided
-- matchScore (number): 0–100 match percentage
-- matchReason (string): 2–3 sentences explaining WHY this doctor is a great match for this patient
+- matchScore (number): 0-100 match percentage
+- matchReason (string): 2-3 sentences explaining WHY this doctor is a great match for this patient
 - specialtyHighlight (string): the single most relevant specialty for this patient
 - isTopPick (boolean): true for the best match only`;
 
@@ -251,10 +251,10 @@ export const bookAppointment = async (req, res) => {
     let assessmentSummary = null;
     if (attachReport && assessmentHistory && assessmentHistory.length > 0) {
       try {
-        const summaryPrompt = `Summarize this patient's mental health assessment results in 2–3 concise sentences for a therapist.`;
+        const summaryPrompt = `Summarize this patient's mental health assessment results in 2-3 concise sentences for a therapist.`;
         const summaryData = assessmentHistory
           .slice(-4)
-          .map(a => `${a.assessmentName}: Score ${a.score}/${a.maxScore} — ${a.severity} (${a.interpretation})`)
+          .map(a => `${a.assessmentName}: Score ${a.score}/${a.maxScore} - ${a.severity} (${a.interpretation})`)
           .join('; ');
         assessmentSummary = await callGemmaModel(summaryPrompt, `Assessment results: ${summaryData}`);
       } catch (e) {
@@ -380,7 +380,7 @@ export const simulateClinicReply = async (req, res) => {
       if (chosenOutcome === 'expired') {
         clinicReplySummary = `24-Hour SLA Expired without response from clinic.`;
       } else {
-        const summaryPrompt = `You are the SoulSpace AI concierge. Summarize this clinic's email reply for the patient in 2–3 clear, friendly bullet points.`;
+        const summaryPrompt = `You are the SoulSpace AI concierge. Summarize this clinic's email reply for the patient in 2-3 clear, friendly bullet points.`;
         clinicReplySummary = await callGemmaModel(summaryPrompt, `Clinic email:\n\n${clinicReplyRaw}`);
       }
     } catch (aiErr) {

@@ -23,7 +23,7 @@ export const AtomicHabitsModal: React.FC<AtomicHabitsModalProps> = ({ isOpen, on
             Your life is shaped by what you repeatedly do.
           </p>
           <p>
-            A single healthy choice may seem insignificant—a glass of water, a short walk, five minutes of journaling, going to bed a little earlier, or putting your phone away for a few minutes. But when small actions are repeated consistently, they gradually become powerful habits.
+            A single healthy choice may seem insignificant - a glass of water, a short walk, five minutes of journaling, going to bed a little earlier, or putting your phone away for a few minutes. But when small actions are repeated consistently, they gradually become powerful habits.
           </p>
           <div className="book-callout-card">
             💡 <strong>The Atomic Principle:</strong> Small changes, repeated consistently, can create remarkable results over time. You do not need to completely transform your life overnight.
@@ -42,7 +42,7 @@ export const AtomicHabitsModal: React.FC<AtomicHabitsModalProps> = ({ isOpen, on
           </p>
           <h4>Start Extremely Small:</h4>
           <ul className="book-bullet-list">
-            <li>Instead of exercising 1 hour ➔ <strong>Start with 5–10 minutes</strong></li>
+            <li>Instead of exercising 1 hour ➔ <strong>Start with 5-10 minutes</strong></li>
             <li>Instead of meditating 30 minutes ➔ <strong>Start with 2 minutes</strong></li>
             <li>Instead of reading a whole chapter ➔ <strong>Read one page</strong></li>
             <li>Instead of fixing your whole sleep schedule ➔ <strong>Move bedtime 15 minutes earlier</strong></li>
@@ -59,7 +59,7 @@ export const AtomicHabitsModal: React.FC<AtomicHabitsModalProps> = ({ isOpen, on
       title: 'Your Habits Shape Your Identity',
       content: (
         <div className="book-chapter-content">
-          <p>Habits are not only about outcomes—they shape how you see yourself.</p>
+          <p>Habits are not only about outcomes - they shape how you see yourself.</p>
           <div className="thought-comparison-grid">
             <div className="thought-item">
               <span className="negative-thought">Outcome Focus: “I am trying to read more.”</span>
@@ -118,12 +118,12 @@ export const AtomicHabitsModal: React.FC<AtomicHabitsModalProps> = ({ isOpen, on
           <p>Mental wellness requires a physiological foundation of daily care:</p>
           <div className="symptom-tag-cloud">
             <span className="symptom-pill">😴 Sleep: Consistent bedtime & wind-down</span>
-            <span className="symptom-pill">🚶 Movement: 5–20 min daily walking</span>
+            <span className="symptom-pill">🚶 Movement: 5-20 min daily walking</span>
             <span className="symptom-pill">💧 Hydration & Nutrition: Fueling the brain</span>
             <span className="symptom-pill">🛋️ Guilt-Free Rest: Scheduled recharge</span>
           </div>
           <div className="book-callout-card">
-            🌿 <em>“Rest is not a failure of discipline—rest is an essential part of a sustainable routine.”</em>
+            🌿 <em>“Rest is not a failure of discipline - rest is an essential part of a sustainable routine.”</em>
           </div>
         </div>
       )
@@ -200,14 +200,14 @@ export const AtomicHabitsModal: React.FC<AtomicHabitsModalProps> = ({ isOpen, on
     },
     {
       id: 'ch11-13',
-      number: 'Chapters 11–13',
+      number: 'Chapters 11-13',
       title: 'Daily Routine & 7-Day Challenge',
       content: (
         <div className="book-chapter-content">
           <h4>Sample Mental Wellness Foundation:</h4>
           <ul className="book-bullet-list">
             <li><strong>Morning:</strong> 2 min slow breathing + 5 min movement + 1 top priority</li>
-            <li><strong>Afternoon:</strong> 5–10 min walk + step away from screens</li>
+            <li><strong>Afternoon:</strong> 5-10 min walk + step away from screens</li>
             <li><strong>Evening:</strong> 5 min reflection + phone away before bed + 1 gratitude point</li>
           </ul>
 

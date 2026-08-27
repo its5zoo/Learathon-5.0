@@ -68,7 +68,7 @@ def generate_mental_health_response(user_text: str, predictions: list) -> str:
     # 2. Guardrail: Medicine / Drug prescription
     medicine_words = ["medicine", "medicines", "pill", "pills", "tablet", "dosage", "antidepressant", "xanax", "prozac", "ssri", "prescribe", "drug"]
     if any(w in lower for w in medicine_words):
-        return "I cannot prescribe or advise on medications — please consult a qualified doctor for prescriptions. In the meantime, gentle movement, fresh air, or guided meditation can help calm your nervous system."
+        return "I cannot prescribe or advise on medications - please consult a qualified doctor for prescriptions. In the meantime, gentle movement, fresh air, or guided meditation can help calm your nervous system."
 
     top_label = predictions[0]["label"].lower() if predictions else "neutral"
     
@@ -76,17 +76,17 @@ def generate_mental_health_response(user_text: str, predictions: list) -> str:
     if "depression" in top_label or "suicid" in top_label or "severe" in top_label:
         return (
             "I hear how deeply you are hurting right now, and I want you to know you are not alone. "
-            "Please take a slow, gentle breath with me right now — your life matters, and support is right here for you."
+            "Please take a slow, gentle breath with me right now - your life matters, and support is right here for you."
         )
     elif "anxiety" in top_label or "stress" in top_label:
         return (
             "It sounds like things are feeling really heavy and overwhelming right now. "
-            "Let's ground your body — try taking three slow deep breaths or stepping outside for a gentle walk, and tell me what's on your mind."
+            "Let's ground your body - try taking three slow deep breaths or stepping outside for a gentle walk, and tell me what's on your mind."
         )
     elif "bipolar" in top_label or "mood" in top_label:
         return (
             "Navigating fluctuating emotions takes a lot of mental energy, and your feelings are completely valid. "
-            "Light stretching or journaling can bring some calm — I'm right here with you without any judgment."
+            "Light stretching or journaling can bring some calm - I'm right here with you without any judgment."
         )
     else:
         return (

@@ -40,7 +40,7 @@ const emailWrapper = (bodyContent) => `
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SoulSpace — Appointment Report</title>
+  <title>SoulSpace - Appointment Report</title>
 </head>
 <body style="margin:0;padding:0;background:#f0f4f8;font-family:'Segoe UI',Arial,sans-serif;">
   <div style="max-width:640px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.10);">
@@ -173,12 +173,12 @@ export const sendAppointmentRequestEmail = async ({
     to: toClinicEmail || 'ashiafhalak786@gmail.com',
     cc: toClinicEmail && toClinicEmail.toLowerCase() !== 'ashiafhalak786@gmail.com' ? 'ashiafhalak786@gmail.com' : undefined,
     replyTo: patientEmail,
-    subject: `Appointment Request [${ref}] — ${patientName} with ${doctorName} · ${date} ${time}`,
+    subject: `Appointment Request [${ref}] - ${patientName} with ${doctorName} · ${date} ${time}`,
     html: emailWrapper(body),
     text: `[SoulSpace Appointment Request]
 Ref: ${ref}
 Patient: ${patientName} | ${patientEmail} | ${patientPhone || 'N/A'}
-Doctor: ${doctorName} — ${clinicName}
+Doctor: ${doctorName} - ${clinicName}
 Date/Time: ${date} at ${time} (${mode})
 Concerns: ${concerns || 'N/A'}
 Assessment: ${assessmentSummary || 'N/A'}
@@ -222,7 +222,7 @@ export const sendConfirmationToPatient = async ({
     <p style="color:#475569;font-size:14px;line-height:1.7;margin:0 0 24px;">
       Dear <strong>${patientName}</strong>,<br/><br/>
       Your appointment request has been successfully submitted to 
-      <strong>${clinicName}</strong>. The clinic will contact you within <strong>24–48 hours</strong> 
+      <strong>${clinicName}</strong>. The clinic will contact you within <strong>24-48 hours</strong> 
       to confirm your slot.
     </p>
 
@@ -260,11 +260,11 @@ export const sendConfirmationToPatient = async ({
   const info = await transporter.sendMail({
     from: fromAddress,
     to: patientEmail,
-    subject: `Appointment Request Sent — ${doctorName} · ${date} [${ref}]`,
+    subject: `Appointment Request Sent - ${doctorName} · ${date} [${ref}]`,
     html: emailWrapper(body),
     text: `[SoulSpace] Your appointment request has been sent.
 Booking Ref: ${ref}
-Doctor: ${doctorName} — ${clinicName}
+Doctor: ${doctorName} - ${clinicName}
 Date/Time: ${date} at ${time} (${mode})
 The clinic will contact you within 24-48 hours.`,
   });

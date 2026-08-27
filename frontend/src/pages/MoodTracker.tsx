@@ -843,10 +843,10 @@ const MoodTracker: React.FC = () => {
               {/* Informative How to Read Guide Drawer */}
               {showGraphGuide && (
                 <div className="chart-educational-guide">
-                  <h4 className="guide-title">📘 Understanding Your 1–7 Mood Scale</h4>
+                  <h4 className="guide-title">📘 Understanding Your 1-7 Mood Scale</h4>
                   <div className="guide-levels-grid">
                     <div className="guide-level-item tier-high">
-                      <strong>🌟 Levels 5–7 (Calm, Happy, Surprise)</strong>
+                      <strong>🌟 Levels 5-7 (Calm, Happy, Surprise)</strong>
                       <p>High energy & restorative states. Reflects emotional fulfillment, joy, or active mental clarity.</p>
                     </div>
                     <div className="guide-level-item tier-mid">
@@ -854,7 +854,7 @@ const MoodTracker: React.FC = () => {
                       <p>Grounding baseline. Steady functioning without strong emotional peaks or low distress.</p>
                     </div>
                     <div className="guide-level-item tier-low">
-                      <strong>🌧️ Levels 1–3 (Sad, Fear, Angry)</strong>
+                      <strong>🌧️ Levels 1-3 (Sad, Fear, Angry)</strong>
                       <p>Distress or fatigue triggers. A healthy signal to pause, practice breathing, or take a gentle walk.</p>
                     </div>
                   </div>
@@ -1197,7 +1197,7 @@ const MoodTracker: React.FC = () => {
                 <div className="how-step-num">2</div>
                 <div className="how-step-icon">🏷️</div>
                 <h4>Tag the Trigger (Optional)</h4>
-                <p>Select what caused your mood—work, sleep, relationships, or personal accomplishments.</p>
+                <p>Select what caused your mood - work, sleep, relationships, or personal accomplishments.</p>
               </div>
 
               <div className="how-step-item">
