@@ -1,17 +1,35 @@
 import mongoose from 'mongoose';
 
+let isConnected = false;
+
 const connectDB = async () => {
+  // If already connected, reuse existing connection (Serverless warm container)
+  if (mongoose.connection.readyState >= 1) {
+    return mongoose.connection;
+  }
+
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URI, {
+    const uri = process.env.MONGO_URI;
+    if (!uri) {
+      console.warn('⚠️ MONGO_URI is not defined in environment variables.');
+      return null;
+    }
+
+    const conn = await mongoose.connect(uri, {
       serverSelectionTimeoutMS: 5000,
+      bufferCommands: false,
     });
 
+    isConnected = true;
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+    return conn;
   } catch (error) {
     console.error(`❌ MongoDB Connection Error: ${error.message}`);
-    process.exit(1); // Exit process with failure
+    // DO NOT use process.exit(1) in serverless environments as it crashes the lambda invocation
+    return null;
   }
 };
+
 
 // Mongoose event listeners for connection health monitoring
 mongoose.connection.on('connected', () => {
