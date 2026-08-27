@@ -139,28 +139,23 @@ const MoodTracker: React.FC = () => {
 
   const { user, isLoggedIn, token } = useAuth();
 
-  // ── MediaPipe FaceLandmarker Ref ────────────────────────────────────────────
   const faceLandmarkerRef = useRef<FaceLandmarker | null>(null);
 
-  // ── Camera State ────────────────────────────────────────────────────────────
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // ── AI Facial Scanning State ────────────────────────────────────────────────
   const [isScanning, setIsScanning] = useState(false);
   const [scanCountdown, setScanCountdown] = useState(3);
   const [scanPhaseText, setScanPhaseText] = useState('Detecting facial landmarks…');
   const [detectedScanResult, setDetectedScanResult] = useState<{ mood: string; emoji: string; confidence: number } | null>(null);
 
-  // ── Manual Selection State ──────────────────────────────────────────────────
   const [selectedMood, setSelectedMood] = useState<'Happy' | 'Calm' | 'Neutral' | 'Sad' | 'Angry' | 'Surprise' | 'Fear'>('Happy');
   const [manualNote, setManualNote] = useState('');
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
 
-  // ── Interactive Chart State ─────────────────────────────────────────────────
   const [hoveredPoint, setHoveredPoint] = useState<{
     day: string;
     x: number;
@@ -173,7 +168,6 @@ const MoodTracker: React.FC = () => {
     note: string;
   } | null>(null);
 
-  // ── Initialize MediaPipe Vision Tasks on Mount ──────────────────────────────
   useEffect(() => {
     let isMounted = true;
     const initMediaPipe = async () => {
@@ -205,7 +199,6 @@ const MoodTracker: React.FC = () => {
     };
   }, []);
 
-  // ── Mood Entries State (rehydrated from localStorage) ────────────────────────
   const [moodEntries, setMoodEntries] = useState<MoodEntry[]>(() => {
     try {
       const stored = localStorage.getItem('ss_mood_entries');
@@ -219,7 +212,6 @@ const MoodTracker: React.FC = () => {
     return initialSampleEntries;
   });
 
-  // Save to localStorage whenever entries change
   useEffect(() => {
     try {
       localStorage.setItem('ss_mood_entries', JSON.stringify(moodEntries));
@@ -228,8 +220,6 @@ const MoodTracker: React.FC = () => {
     }
   }, [moodEntries]);
 
-
-  // ── Dynamic Mood Analytics & Clinical Interpretation ────────────────────────
   const [showGraphGuide, setShowGraphGuide] = useState(false);
 
   const moodAnalytics = useMemo(() => {

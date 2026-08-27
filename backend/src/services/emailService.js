@@ -1,34 +1,10 @@
 import nodemailer from 'nodemailer';
 
-// ──────────────────────────────────────────────────────────────────────────────
-// EMAIL SERVICE — Nodemailer (Gmail SMTP or Ethereal fallback for demo)
-//
-// FREE OPTIONS:
-//  1. Gmail SMTP: Set GMAIL_USER + GMAIL_APP_PASSWORD in .env
-//     → Get App Password: Google Account → Security → 2FA → App passwords
-//  2. Ethereal.email (demo/testing): No setup needed — auto-creates test account
-//     → Sends captured emails with a preview URL (no real delivery)
-//
-// DEMO SETUP:
-//  - Doctor emails: iamrevenent007@gmail.com / ashiafhalak786@gmail.com
-//  - PLATFORM_NOTIFY_EMAIL: second Gmail always gets CC'd on every booking
-//
-// TODO (post-demo): Add PDF attachment generation using puppeteer/pdfkit
-//   → generateAppointmentReportPDF(appointmentData) → Buffer
-//   → attach as 'SoulSpace_Appointment_Report.pdf' in sendMail attachments
-// ──────────────────────────────────────────────────────────────────────────────
-
-// Second Gmail that always gets CC'd (platform monitoring / demo observer)
 const BOOKING_REF_PREFIX = 'SS';
 
 let cachedTransporter = null;
 let cachedTestAccount = null;
 
-/**
- * Returns a Nodemailer transporter.
- * - Gmail SMTP when GMAIL_USER + GMAIL_APP_PASSWORD env vars are set.
- * - Ethereal (fake SMTP) otherwise — perfect for hackathon demos.
- */
 const getTransporter = async () => {
   if (cachedTransporter) return cachedTransporter;
 
@@ -40,11 +16,9 @@ const getTransporter = async () => {
         pass: process.env.GMAIL_APP_PASSWORD,
       },
     });
-    console.log('📧 Email: Using Gmail SMTP →', process.env.GMAIL_USER);
   } else {
     if (!cachedTestAccount) {
       cachedTestAccount = await nodemailer.createTestAccount();
-      console.log('📧 Email: Using Ethereal test account →', cachedTestAccount.user);
     }
     cachedTransporter = nodemailer.createTransport({
       host: 'smtp.ethereal.email',
@@ -55,15 +29,11 @@ const getTransporter = async () => {
         pass: cachedTestAccount.pass,
       },
     });
-    console.log('📧 Email: Ethereal SMTP ready (demo mode — no real delivery)');
   }
 
   return cachedTransporter;
 };
 
-// ──────────────────────────────────────────────────────────────────────────────
-// SHARED: Rich HTML email header/footer wrapper
-// ──────────────────────────────────────────────────────────────────────────────
 const emailWrapper = (bodyContent) => `
 <!DOCTYPE html>
 <html lang="en">
@@ -75,19 +45,16 @@ const emailWrapper = (bodyContent) => `
 <body style="margin:0;padding:0;background:#f0f4f8;font-family:'Segoe UI',Arial,sans-serif;">
   <div style="max-width:640px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.10);">
     
-    <!-- Header -->
     <div style="background:linear-gradient(135deg,#1a3a6b 0%,#3f72af 60%,#6c9fd8 100%);padding:36px 32px;text-align:center;">
       <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:50%;width:64px;height:64px;line-height:64px;font-size:28px;margin-bottom:12px;">🌿</div>
       <h1 style="color:#fff;margin:0;font-size:26px;font-weight:700;letter-spacing:0.5px;">SoulSpace</h1>
       <p style="color:rgba(255,255,255,0.80);margin:6px 0 0;font-size:13px;letter-spacing:1px;text-transform:uppercase;">Mental Health Platform · Learnathon 5.0</p>
     </div>
 
-    <!-- Body -->
     <div style="padding:36px 32px;">
       ${bodyContent}
     </div>
 
-    <!-- Footer -->
     <div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 32px;text-align:center;">
       <p style="margin:0 0 6px;color:#64748b;font-size:12px;">
         This is an automated message sent by the <strong>SoulSpace AI Appointment Concierge</strong>.<br/>
@@ -103,9 +70,6 @@ const emailWrapper = (bodyContent) => `
 </html>
 `;
 
-// ──────────────────────────────────────────────────────────────────────────────
-// SHARED: Appointment detail table rows
-// ──────────────────────────────────────────────────────────────────────────────
 const detailRow = (label, value, shade = false) => `
   <tr style="background:${shade ? '#f8fafc' : '#fff'};">
     <td style="padding:13px 16px;font-weight:600;color:#3f72af;font-size:13px;width:42%;border-bottom:1px solid #e2e8f0;">${label}</td>
@@ -113,15 +77,6 @@ const detailRow = (label, value, shade = false) => `
   </tr>
 `;
 
-// ──────────────────────────────────────────────────────────────────────────────
-// 1. SEND APPOINTMENT REQUEST EMAIL → Clinic / Doctor
-//    Also CC's the platform monitor email (ashiafhalak786@gmail.com)
-// ──────────────────────────────────────────────────────────────────────────────
-
-/**
- * Sends a formatted appointment request report email to the doctor/clinic.
- * @returns { messageId, previewUrl }
- */
 export const sendAppointmentRequestEmail = async ({
   toClinicEmail,
   clinicName,
@@ -162,7 +117,6 @@ export const sendAppointmentRequestEmail = async ({
   ` : '';
 
   const body = `
-    <!-- Badge -->
     <div style="display:inline-block;background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;font-size:11px;font-weight:700;padding:5px 14px;border-radius:20px;letter-spacing:0.5px;margin-bottom:24px;text-transform:uppercase;">
       📋 New Appointment Request
     </div>
@@ -177,7 +131,6 @@ export const sendAppointmentRequestEmail = async ({
       <strong>${patientEmail}</strong> to confirm or suggest an alternative slot.
     </p>
 
-    <!-- Section: Patient Details -->
     <p style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.8px;margin:0 0 8px;">Patient Details</p>
     <table style="width:100%;border-collapse:collapse;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;margin-bottom:20px;">
       ${detailRow('Full Name', patientName, true)}
@@ -185,7 +138,6 @@ export const sendAppointmentRequestEmail = async ({
       ${detailRow('Phone', patientPhone || 'Not provided', true)}
     </table>
 
-    <!-- Section: Appointment Details -->
     <p style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.8px;margin:0 0 8px;">Appointment Details</p>
     <table style="width:100%;border-collapse:collapse;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;margin-bottom:20px;">
       ${detailRow('Specialist', `${doctorName}`, true)}
@@ -200,29 +152,20 @@ export const sendAppointmentRequestEmail = async ({
     ${concernsBlock}
     ${assessmentBlock}
 
-    <!-- Action prompt -->
     <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:18px 20px;margin:24px 0;">
       <p style="margin:0;color:#92400e;font-size:13px;line-height:1.6;">
         ⚡ <strong>Action Required:</strong> Please reply to the patient at 
         <a href="mailto:${patientEmail}" style="color:#d97706;font-weight:600;">${patientEmail}</a>
-        to confirm or reschedule. The patient will be notified via SoulSpace.
+        to confirm or reschedule.
       </p>
     </div>
 
-    <!-- Privacy notice -->
     <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:14px 18px;">
       <p style="margin:0;color:#991b1b;font-size:12px;line-height:1.5;">
         🔒 <strong>Privacy Notice:</strong> All assessment data shared in this report is with the patient's 
-        explicit consent and is protected under applicable health data privacy regulations (DPDP Act 2023, India).
+        explicit consent and is protected under applicable health data privacy regulations.
       </p>
     </div>
-
-    <!-- TODO: PDF Report placeholder note -->
-    <!--
-      TODO: Attach 'SoulSpace_Appointment_Report_${ref}.pdf' generated by
-      pdfkit/puppeteer with full patient profile, assessment charts, and
-      AI recommendation reasoning. Currently held for next sprint.
-    -->
   `;
 
   const mailOptions = {
@@ -230,7 +173,7 @@ export const sendAppointmentRequestEmail = async ({
     to: toClinicEmail || 'ashiafhalak786@gmail.com',
     cc: toClinicEmail && toClinicEmail.toLowerCase() !== 'ashiafhalak786@gmail.com' ? 'ashiafhalak786@gmail.com' : undefined,
     replyTo: patientEmail,
-    subject: `📋 Appointment Request [${ref}] — ${patientName} with ${doctorName} · ${date} ${time}`,
+    subject: `Appointment Request [${ref}] — ${patientName} with ${doctorName} · ${date} ${time}`,
     html: emailWrapper(body),
     text: `[SoulSpace Appointment Request]
 Ref: ${ref}
@@ -243,18 +186,10 @@ Action: Reply to ${patientEmail} to confirm.`,
   };
 
   const info = await transporter.sendMail(mailOptions);
-
-
   const previewUrl = nodemailer.getTestMessageUrl(info) || null;
-  if (previewUrl) console.log('📧 Clinic Email preview:', previewUrl);
 
   return { messageId: info.messageId, previewUrl, bookingRef: ref };
 };
-
-// ──────────────────────────────────────────────────────────────────────────────
-// 2. SEND CONFIRMATION EMAIL → Patient
-//    Also CC's the platform monitor email
-// ──────────────────────────────────────────────────────────────────────────────
 
 export const sendConfirmationToPatient = async ({
   patientEmail,
@@ -278,7 +213,6 @@ export const sendConfirmationToPatient = async ({
   const sentAt = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'long', timeStyle: 'short' });
 
   const body = `
-    <!-- Badge -->
     <div style="text-align:center;margin-bottom:28px;">
       <div style="display:inline-flex;align-items:center;justify-content:center;width:72px;height:72px;background:#dcfce7;border-radius:50%;font-size:32px;margin-bottom:12px;">✅</div>
       <h2 style="margin:0;color:#166534;font-size:22px;font-weight:700;">Appointment Request Sent!</h2>
@@ -289,10 +223,9 @@ export const sendConfirmationToPatient = async ({
       Dear <strong>${patientName}</strong>,<br/><br/>
       Your appointment request has been successfully submitted to 
       <strong>${clinicName}</strong>. The clinic will contact you within <strong>24–48 hours</strong> 
-      to confirm your slot. You can also track the status on your SoulSpace dashboard.
+      to confirm your slot.
     </p>
 
-    <!-- Booking Summary Card -->
     <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;overflow:hidden;margin:0 0 24px;">
       <div style="background:#3f72af;padding:14px 20px;">
         <p style="margin:0;color:#fff;font-size:13px;font-weight:700;letter-spacing:0.5px;">📋 BOOKING SUMMARY</p>
@@ -309,17 +242,15 @@ export const sendConfirmationToPatient = async ({
       </table>
     </div>
 
-    <!-- What's next -->
     <div style="background:#f0f9ff;border-left:4px solid #3f72af;border-radius:0 10px 10px 0;padding:18px 20px;margin-bottom:24px;">
       <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:#0369a1;text-transform:uppercase;letter-spacing:0.5px;">📌 What happens next?</p>
       <ol style="margin:0;padding-left:18px;color:#334155;font-size:13px;line-height:1.8;">
         <li>The clinic reviews your request and contacts you at <strong>${patientEmail}</strong></li>
         <li>Once confirmed, your appointment will appear in your SoulSpace profile</li>
-        <li>You'll receive a final confirmation email with session details</li>
+        <li>You will receive a confirmation email with session details</li>
       </ol>
     </div>
 
-    <!-- Reference note -->
     <p style="color:#94a3b8;font-size:12px;text-align:center;margin:0;">
       Keep your booking reference <strong style="color:#3f72af;">${ref}</strong> handy.<br/>
       Sent at ${sentAt} IST
@@ -329,7 +260,7 @@ export const sendConfirmationToPatient = async ({
   const info = await transporter.sendMail({
     from: fromAddress,
     to: patientEmail,
-    subject: `✅ Appointment Request Sent — ${doctorName} · ${date} [${ref}]`,
+    subject: `Appointment Request Sent — ${doctorName} · ${date} [${ref}]`,
     html: emailWrapper(body),
     text: `[SoulSpace] Your appointment request has been sent.
 Booking Ref: ${ref}
@@ -339,7 +270,5 @@ The clinic will contact you within 24-48 hours.`,
   });
 
   const previewUrl = nodemailer.getTestMessageUrl(info) || null;
-  if (previewUrl) console.log('📧 Patient Email preview:', previewUrl);
-
   return { messageId: info.messageId, previewUrl };
 };

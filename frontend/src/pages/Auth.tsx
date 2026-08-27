@@ -10,12 +10,10 @@ const Auth: React.FC = () => {
   const navigate = useNavigate();
   const { login, register, demoLogin, isLoggedIn } = useAuth();
 
-  // If already logged in, redirect away
   useEffect(() => {
     if (isLoggedIn) navigate('/', { replace: true });
   }, [isLoggedIn, navigate]);
 
-  // Determine initial mode from URL
   const getModeFromPath = (): AuthMode => {
     if (location.pathname === '/register' || location.search.includes('mode=signup')) return 'signup';
     if (location.pathname === '/forgot-password' || location.search.includes('mode=forgot')) return 'forgot';
@@ -24,13 +22,11 @@ const Auth: React.FC = () => {
 
   const [mode, setMode] = useState<AuthMode>(getModeFromPath());
 
-  // Login form
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showLoginPassword, setShowLoginPassword] = useState(false);
 
-  // Signup form
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
@@ -42,11 +38,9 @@ const Auth: React.FC = () => {
   const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Forgot password form
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSubmitted, setForgotSubmitted] = useState(false);
 
-  // Status
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -69,7 +63,6 @@ const Auth: React.FC = () => {
     else if (newMode === 'forgot') navigate('/forgot-password');
   };
 
-  // ── Login Submit ─────────────────────────────────────────────────────────────
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -86,7 +79,6 @@ const Auth: React.FC = () => {
     }
   };
 
-  // ── Demo Login ────────────────────────────────────────────────────────────────
   const handleDemoLogin = async () => {
     setErrorMessage(null);
     setIsLoading(true);
@@ -101,7 +93,6 @@ const Auth: React.FC = () => {
     }
   };
 
-  // ── Signup Submit ─────────────────────────────────────────────────────────────
   const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -149,7 +140,6 @@ const Auth: React.FC = () => {
     }
   };
 
-  // ── Forgot Password ───────────────────────────────────────────────────────────
   const handleForgotSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!forgotEmail.trim()) {
@@ -166,17 +156,14 @@ const Auth: React.FC = () => {
 
   return (
     <div className="auth-split-page">
-      {/* Toast Notification */}
-      {toastMessage && (
+      {toastMessage ? (
         <div className="auth-toast-success">
           <span>✨</span>
           <span>{toastMessage}</span>
         </div>
-      )}
+      ) : null}
 
       <div className="auth-split-wrapper">
-
-        {/* LEFT SIDE: ARTWORK */}
         <div className="auth-side-showcase">
           <div className="auth-showcase-bg-img" style={{ backgroundImage: `url('/auth_side_art.jpg')` }}></div>
           <div className="auth-showcase-overlay"></div>
@@ -196,40 +183,36 @@ const Auth: React.FC = () => {
           </div>
         </div>
 
-        {/* RIGHT SIDE: FORM */}
         <div className="auth-side-form">
           <div className="auth-form-container">
-
-            {/* Header */}
             <div className="auth-form-header">
-              {mode === 'login' && (
+              {mode === 'login' ? (
                 <>
                   <h1 className="auth-header-title">Welcome Back</h1>
                   <p className="auth-header-sub">
                     Sign in to access your assessments, AI therapy chats, and mood records.
                   </p>
                 </>
-              )}
-              {mode === 'signup' && (
+              ) : null}
+              {mode === 'signup' ? (
                 <>
                   <h1 className="auth-header-title">Create an Account</h1>
                   <p className="auth-header-sub">
                     Start your confidential journey to mental wellness with SoulSpace today.
                   </p>
                 </>
-              )}
-              {mode === 'forgot' && (
+              ) : null}
+              {mode === 'forgot' ? (
                 <>
                   <h1 className="auth-header-title">Reset Password</h1>
                   <p className="auth-header-sub">
                     Enter your registered email address to receive a secure recovery link.
                   </p>
                 </>
-              )}
+              ) : null}
             </div>
 
-            {/* Error Banner */}
-            {errorMessage && (
+            {errorMessage ? (
               <div className="auth-error-banner">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#ef4444" strokeWidth="2">
                   <circle cx="12" cy="12" r="10"></circle>
@@ -238,12 +221,10 @@ const Auth: React.FC = () => {
                 </svg>
                 <span>{errorMessage}</span>
               </div>
-            )}
+            ) : null}
 
-            {/* ── LOGIN FORM ─────────────────────────────────────────── */}
-            {mode === 'login' && (
+            {mode === 'login' ? (
               <form onSubmit={handleLoginSubmit} className="auth-main-form">
-
                 <div className="form-group-block">
                   <label className="form-label-text">Email Address</label>
                   <div className="input-with-icon-wrapper">
@@ -313,12 +294,10 @@ const Auth: React.FC = () => {
                   ) : 'Sign In →'}
                 </button>
 
-                {/* Divider */}
                 <div className="auth-divider-line">
                   <span>or explore instantly</span>
                 </div>
 
-                {/* Demo Login */}
                 <button
                   type="button"
                   className="btn-demo-quick-login"
@@ -339,12 +318,10 @@ const Auth: React.FC = () => {
                   </button>
                 </div>
               </form>
-            )}
+            ) : null}
 
-            {/* ── SIGNUP FORM ────────────────────────────────────────── */}
-            {mode === 'signup' && (
+            {mode === 'signup' ? (
               <form onSubmit={handleSignupSubmit} className="auth-main-form">
-
                 <div className="form-two-col-row">
                   <div className="form-group-block">
                     <label className="form-label-text">First Name <span className="req-star">*</span></label>
@@ -487,10 +464,9 @@ const Auth: React.FC = () => {
                   </button>
                 </div>
               </form>
-            )}
+            ) : null}
 
-            {/* ── FORGOT PASSWORD FORM ───────────────────────────────── */}
-            {mode === 'forgot' && (
+            {mode === 'forgot' ? (
               <div className="auth-forgot-wrapper">
                 {forgotSubmitted ? (
                   <div className="forgot-success-card">
@@ -535,8 +511,7 @@ const Auth: React.FC = () => {
                   </form>
                 )}
               </div>
-            )}
-
+            ) : null}
           </div>
         </div>
       </div>

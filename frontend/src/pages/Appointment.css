@@ -681,10 +681,45 @@
 }
 
 .schedule-card-title {
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 700;
   color: #1e293b;
-  margin-bottom: 24px;
+  margin: 0;
+}
+
+.booking-section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.section-title-with-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.selection-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+  border-radius: 20px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.section-hint {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
 }
 
 .mode-toggle-group {
@@ -717,74 +752,266 @@
   color: #64748b;
 }
 
+.mode-btn:hover {
+  border-color: #93c5fd;
+  background: #f1f5f9;
+}
+
 .mode-btn.active {
   background: #eff6ff;
   border-color: #3f72af;
   color: #1e3a8a;
+  box-shadow: 0 4px 12px rgba(63, 114, 175, 0.12);
 }
 
-.slots-heading {
-  font-size: 15px;
+/* Date Options Chips */
+.date-options-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.date-chip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  position: relative;
+  font-family: inherit;
+  width: 100%;
+}
+
+.date-chip:hover {
+  border-color: #3f72af;
+  background: #f8fafc;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(63, 114, 175, 0.08);
+}
+
+.date-chip.active {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-color: #2563eb;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.15);
+  transform: translateY(-1px);
+}
+
+.date-chip-icon {
+  font-size: 20px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.date-chip.active .date-chip-icon {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.date-chip-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.date-chip-label {
+  font-size: 14px;
   font-weight: 700;
   color: #1e293b;
-  margin-bottom: 12px;
 }
 
-.dates-row {
+.date-chip.active .date-chip-label {
+  color: #1e40af;
+}
+
+.date-chip-sub {
+  font-size: 11.5px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.date-chip.active .date-chip-sub {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+.date-chip-check {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: #ffffff;
   display: flex;
-  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* Time Shifts Wrapper (Morning & Evening) */
+.time-shifts-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   margin-bottom: 28px;
 }
 
-.date-btn {
-  padding: 10px 20px;
-  border-radius: 10px;
-  border: 1px solid #cbd5e1;
+.time-shift-card {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px 18px;
+  transition: all 0.2s;
+}
+
+.time-shift-card:hover {
+  border-color: #cbd5e1;
   background: #ffffff;
+}
+
+.time-shift-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed #e2e8f0;
+}
+
+.time-shift-head-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.shift-emoji {
+  font-size: 20px;
+  width: 36px;
+  height: 36px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.shift-name {
+  display: block;
   font-size: 14px;
-  font-weight: 600;
-  color: #475569;
-  cursor: pointer;
-  font-family: inherit;
-  transition: all 0.2s ease;
+  font-weight: 700;
+  color: #1e293b;
 }
 
-.date-btn.active {
-  background: #3f72af;
-  border-color: #3f72af;
-  color: #ffffff;
+.shift-timing {
+  display: block;
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
 }
 
-.time-slots-grid {
+.shift-pill {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+.morning-pill {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.evening-pill {
+  background: #f3e8ff;
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+}
+
+.time-slot-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 36px;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
 }
 
-.time-slot-btn {
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid #cbd5e1;
+.time-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 14px;
   background: #ffffff;
-  font-size: 14px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 12px;
+  font-size: 13.5px;
   font-weight: 600;
   color: #334155;
   cursor: pointer;
-  text-align: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: inherit;
-  transition: all 0.2s ease;
+  width: 100%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
-.time-slot-btn:hover {
+.time-chip:hover {
   border-color: #3f72af;
   background: #eff6ff;
+  color: #1e40af;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(63, 114, 175, 0.12);
 }
 
-.time-slot-btn.active {
-  background: #3f72af;
-  border-color: #3f72af;
+.time-chip.active {
+  background: linear-gradient(135deg, #112d4e 0%, #1e40af 100%);
+  border-color: #112d4e;
   color: #ffffff;
+  box-shadow: 0 4px 14px rgba(17, 45, 78, 0.25);
+  transform: translateY(-1px);
+  font-weight: 700;
+}
+
+.time-chip-clock {
+  font-size: 14px;
+  opacity: 0.75;
+}
+
+.time-chip.active .time-chip-clock {
+  opacity: 1;
+  filter: brightness(1.3);
+}
+
+.time-chip-check {
+  font-size: 11px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 2px;
 }
 
 .schedule-actions-row {

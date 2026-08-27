@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
 
-// ── Message Sub-Schema ─────────────────────────────────────────────────────────
 const messageSchema = new mongoose.Schema(
   {
     role: {
@@ -26,7 +25,6 @@ const messageSchema = new mongoose.Schema(
   { _id: false }
 );
 
-// ── Chat Session Schema ────────────────────────────────────────────────────────
 const chatSchema = new mongoose.Schema(
   {
     userId: {
@@ -58,7 +56,6 @@ const chatSchema = new mongoose.Schema(
   }
 );
 
-// Auto-update lastMessageAt on save (Mongoose 8+ compatible — no next())
 chatSchema.pre('save', function () {
   if (this.messages.length > 0) {
     this.lastMessageAt = this.messages[this.messages.length - 1].timestamp;

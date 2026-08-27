@@ -4,7 +4,6 @@ import { useAuth } from '../context/AuthContext';
 import { API_URL as API } from '../config';
 import './AiSupport.css';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
 interface Message {
   role: 'user' | 'assistant';
   content: string;
@@ -23,24 +22,21 @@ interface ChatSession {
   isCrisisSession?: boolean;
 }
 
-// ── Emotion config ────────────────────────────────────────────────────────────
 const EMOTION_META: Record<string, { emoji: string; label: string; color: string }> = {
-  anxious:  { emoji: '😰', label: 'Anxious',  color: '#f59e0b' },
-  sad:      { emoji: '😔', label: 'Sad',       color: '#6366f1' },
-  angry:    { emoji: '😤', label: 'Frustrated',color: '#ef4444' },
-  stressed: { emoji: '😓', label: 'Stressed',  color: '#f97316' },
-  happy:    { emoji: '😊', label: 'Positive',  color: '#10b981' },
-  hopeful:  { emoji: '🌱', label: 'Hopeful',   color: '#3f72af' },
-  crisis:   { emoji: '🆘', label: 'Crisis',    color: '#dc2626' },
-  neutral:  { emoji: '💬', label: 'Neutral',   color: '#64748b' },
+  anxious: { emoji: '😰', label: 'Anxious', color: '#f59e0b' },
+  sad: { emoji: '😔', label: 'Sad', color: '#6366f1' },
+  angry: { emoji: '😤', label: 'Frustrated', color: '#ef4444' },
+  stressed: { emoji: '😓', label: 'Stressed', color: '#f97316' },
+  happy: { emoji: '😊', label: 'Positive', color: '#10b981' },
+  hopeful: { emoji: '🌱', label: 'Hopeful', color: '#3f72af' },
+  crisis: { emoji: '🆘', label: 'Crisis', color: '#dc2626' },
+  neutral: { emoji: '💬', label: 'Neutral', color: '#64748b' },
 };
 
-// ── Markdown & Link renderer ──────────────────────────────────────────────────
 const renderContent = (text: string) => {
   return text.split('\n').map((line, i) => {
     if (!line.trim()) return <div key={i} className="msg-spacer" />;
-    
-    // Check if line contains WhatsApp link
+
     if (line.includes('wa.me/')) {
       const parts = line.split(/(wa\.me\/\d+)/g);
       return (
@@ -75,7 +71,6 @@ const renderContent = (text: string) => {
   });
 };
 
-// ── Date formatter ────────────────────────────────────────────────────────────
 const fmtDate = (d: string) => {
   const date = new Date(d);
   const now = new Date();
@@ -87,7 +82,6 @@ const fmtDate = (d: string) => {
   return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
 };
 
-// ── Clinical Crisis Detection Helper ──────────────────────────────────────────
 const isCrisisText = (text: string): boolean => {
   if (!text) return false;
   const lower = text.toLowerCase().trim();
@@ -116,8 +110,6 @@ const isCrisisText = (text: string): boolean => {
   return patterns.some((r) => r.test(lower));
 };
 
-// ── Breathing Widget Decision Helper ──────────────────────────────────────────
-// Strictly triggers ONLY when the user is experiencing anxiety, fear, or heavy breathing
 const shouldShowBreathingWidget = (
   currentIdx: number,
   allMessages: Message[],
@@ -128,7 +120,6 @@ const shouldShowBreathingWidget = (
   const currentMsg = allMessages[currentIdx];
   if (currentMsg.role !== 'assistant') return false;
 
-  // Find the immediate preceding user message that prompted this response
   let userText = '';
   let userEmotion = '';
   for (let i = currentIdx - 1; i >= 0; i--) {
@@ -141,7 +132,6 @@ const shouldShowBreathingWidget = (
 
   if (!userText && !userEmotion) return false;
 
-  // CRITICAL SAFETY RULE: Never display breathing widget during a crisis
   if (
     userEmotion === 'crisis' ||
     currentMsg.emotion === 'crisis' ||
@@ -151,23 +141,19 @@ const shouldShowBreathingWidget = (
     return false;
   }
 
-  // 1. User's emotion detected as anxious or fear
   if (userEmotion === 'anxious' || userEmotion === 'fear') return true;
 
-  // 2. Anxiety & Panic patterns in user's prompt
   const anxietyPatterns = [
     /\b(anxi(ety|ous)|panic|panicking|panicky|panic\s*attack|overwhelm(ed)?|freak(ing)?\s*out)\b/i,
     /\b(nervous\s*breakdown|heart\s*(racing|pounding)|chest\s*pounding|palpitations)\b/i,
     /\b(ghabrahat|ghabra|bechaini)\b/i,
   ];
 
-  // 3. Fear & Terror patterns in user's prompt
   const fearPatterns = [
     /\b(fear|scared|terrifi(ed|ying)|terror|afraid|fright(ened)?|petrified)\b/i,
     /\b(shak(ing|y)|trembl(ing)?|darr?|dar\s*lag)\b/i,
   ];
 
-  // 4. Heavy Breathing / Respiratory distress patterns in user's prompt
   const breathingDistressPatterns = [
     /\b(heavy\s*breath(ing)?|breath(ing)?\s*heavily|breath(ing)?\s*hard)\b/i,
     /\b(can'?t\s*breath(e)?|cannot\s*breath(e)?|hard\s*to\s*breath(e)?|trouble\s*breath(ing)?)\b/i,
@@ -177,7 +163,6 @@ const shouldShowBreathingWidget = (
     /\b(saans?\s*nahi|dam\s*ghut)\b/i,
   ];
 
-  // 5. Explicit user request for breathing exercise
   const explicitBreathingPatterns = [
     /\b(box\s*breath(ing)?|4-4-4|help\s*me\s*breath(e)?|breath(e)?\s*with\s*me|breathing\s*exercise)\b/i,
   ];
@@ -190,12 +175,10 @@ const shouldShowBreathingWidget = (
   );
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
 const AiSupport: React.FC = () => {
   const navigate = useNavigate();
   const { user, token, isLoggedIn } = useAuth();
 
-  // ── State ──────────────────────────────────────────────────────────────────
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -206,7 +189,6 @@ const AiSupport: React.FC = () => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Breathing tool
   const [isBreathingActive, setIsBreathingActive] = useState(false);
   const [isBreathingDismissed, setIsBreathingDismissed] = useState(false);
   const [breathingPhase, setBreathingPhase] = useState<'Inhale' | 'Hold' | 'Exhale' | 'Rest'>('Inhale');
@@ -224,26 +206,21 @@ const AiSupport: React.FC = () => {
     setIsTyping(false);
   };
 
-
-  // ── Auth headers ───────────────────────────────────────────────────────────
   const authHeaders = useCallback(() => ({
     'Content-Type': 'application/json',
     Authorization: `Bearer ${token}`,
   }), [token]);
 
-  // ── Scroll to bottom ───────────────────────────────────────────────────────
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  // ── Load sessions on login ─────────────────────────────────────────────────
   useEffect(() => {
     if (isLoggedIn && token) {
       fetchSessions();
     }
   }, [isLoggedIn, token]);
 
-  // ── Breathing timer ────────────────────────────────────────────────────────
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
     if (isBreathingActive) {
@@ -266,7 +243,6 @@ const AiSupport: React.FC = () => {
     return () => { if (interval) clearInterval(interval); };
   }, [isBreathingActive]);
 
-  // ── API: fetch sessions ────────────────────────────────────────────────────
   const fetchSessions = async () => {
     try {
       const res = await fetch(`${API}/chat/sessions`, { headers: authHeaders() });
@@ -277,7 +253,6 @@ const AiSupport: React.FC = () => {
     }
   };
 
-  // ── API: load session messages ─────────────────────────────────────────────
   const loadSession = async (sessionId: string) => {
     setLoadingSession(true);
     setActiveSessionId(sessionId);
@@ -294,7 +269,6 @@ const AiSupport: React.FC = () => {
     }
   };
 
-  // ── API: create new session ────────────────────────────────────────────────
   const createNewSession = async () => {
     try {
       const res = await fetch(`${API}/chat/session`, {
@@ -315,7 +289,6 @@ const AiSupport: React.FC = () => {
     return null;
   };
 
-  // ── API: delete session ────────────────────────────────────────────────────
   const deleteSession = async (sessionId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setDeletingId(sessionId);
@@ -339,17 +312,14 @@ const AiSupport: React.FC = () => {
     }
   };
 
-  // ── Send message ───────────────────────────────────────────────────────────
   const handleSend = async (textOverride?: string) => {
     if (!isLoggedIn) { navigate('/login'); return; }
 
     const text = (textOverride || inputText).trim();
     if (!text || isTyping) return;
 
-    // Ensure we have an active session
     let sessionId = activeSessionId;
     if (!sessionId) {
-      // Auto-create session
       try {
         const res = await fetch(`${API}/chat/session`, {
           method: 'POST',
@@ -367,7 +337,6 @@ const AiSupport: React.FC = () => {
       }
     }
 
-    // Optimistic user message with instant crisis detection
     const userIsCrisis = isCrisisText(text);
     const userMsg: Message = {
       role: 'user',
@@ -413,7 +382,6 @@ const AiSupport: React.FC = () => {
           }];
         });
 
-        // Update session title & crisis flag in sidebar
         setSessions((prev) => prev.map((s) =>
           s._id === sessionId
             ? {
@@ -430,7 +398,6 @@ const AiSupport: React.FC = () => {
       }
     } catch (e: any) {
       if (e?.name === 'AbortError') {
-        // User stopped generation manually
         return;
       }
       setErrorMsg('Connection error. Please check backend is running.');
@@ -451,19 +418,13 @@ const AiSupport: React.FC = () => {
     }
   };
 
-
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="ai-page-root">
-      {/* ════════════════════════════════════════════════════════════════════
-          HISTORY SIDEBAR
-          ════════════════════════════════════════════════════════════════════ */}
       <aside className={`ai-history-sidebar ${isSidebarOpen ? 'open' : 'collapsed'}`}>
-        {/* Sidebar Header */}
         <div className="sidebar-header">
           <div className="sidebar-logo">
             <img src="/cloud_box.png" alt="Chats" className="sidebar-logo-img" />
-            {isSidebarOpen && <span className="sidebar-logo-text">Chats</span>}
+            {isSidebarOpen ? <span className="sidebar-logo-text">Chats</span> : null}
           </div>
           <button className="sidebar-collapse-btn" onClick={() => setIsSidebarOpen(!isSidebarOpen)} title="Toggle sidebar">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
@@ -474,9 +435,8 @@ const AiSupport: React.FC = () => {
           </button>
         </div>
 
-        {isSidebarOpen && (
+        {isSidebarOpen ? (
           <>
-            {/* New Chat Button */}
             <button className="new-chat-btn" onClick={isLoggedIn ? createNewSession : () => navigate('/login')}>
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -485,7 +445,6 @@ const AiSupport: React.FC = () => {
               New Chat
             </button>
 
-            {/* Session List */}
             <div className="sidebar-session-list">
               {!isLoggedIn ? (
                 <div className="sidebar-login-prompt">
@@ -532,14 +491,10 @@ const AiSupport: React.FC = () => {
               )}
             </div>
           </>
-        )}
+        ) : null}
       </aside>
 
-      {/* ════════════════════════════════════════════════════════════════════
-          MAIN CHAT AREA
-          ════════════════════════════════════════════════════════════════════ */}
       <main className="ai-chat-main">
-        {/* Top bar */}
         <div className="chat-topbar">
           <div className="chat-topbar-left">
             <div className="chat-agent-avatar">
@@ -553,29 +508,23 @@ const AiSupport: React.FC = () => {
             </div>
           </div>
           <div className="chat-topbar-right">
-            {!isLoggedIn && (
+            {!isLoggedIn ? (
               <button className="topbar-login-btn" onClick={() => navigate('/login')}>
                 🔒 Login to Chat
               </button>
-            )}
+            ) : null}
           </div>
-
-
         </div>
 
-
-        {/* Error message */}
-        {errorMsg && (
+        {errorMsg ? (
           <div className="chat-error-bar">
             ⚠️ {errorMsg}
             <button onClick={() => setErrorMsg(null)}>✕</button>
           </div>
-        )}
+        ) : null}
 
-        {/* Messages Area */}
         <div className="chat-messages-area">
-          {/* Welcome screen when no session */}
-          {!activeSessionId && !loadingSession && (
+          {!activeSessionId && !loadingSession ? (
             <div className="chat-welcome-screen">
               <img src="/support_welcome.jpg" alt="Mindfulness" className="welcome-avatar-img" />
               <h2 className="welcome-title">
@@ -595,8 +544,7 @@ const AiSupport: React.FC = () => {
                   🔒 Login to Get Started
                 </button>
               )}
-              {/* Quick prompts on welcome screen */}
-              {isLoggedIn && (
+              {isLoggedIn ? (
                 <div className="welcome-prompts">
                   <p className="welcome-prompts-label">Try asking:</p>
                   <div className="welcome-prompt-pills">
@@ -615,55 +563,52 @@ const AiSupport: React.FC = () => {
                     ))}
                   </div>
                 </div>
-              )}
+              ) : null}
             </div>
-          )}
+          ) : null}
 
-          {/* Loading skeleton */}
-          {loadingSession && (
+          {loadingSession ? (
             <div className="chat-loading-state">
               <div className="loading-spinner-large"></div>
               <p>Loading conversation…</p>
             </div>
-          )}
+          ) : null}
 
-          {/* Messages */}
-          {!loadingSession && messages.map((msg, idx) => {
+          {!loadingSession ? messages.map((msg, idx) => {
             const isCrisisMsg = msg.emotion === 'crisis';
             const emotionMeta = EMOTION_META[msg.emotion] || EMOTION_META.neutral;
             return (
               <div key={idx} className={`msg-row ${msg.role} ${isCrisisMsg ? 'crisis-row' : ''}`}>
-                {msg.role === 'assistant' && (
+                {msg.role === 'assistant' ? (
                   <div className={`msg-avatar ai-avatar ${isCrisisMsg ? 'crisis-avatar' : ''}`}>
                     {isCrisisMsg ? '🆘' : <img src="/logo_main.png" alt="SoulSpace" className="msg-avatar-logo-img" />}
                   </div>
-                )}
+                ) : null}
                 <div className="msg-bubble-wrap">
                   <div className={`msg-bubble ${msg.role} ${isCrisisMsg ? 'crisis-msg-bubble' : ''}`}>
-                    {isCrisisMsg && (
+                    {isCrisisMsg ? (
                       <div className="crisis-msg-header-pill">
                         <span className="pulse-dot-red"></span>
                         <span>🚨 EMERGENCY SAFETY INTERVENTION</span>
                       </div>
-                    )}
+                    ) : null}
                     <div className="msg-text">{renderContent(msg.content)}</div>
                   </div>
                   <div className="msg-meta">
                     <span className="msg-time">
                       {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
-                    {msg.role === 'assistant' && msg.emotion !== 'neutral' && (
+                    {msg.role === 'assistant' && msg.emotion !== 'neutral' ? (
                       <span
                         className={`msg-emotion-tag ${isCrisisMsg ? 'crisis-badge-dark' : ''}`}
                         style={{ '--emotion-color': emotionMeta.color } as React.CSSProperties}
                       >
                         {emotionMeta.emoji} {emotionMeta.label}
                       </span>
-                    )}
+                    ) : null}
                   </div>
 
-                  {/* Inline breathing widget - strictly triggers when user experiences anxiety, fear, or heavy breathing */}
-                  {shouldShowBreathingWidget(idx, messages, isBreathingDismissed) && (
+                  {shouldShowBreathingWidget(idx, messages, isBreathingDismissed) ? (
                     <div className="inline-breathing-card">
                       <div className="breathing-card-header">
                         <span>🧘 4-4-4 Box Breathing</span>
@@ -683,28 +628,27 @@ const AiSupport: React.FC = () => {
                           </button>
                         </div>
                       </div>
-                      {isBreathingActive && (
+                      {isBreathingActive ? (
                         <div className="breathing-display">
                           <div className={`breath-circle ${breathingPhase.toLowerCase()}`}>
                             <span className="breath-phase">{breathingPhase}</span>
                             <span className="breath-count">{breathingCount}s</span>
                           </div>
                         </div>
-                      )}
+                      ) : null}
                     </div>
-                  )}
+                  ) : null}
                 </div>
-                {msg.role === 'user' && (
+                {msg.role === 'user' ? (
                   <div className="msg-avatar user-avatar">
                     {user ? `${user.firstName[0]}${user.lastName[0]}` : 'U'}
                   </div>
-                )}
+                ) : null}
               </div>
             );
-          })}
+          }) : null}
 
-          {/* Typing indicator */}
-          {isTyping && (
+          {isTyping ? (
             <div className="msg-row assistant">
               <div className="msg-avatar ai-avatar">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" strokeWidth="2">
@@ -719,13 +663,12 @@ const AiSupport: React.FC = () => {
                 </div>
               </div>
             </div>
-          )}
+          ) : null}
 
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Quick Prompts (when session active) */}
-        {activeSessionId && !isTyping && (
+        {activeSessionId && !isTyping ? (
           <div className="quick-prompts-row">
             {[
               { icon: '⚡', text: 'Anxious & overthinking', full: "I'm feeling very anxious and can't stop overthinking." },
@@ -738,9 +681,8 @@ const AiSupport: React.FC = () => {
               </button>
             ))}
           </div>
-        )}
+        ) : null}
 
-        {/* Input Bar */}
         <div className="chat-input-section">
           {!isLoggedIn ? (
             <div className="input-locked-bar" onClick={() => navigate('/login')}>
@@ -791,7 +733,6 @@ const AiSupport: React.FC = () => {
                       </svg>
                     </button>
                   )}
-
                 </div>
               </div>
               <p className="input-disclaimer">

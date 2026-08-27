@@ -1,10 +1,5 @@
 import Chat from '../models/Chat.js';
 
-// ──────────────────────────────────────────────────────────────────────────────
-// CONSTANTS
-// ──────────────────────────────────────────────────────────────────────────────
-
-// Verified Indian Mental Health Crisis Helplines & Online Support
 const CRISIS_HELPLINES = `
 🆘 **Immediate 24/7 Crisis & Online Support**
 • **Tele-MANAS** (Govt 24/7 Toll-Free): 📞 14416 / 1800-891-4416
@@ -16,7 +11,6 @@ const CRISIS_HELPLINES = `
 Please reach out — confidential online & phone support is available right now. 💙
 `.trim();
 
-// Comprehensive Crisis trigger keywords & patterns (English + Hinglish)
 const CRISIS_KEYWORDS = [
   'suicide', 'suicidal', 'kill myself', 'killing myself', 'end my life', 'ending my life',
   'want to die', 'wanna die', 'wanna di', 'going to die', 'gonna die', 'will die', 'feel like dying',
@@ -31,38 +25,30 @@ const CRISIS_KEYWORDS = [
   'end it all', 'end everything', 'not worth living', 'goodbye world', 'final goodbye', 'my last words',
   'give up on life', 'tired of living', "don't want to live", 'dont want to live', 'do not want to live', 'hate being alive',
   'done with life', 'done living', 'done with this world',
-  // Hinglish / Hindi triggers
   'marne ka man', 'mar jaunga', 'mar jaungi', 'jaan de dunga', 'jaan dedu', 'khudkushi',
   'aatmahatya', 'mar jana chahta', 'mar jana chahti', 'jeena nahi chahta', 'jeena nahi chahti', 'khud ko khatam'
 ];
 
-// Emotion detection patterns
 const EMOTION_PATTERNS = {
-  crisis:   CRISIS_KEYWORDS,
-  anxious:  [
+  crisis: CRISIS_KEYWORDS,
+  anxious: [
     'anxious', 'anxiety', 'panic', 'overthink', 'worry', 'nervous', 'scared', 'fear', 'dread', 'frightened',
     'heavy breathing', 'shortness of breath', 'hyperventilating', 'cannot breathe', "can't breathe", 'cant breathe',
     'trouble breathing', 'suffocating', 'heart racing', 'palpitations', 'shaking', 'terrified', 'ghabrahat'
   ],
-  sad:      ['sad', 'crying', 'cry', 'depressed', 'depression', 'lonely', 'alone', 'miss', 'grief', 'heartbroken', 'hopeless'],
-  angry:    ['angry', 'anger', 'frustrated', 'furious', 'rage', 'hate', 'annoyed', 'irritated'],
+  sad: ['sad', 'crying', 'cry', 'depressed', 'depression', 'lonely', 'alone', 'miss', 'grief', 'heartbroken', 'hopeless'],
+  angry: ['angry', 'anger', 'frustrated', 'furious', 'rage', 'hate', 'annoyed', 'irritated'],
   stressed: ['stressed', 'stress', 'overwhelmed', 'burnout', 'exhausted', 'tired', 'pressure', 'deadline', 'burdened'],
-  happy:    ['happy', 'great', 'good', 'better', 'amazing', 'excited', 'joy', 'grateful', 'thankful', 'relieved'],
-  hopeful:  ['hopeful', 'hope', 'improving', 'progress', 'trying', 'effort'],
+  happy: ['happy', 'great', 'good', 'better', 'amazing', 'excited', 'joy', 'grateful', 'thankful', 'relieved'],
+  hopeful: ['hopeful', 'hope', 'improving', 'progress', 'trying', 'effort'],
 };
-
-// ──────────────────────────────────────────────────────────────────────────────
-// HELPERS
-// ──────────────────────────────────────────────────────────────────────────────
 
 const isCrisis = (text) => {
   if (!text || typeof text !== 'string') return false;
   const lower = text.toLowerCase().trim();
 
-  // 1. Direct keyword/phrase match
   if (CRISIS_KEYWORDS.some((kw) => lower.includes(kw))) return true;
 
-  // 2. Comprehensive clinical crisis regex patterns
   const crisisPatterns = [
     /\b(suicid\w*|khudkushi|aatmahatya)\b/i,
     /\b(kill|killing|hurt|harm|cut|slit|hang|hanging|poison|drown|shoot|strangle|asphyxiate)\s*(my\s*own\s*self|myself|my\s*wrist|my\s*throat|my\s*life)\b/i,
@@ -101,53 +87,35 @@ const generateTitle = (firstMessage) => {
   return words.length > 60 ? words.slice(0, 60) + '…' : words || 'New Conversation';
 };
 
-// ──────────────────────────────────────────────────────────────────────────────
-// SYSTEM PROMPT (Dynamic Model Spec with Clinical & Ethical Guardrails)
-// ──────────────────────────────────────────────────────────────────────────────
-
-const buildSystemPrompt = (crisisDetected, modelChoice = 'gemma-2b') => `
+const buildSystemPrompt = (crisisDetected) => `
 You are SoulSpace AI, an intelligent, empathetic mental health counselor powered by the fine-tuned Gemma-2B clinical mental health model developed by the 3BrainCell team.
 
 CONVERSATIONAL & CLINICAL INSTRUCTIONS:
-- Directly and specifically address what the user just asked or shared (e.g., if they mention overthinking, address the racing thoughts; if they mention relationship stress, address that specific dilemma; if they ask for help calming down, give specific calming steps).
-- NEVER use repetitive canned phrases or generic boilerplate openings like "Thank you for sharing your thoughts with me..." or "Tell me what's on your heart". Speak freshly, dynamically, and contextually on every turn.
-- Validate their specific emotion with genuine human warmth, then provide a practical calming perspective or non-medical grounding exercise (like 4-4-4 box breathing, stepping back from the thought loop, drinking cold water, light stretching, or going for a brief walk).
+- Directly and specifically address what the user just asked or shared.
+- Speak freshly, dynamically, and contextually on every turn without generic openings.
+- Validate their specific emotion with warmth, then provide a practical calming perspective or non-medical grounding exercise.
 - Keep every response concise, natural, and conversational: MAXIMUM 2 to 3 sentences total.
 
 STRICT SAFETY & ETHICAL GUARDRAILS:
-1. NO SEXUAL / EXPLICIT / INAPPROPRIATE CONTENT:
-   - If user asks sexual or inappropriate questions, gently redirect: "I am here as a safe space for your emotional and mental wellbeing. Let's focus on how you are feeling inside today."
-2. NO ABUSIVE / TOXIC TALK:
-   - Always respond with warmth, respect, patience, and dignity.
-3. STRICTLY NO MEDICINE / DRUG PRESCRIPTIONS:
-   - NEVER suggest or prescribe medications, chemical drugs, or pill dosages under any circumstances.
-   - If asked about medications, advise consulting a licensed psychiatrist or doctor.
-4. CALMING GROUNDING SUGGESTIONS (Non-Medical Only):
-   - Suggest meditation, slow breathing, physical movement, sensory grounding, or speaking with a therapist on SoulSpace.
+1. NO SEXUAL / EXPLICIT / INAPPROPRIATE CONTENT
+2. NO ABUSIVE / TOXIC TALK
+3. STRICTLY NO MEDICINE / DRUG PRESCRIPTIONS
+4. CALMING GROUNDING SUGGESTIONS (Non-Medical Only)
 
 LANGUAGE:
 - Understand Hindi, Hinglish, and English completely.
-- CRITICAL LANGUAGE RULE: Always output your reply in CLEAR, NATURAL ENGLISH ONLY. Never output in Tamil, Marathi, Odia, Bengali, or any other regional language.
+- Always output your reply in CLEAR, NATURAL ENGLISH ONLY.
 
 ${crisisDetected ? `
-🚨 CRITICAL CRISIS SAFETY PROTOCOL:
-- The user expressed thoughts of dying, suicide, or acute severe distress.
-- You are in EMERGENCY CRISIS INTERVENTION MODE.
-- Strictly DO NOT suggest breathing exercises, relaxation techniques, or casual grounding.
-- Respond in 2 compassionate, caring sentences:
-  1. Acknowledge their deep pain with unconditional empathy and reassure them that their life matters and they are not alone.
-  2. Urge them to stay safe and connect immediately with crisis support professionals.
+CRITICAL CRISIS SAFETY PROTOCOL:
+- User expressed thoughts of suicide or acute severe distress.
+- You are in emergency support mode.
+- Respond in 2 compassionate sentences acknowledging pain and encouraging immediate connection with crisis professionals.
 ` : ''}
 `.trim();
 
-// ──────────────────────────────────────────────────────────────────────────────
-// HELPERS & INFERENCE PIPELINE
-// ──────────────────────────────────────────────────────────────────────────────
-
-/** Exponential backoff delay */
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-/** Call the fine-tuned AI model with up to `maxRetries` retries on 429/503 overload */
 const callAIWithRetry = async (apiMessages, retries = 3) => {
   let lastErr;
   const modelToUse = process.env.AI_MODEL || 'gemini-3-flash-preview';
@@ -169,11 +137,9 @@ const callAIWithRetry = async (apiMessages, retries = 3) => {
         }),
       });
 
-      // Rate-limit / overload — wait and retry
       if (response.status === 429 || response.status === 503) {
         const retryAfter = parseInt(response.headers.get('retry-after') || '0', 10);
         const backoff = retryAfter * 1000 || attempt * 1500;
-        console.warn(`AI API overloaded (${response.status}). Retry ${attempt}/${retries} in ${backoff}ms…`);
         await sleep(backoff);
         lastErr = new Error(`AI API overloaded (${response.status})`);
         continue;
@@ -181,7 +147,6 @@ const callAIWithRetry = async (apiMessages, retries = 3) => {
 
       if (!response.ok) {
         const errText = await response.text();
-        console.error(`AI API Error ${response.status}:`, errText);
         throw new Error(`AI API returned ${response.status}: ${errText}`);
       }
 
@@ -189,27 +154,19 @@ const callAIWithRetry = async (apiMessages, retries = 3) => {
       const content = data.choices?.[0]?.message?.content?.trim();
       if (!content) throw new Error('Model returned empty response');
       return content;
-
     } catch (err) {
       lastErr = err;
       if (attempt < retries) {
-        const backoff = attempt * 2000;
-        console.warn(`AI call error (attempt ${attempt}): ${err.message}. Retrying in ${backoff}ms…`);
-        await sleep(backoff);
+        await sleep(attempt * 2000);
       }
     }
   }
   throw lastErr;
 };
 
-// ──────────────────────────────────────────────────────────────────────────────
-// AI INFERENCE GATEWAY
-// ──────────────────────────────────────────────────────────────────────────────
-
 const callAI = async (messages, crisisDetected) => {
   const systemPrompt = buildSystemPrompt(crisisDetected);
 
-  // Build messages: system + last 20 conversation turns
   const apiMessages = [
     { role: 'system', content: systemPrompt },
     ...messages.slice(-20).map((m) => ({
@@ -218,11 +175,9 @@ const callAI = async (messages, crisisDetected) => {
     })),
   ];
 
-  // ── 1. Local Fine-Tuned Gemma 2B Inference Server (Port 11434) ─────────────
   if (process.env.USE_LOCAL_LLM === 'true') {
     const localUrl = process.env.LOCAL_LLM_URL || 'http://localhost:11434/api/chat';
     try {
-      console.log(`🧠 [SoulSpace] Connecting with Local Fine-Tuned Gemma 2B at ${localUrl}...`);
       const response = await fetch(localUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -237,34 +192,21 @@ const callAI = async (messages, crisisDetected) => {
         const data = await response.json();
         const content = data.message?.content?.trim();
         if (content) {
-          console.log('✅ [SoulSpace] Local Gemma 2B response generated successfully.');
           return content;
         }
       }
-      console.warn(`Local LLM returned status ${response.status}. Attempting cloud fallback...`);
     } catch (localErr) {
-      console.warn(`⚠️ Could not reach Local LLM (${localErr.message}). Attempting cloud fallback...`);
+      // fallback to cloud
     }
   }
 
-  // ── 2. Cloud AI Fallback ───────────────────────────────────────────────────
   if (process.env.AI_API_URL) {
     return callAIWithRetry(apiMessages);
   }
 
-  throw new Error('No AI inference service available. Please ensure the local LLM server is running on port 11434 or configure AI_API_URL in .env.');
+  throw new Error('No AI inference service available');
 };
 
-
-
-
-// ──────────────────────────────────────────────────────────────────────────────
-// CONTROLLERS
-// ──────────────────────────────────────────────────────────────────────────────
-
-// @route  POST /api/chat/session
-// @desc   Create a new chat session for the logged-in user
-// @access Private
 export const createSession = async (req, res) => {
   try {
     const session = await Chat.create({
@@ -284,24 +226,20 @@ export const createSession = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error('createSession Error:', err.message);
+    console.error('createSession error:', err.message);
     return res.status(500).json({ success: false, message: 'Could not create session.' });
   }
 };
 
-// @route  POST /api/chat/session/:sessionId/message
-// @desc   Send a message — get AI reply back
-// @access Private
 export const sendMessage = async (req, res) => {
   try {
     const { sessionId } = req.params;
-    const { content, modelChoice = 'gemma-2b' } = req.body;
+    const { content } = req.body;
 
     if (!content?.trim()) {
       return res.status(400).json({ success: false, message: 'Message content is required.' });
     }
 
-    // Verify session belongs to this user
     const session = await Chat.findOne({ _id: sessionId, userId: req.userId });
     if (!session) {
       return res.status(404).json({ success: false, message: 'Chat session not found.' });
@@ -311,7 +249,6 @@ export const sendMessage = async (req, res) => {
     const crisisDetected = isCrisis(userContent);
     const userEmotion = detectEmotion(userContent);
 
-    // Append user message
     session.messages.push({
       role: 'user',
       content: userContent,
@@ -319,40 +256,34 @@ export const sendMessage = async (req, res) => {
       timestamp: new Date(),
     });
 
-    // Auto-set title from first user message
     if (session.messages.length === 1 || session.title === 'New Conversation') {
       session.title = generateTitle(userContent);
     }
 
     if (crisisDetected) session.isCrisisSession = true;
 
-    // Call AI with retry
     let aiContent;
     try {
       aiContent = await callAI(session.messages, crisisDetected);
     } catch (aiErr) {
-      console.error('AI call failed after retries:', aiErr.message);
-      aiContent = "I'm having a bit of trouble connecting right now — please try sending your message again in a moment. If you're in distress, you can call **iCall at 9152987821** anytime (free, 24/7). 💙";
+      console.error('AI call failed:', aiErr.message);
+      aiContent = "I'm having a bit of trouble connecting right now — please try sending your message again in a moment. If you're in distress, you can reach iCall at 9152987821 anytime.";
     }
 
-    // Clinical crisis handling & safety override
     if (crisisDetected) {
       session.isCrisisSession = true;
-      // Prevent LLM hallucinating casual relaxation exercises during acute suicide crisis
       const containsInappropriateAdvice = /breathing exercise|muscle relaxation|box breathing|focusing on your senses|grounding exercise|take a walk|drink cold water/i.test(aiContent);
       if (containsInappropriateAdvice || !aiContent || aiContent.length < 20) {
-        aiContent = "I hear how much pain you are experiencing right now, and I want you to know that you are not alone and your life deeply matters. Please stay safe — immediate confidential support is available right now. You don't have to carry this alone.";
+        aiContent = "I hear how much pain you are experiencing right now, and I want you to know that you are not alone and your life deeply matters. Please stay safe — immediate confidential support is available right now.";
       }
       if (!aiContent.includes('Tele-MANAS') && !aiContent.includes('iCall')) {
         aiContent = aiContent + '\n\n' + CRISIS_HELPLINES;
       }
     } else {
-      // 1. Detect colloquial / gaming expressions where "died" is hyperbole or gaming
       const casualGamingSlang = /\b(i\s*died\s*(again)?\s*(bro|bruh|man|dude)?|died\s*in\s*(the\s*)?(game|match|round|boss|val|bgmi|cod)|(lol|lmao|haha|lmfao)\s*i\s*died|died\s*laughing)\b/i;
       if (casualGamingSlang.test(userContent)) {
         aiContent = "Haha wait, did you die in a video game or was today just that exhausting bro? 🎮 If you're gaming, which game was it? If life is just wearing you down, I'm right here with you!";
       } else {
-        // 2. Strip repetitive, hallucinated 2B boilerplate templates like "takes a lot of courage to reach out..."
         const isHallucinatedBoilerplate = /takes a lot of courage to reach out|acknowledge the strength it took for you to share/i.test(aiContent);
         if (isHallucinatedBoilerplate) {
           aiContent = aiContent
@@ -369,7 +300,6 @@ export const sendMessage = async (req, res) => {
 
     const aiEmotion = crisisDetected ? 'crisis' : detectEmotion(aiContent);
 
-    // Append AI message
     session.messages.push({
       role: 'assistant',
       content: aiContent,
@@ -379,7 +309,6 @@ export const sendMessage = async (req, res) => {
 
     await session.save();
 
-    // Return just the AI message + crisis flag
     const lastAiMsg = session.messages[session.messages.length - 1];
     return res.status(200).json({
       success: true,
@@ -394,14 +323,11 @@ export const sendMessage = async (req, res) => {
       sessionTitle: session.title,
     });
   } catch (err) {
-    console.error('sendMessage Error:', err.message);
-    return res.status(500).json({ success: false, message: 'Server error processing your message.' });
+    console.error('sendMessage error:', err.message);
+    return res.status(500).json({ success: false, message: 'Server error processing message.' });
   }
 };
 
-// @route  GET /api/chat/sessions
-// @desc   Get all chat sessions for the logged-in user (list view)
-// @access Private
 export const getSessions = async (req, res) => {
   try {
     const sessions = await Chat.find({ userId: req.userId })
@@ -423,14 +349,11 @@ export const getSessions = async (req, res) => {
 
     return res.status(200).json({ success: true, sessions: sessionList });
   } catch (err) {
-    console.error('getSessions Error:', err.message);
+    console.error('getSessions error:', err.message);
     return res.status(500).json({ success: false, message: 'Could not fetch sessions.' });
   }
 };
 
-// @route  GET /api/chat/session/:sessionId
-// @desc   Get full message history for a session
-// @access Private
 export const getSession = async (req, res) => {
   try {
     const session = await Chat.findOne({
@@ -444,14 +367,11 @@ export const getSession = async (req, res) => {
 
     return res.status(200).json({ success: true, session });
   } catch (err) {
-    console.error('getSession Error:', err.message);
+    console.error('getSession error:', err.message);
     return res.status(500).json({ success: false, message: 'Could not fetch session.' });
   }
 };
 
-// @route  DELETE /api/chat/session/:sessionId
-// @desc   Delete a chat session
-// @access Private
 export const deleteSession = async (req, res) => {
   try {
     const result = await Chat.findOneAndDelete({
@@ -465,7 +385,7 @@ export const deleteSession = async (req, res) => {
 
     return res.status(200).json({ success: true, message: 'Chat session deleted.' });
   } catch (err) {
-    console.error('deleteSession Error:', err.message);
+    console.error('deleteSession error:', err.message);
     return res.status(500).json({ success: false, message: 'Could not delete session.' });
   }
 };

@@ -19,7 +19,6 @@ interface Resource {
 }
 
 const resourcesData: Resource[] = [
-  // Videos
   {
     id: 1,
     title: 'Breathing Exercises for Anxiety',
@@ -50,8 +49,6 @@ const resourcesData: Resource[] = [
     image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
     youtubeId: 'hnpQrMqDoqE'
   },
-  
-  // Calming Audio
   {
     id: 4,
     title: 'Calming Nature Sounds',
@@ -85,9 +82,6 @@ const resourcesData: Resource[] = [
     audioUrl: '/resource_audio/confidenceboost_audio.mp3',
     link: 'https://cdn.pixabay.com/download/audio/2022/10/14/audio_9939f792cb.mp3?filename=relaxing-music-119247.mp3'
   },
-
-  // Awareness Posters
-
   {
     id: 7,
     title: 'Break the Stigma',
@@ -106,8 +100,6 @@ const resourcesData: Resource[] = [
     actionText: 'View Guide',
     image: 'https://images.unsplash.com/photo-1528716321680-815a8cdb8cbe?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
   },
-
-  // Self-Help Guides
   {
     id: 9,
     title: 'CBT Journaling Guide',
@@ -126,8 +118,6 @@ const resourcesData: Resource[] = [
     actionText: 'Download Guide',
     image: 'https://images.unsplash.com/photo-1506784951206-8d6bd6f5195c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
   },
-
-  // Books
   {
     id: 11,
     title: 'The Body Keeps the Score Summary',
@@ -146,8 +136,6 @@ const resourcesData: Resource[] = [
     actionText: 'Read Summary',
     image: 'https://images.unsplash.com/photo-1589829085413-56de8ae18c73?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
   },
-
-  // Quotes
   {
     id: 13,
     title: 'Daily Mindful Inspiration',
@@ -159,15 +147,22 @@ const resourcesData: Resource[] = [
   }
 ];
 
+const types = ['All Types', 'Videos', 'Calming Audio', 'Awareness', 'Self-Help Guides', 'Books', 'Quotes'];
+const moods = ['All Moods', 'Angry', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sad', 'Surprise'];
+
 const ResourcesPage: React.FC = () => {
   const [selectedType, setSelectedType] = useState<string>('All Types');
   const [selectedMood, setSelectedMood] = useState<string>('All Moods');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Audio state
   const [activeAudioId, setActiveAudioId] = useState<number | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const [hoveredVideoId, setHoveredVideoId] = useState<number | null>(null);
+  const [isSocialGuideOpen, setIsSocialGuideOpen] = useState<boolean>(false);
+  const [isBookModalOpen, setIsBookModalOpen] = useState<boolean>(false);
+  const [isAtomicHabitsModalOpen, setIsAtomicHabitsModalOpen] = useState<boolean>(false);
 
   const toggleAudio = (resource: Resource) => {
     const audioSrc = resource.audioUrl || resource.link;
@@ -187,29 +182,12 @@ const ResourcesPage: React.FC = () => {
     }
   };
 
-  // Video hover state
-  const [hoveredVideoId, setHoveredVideoId] = useState<number | null>(null);
-
-  // Social Anxiety Guide Modal state
-  const [isSocialGuideOpen, setIsSocialGuideOpen] = useState<boolean>(false);
-
-  // Book Summary Modal state
-  const [isBookModalOpen, setIsBookModalOpen] = useState<boolean>(false);
-
-  // Atomic Habits Modal state
-  const [isAtomicHabitsModalOpen, setIsAtomicHabitsModalOpen] = useState<boolean>(false);
-
-  const types = ['All Types', 'Videos', 'Calming Audio', 'Awareness', 'Self-Help Guides', 'Books', 'Quotes'];
-  const moods = ['All Moods', 'Angry', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sad', 'Surprise'];
-
   const filteredResources = useMemo(() => {
-    return resourcesData.filter(resource => {
+    return resourcesData.filter((resource) => {
       const matchesType = selectedType === 'All Types' || resource.type === selectedType;
-      
-      const matchesMood = selectedMood === 'All Moods' || 
-        resource.moods.some(m => m.toLowerCase() === selectedMood.toLowerCase());
-      
-      const matchesSearch = searchQuery.trim() === '' || 
+      const matchesMood = selectedMood === 'All Moods' ||
+        resource.moods.some((m) => m.toLowerCase() === selectedMood.toLowerCase());
+      const matchesSearch = searchQuery.trim() === '' ||
         resource.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         resource.description.toLowerCase().includes(searchQuery.toLowerCase());
 
@@ -223,25 +201,18 @@ const ResourcesPage: React.FC = () => {
     setSearchQuery('');
   };
 
-
   return (
     <div className="resources-page-container">
-      {/* Hidden Audio Player for Resource Tracks */}
       <audio
         ref={audioRef}
         onEnded={() => {
           setIsPlaying(false);
           setActiveAudioId(null);
         }}
-        onPause={() => {
-          setIsPlaying(false);
-        }}
-        onPlay={() => {
-          setIsPlaying(true);
-        }}
+        onPause={() => setIsPlaying(false)}
+        onPlay={() => setIsPlaying(true)}
       />
 
-      {/* Top Hero Banner */}
       <section className="resources-hero">
         <div className="container">
           <span className="resources-eyebrow">PREMIUM MENTAL HEALTH LIBRARY</span>
@@ -252,46 +223,41 @@ const ResourcesPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Interactive Filters Panel */}
       <section className="resources-filters-section">
         <div className="container">
           <div className="resources-filter-card">
             <div className="filters-grid">
-              
-              {/* Type Select */}
               <div className="filter-group">
                 <label className="filter-label">Resource Type:</label>
-                <select 
-                  className="filter-select" 
+                <select
+                  className="filter-select"
                   value={selectedType}
                   onChange={(e) => setSelectedType(e.target.value)}
                 >
-                  {types.map(t => (
+                  {types.map((t) => (
                     <option key={t} value={t}>{t}</option>
                   ))}
                 </select>
               </div>
 
-              {/* Mood Select */}
               <div className="filter-group">
                 <label className="filter-label">Mood Tag:</label>
-                <select 
-                  className="filter-select" 
+                <select
+                  className="filter-select"
                   value={selectedMood}
                   onChange={(e) => setSelectedMood(e.target.value)}
                 >
-                  {moods.map(m => (
+                  {moods.map((m) => (
                     <option key={m} value={m}>{m}</option>
                   ))}
                 </select>
               </div>
 
-              {/* Search Box & Clear Button in Same Line */}
               <div className="filter-group filter-search-row-group">
                 <label className="filter-label">Search & Actions:</label>
                 <div className="search-with-clear-row">
                   <div className="search-input-wrapper">
-                    <input 
+                    <input
                       type="text"
                       className="filter-search-input"
                       placeholder="Search resources..."
@@ -305,13 +271,11 @@ const ResourcesPage: React.FC = () => {
                   </button>
                 </div>
               </div>
-
             </div>
           </div>
         </div>
       </section>
 
-      {/* Grid of Results */}
       <section className="resources-results-section">
         <div className="container">
           {filteredResources.length > 0 ? (
@@ -323,26 +287,23 @@ const ResourcesPage: React.FC = () => {
                 const isThisVideoHovered = isVideo && resource.youtubeId && hoveredVideoId === resource.id;
 
                 return (
-                  <div 
+                  <div
                     className={`resource-item-card ${isVideo ? 'video-card' : ''} ${isAudio ? 'audio-card' : ''} ${isThisAudioPlaying ? 'card-audio-active' : ''} ${isThisVideoHovered ? 'card-video-hovered' : ''}`}
                     key={resource.id}
                     style={isAudio && resource.image ? { backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.85)), url('${resource.image}')` } : {}}
                   >
-                    
-                    {/* Media Type Header Badge */}
                     <div className="media-badge-row">
-                      {isVideo && (
+                      {isVideo ? (
                         <span className="media-type-tag video-tag">
                           <span className="tag-icon">▶</span> VIDEO
                         </span>
-                      )}
-                      {isAudio && (
+                      ) : null}
+                      {isAudio ? (
                         <div className="audio-header-flex">
                           <span className="media-type-tag audio-tag">
                             <span className="tag-icon">🎧</span> AUDIO
                           </span>
-                          {/* Animated Audio Visualizer */}
-                          <div className={`audio-visualizer-container ${isThisAudioPlaying ? 'playing' : ''}`} title={isThisAudioPlaying ? "Audio playing" : "Audio ready"}>
+                          <div className={`audio-visualizer-container ${isThisAudioPlaying ? 'playing' : ''}`} title={isThisAudioPlaying ? 'Audio playing' : 'Audio ready'}>
                             <span className="visualizer-bar bar-1"></span>
                             <span className="visualizer-bar bar-2"></span>
                             <span className="visualizer-bar bar-3"></span>
@@ -350,18 +311,17 @@ const ResourcesPage: React.FC = () => {
                             <span className="visualizer-bar bar-5"></span>
                           </div>
                         </div>
-                      )}
-                      {!isVideo && !isAudio && (
+                      ) : null}
+                      {!isVideo && !isAudio ? (
                         <span className="media-type-tag general-tag">
                           {resource.type.toUpperCase()}
                         </span>
-                      )}
+                      ) : null}
                     </div>
 
-                    {/* Card Content Area */}
                     <div className="resource-card-body">
-                      {isVideo && (
-                        <div 
+                      {isVideo ? (
+                        <div
                           className="video-preview-thumb"
                           onMouseEnter={() => resource.youtubeId && setHoveredVideoId(resource.id)}
                           onMouseLeave={() => resource.youtubeId && setHoveredVideoId(null)}
@@ -376,30 +336,26 @@ const ResourcesPage: React.FC = () => {
                             />
                           ) : (
                             <>
-                              {resource.image && <img src={resource.image} alt={resource.title} />}
+                              {resource.image ? <img src={resource.image} alt={resource.title} /> : null}
                               <div className="video-play-overlay">
                                 <span className="play-button-triangle">▶</span>
                               </div>
                             </>
                           )}
                         </div>
-                      )}
+                      ) : null}
 
                       <h3 className="resource-item-title">{resource.title}</h3>
                       <p className="resource-item-description">{resource.description}</p>
                     </div>
 
-                    {/* Footer Row (Tags & Action Link) */}
                     <div className="resource-card-footer">
                       <div className="mood-tag-pills">
-                        {resource.moods.map((mood) => {
-                          const lowerMood = mood.toLowerCase();
-                          return (
-                            <span key={mood} className={`mood-pill ${lowerMood}`}>
-                              {mood.toUpperCase()}
-                            </span>
-                          );
-                        })}
+                        {resource.moods.map((mood) => (
+                          <span key={mood} className={`mood-pill ${mood.toLowerCase()}`}>
+                            {mood.toUpperCase()}
+                          </span>
+                        ))}
                       </div>
 
                       {isAudio ? (
@@ -420,10 +376,10 @@ const ResourcesPage: React.FC = () => {
                           )}
                         </button>
                       ) : isVideo && resource.youtubeId ? (
-                        <a 
-                          href={`https://www.youtube.com/watch?v=${resource.youtubeId}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
+                        <a
+                          href={`https://www.youtube.com/watch?v=${resource.youtubeId}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="resource-card-action-btn"
                         >
                           {resource.actionText} →
@@ -453,14 +409,11 @@ const ResourcesPage: React.FC = () => {
                           {resource.actionText} →
                         </button>
                       ) : (
-                        <a href={resource.link || "#"} className="resource-card-action-btn" onClick={(e) => { if (!resource.link) e.preventDefault(); }}>
+                        <a href={resource.link || '#'} className="resource-card-action-btn" onClick={(e) => { if (!resource.link) e.preventDefault(); }}>
                           {resource.actionText} →
                         </a>
                       )}
                     </div>
-
-
-
                   </div>
                 );
               })}
@@ -476,19 +429,16 @@ const ResourcesPage: React.FC = () => {
         </div>
       </section>
 
-      {/* 7-Day Social Anxiety Action Plan Modal */}
-      <SocialAnxietyGuideModal 
-        isOpen={isSocialGuideOpen} 
-        onClose={() => setIsSocialGuideOpen(false)} 
+      <SocialAnxietyGuideModal
+        isOpen={isSocialGuideOpen}
+        onClose={() => setIsSocialGuideOpen(false)}
       />
 
-      {/* Book Summary Reader Modal */}
       <BookSummaryModal
         isOpen={isBookModalOpen}
         onClose={() => setIsBookModalOpen(false)}
       />
 
-      {/* Atomic Habits & Mental Wellness Modal */}
       <AtomicHabitsModal
         isOpen={isAtomicHabitsModalOpen}
         onClose={() => setIsAtomicHabitsModalOpen(false)}

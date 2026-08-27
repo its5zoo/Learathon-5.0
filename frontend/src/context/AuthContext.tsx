@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { API_URL } from '../config';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 export interface EmergencyContact {
   name: string;
   phone: string;
@@ -54,6 +53,7 @@ interface AuthContextType {
   demoLogin: () => Promise<{ success: boolean; message: string }>;
   updateProfile: (data: Partial<AuthUser>) => Promise<{ success: boolean; message: string; user?: AuthUser }>;
   refreshUser: () => Promise<void>;
+  recordAssessmentLocally: (item: AssessmentResultItem) => void;
   logout: () => void;
 }
 
@@ -65,16 +65,13 @@ interface RegisterData {
   password: string;
 }
 
-// ─── Context ───────────────────────────────────────────────────────────────────
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// ─── Provider ─────────────────────────────────────────────────────────────────
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // true until we check localStorage
+  const [isLoading, setIsLoading] = useState(true);
 
-  // On mount: restore session from localStorage
   useEffect(() => {
     const storedToken = localStorage.getItem('ss_token');
     const storedUser = localStorage.getItem('ss_user');
@@ -90,7 +87,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(false);
   }, []);
 
-  // ── Persist session ─────────────────────────────────────────────────────────
   const persistSession = (tk: string, usr: AuthUser) => {
     localStorage.setItem('ss_token', tk);
     localStorage.setItem('ss_user', JSON.stringify(usr));
@@ -98,7 +94,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(usr);
   };
 
-  // ── Login ───────────────────────────────────────────────────────────────────
   const login = async (email: string, password: string) => {
     try {
       const res = await fetch(`${API_URL}/auth/login`, {
@@ -117,7 +112,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // ── Register ────────────────────────────────────────────────────────────────
   const register = async (formData: RegisterData) => {
     try {
       const res = await fetch(`${API_URL}/auth/register`, {
@@ -136,7 +130,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // ── Demo Login ──────────────────────────────────────────────────────────────
   const demoLogin = async () => {
     try {
       const res = await fetch(`${API_URL}/auth/demo-login`, {
@@ -154,7 +147,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // ── Update Profile ─────────────────────────────────────────────────────────
   const updateProfile = async (profileData: Partial<AuthUser>) => {
     try {
       const res = await fetch(`${API_URL}/auth/profile`, {
@@ -176,7 +168,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // ── Refresh User Info ───────────────────────────────────────────────────────
   const refreshUser = async () => {
     const currentToken = token || localStorage.getItem('ss_token');
     if (!currentToken) return;
@@ -195,7 +186,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // ── Logout ──────────────────────────────────────────────────────────────────
+  const recordAssessmentLocally = (item: AssessmentResultItem) => {
+    try {
+      const existing = localStorage.getItem('ss_assessment_history');
+      const list: AssessmentResultItem[] = existing ? JSON.parse(existing) : [];
+      const updatedList = [item, ...list.filter(x => !(x.assessmentId === item.assessmentId && x.completedAt === item.completedAt))];
+      localStorage.setItem('ss_assessment_history', JSON.stringify(updatedList));
+    } catch {
+      // ignore local parsing errors
+    }
+
+    if (user) {
+      const currentResults = user.assessmentResults || [];
+      const updatedUser: AuthUser = {
+        ...user,
+        assessmentResults: [item, ...currentResults],
+      };
+      setUser(updatedUser);
+      localStorage.setItem('ss_user', JSON.stringify(updatedUser));
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('ss_token');
     localStorage.removeItem('ss_user');
@@ -208,13 +219,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       value={{
         user,
         token,
-        isLoggedIn: !!user,
+        isLoggedIn: Boolean(user),
         isLoading,
         login,
         register,
         demoLogin,
         updateProfile,
         refreshUser,
+        recordAssessmentLocally,
         logout,
       }}
     >
@@ -223,7 +235,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// ─── Hook ──────────────────────────────────────────────────────────────────────
 export const useAuth = (): AuthContextType => {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>');

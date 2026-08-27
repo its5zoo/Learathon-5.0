@@ -10,7 +10,6 @@ const Navbar: React.FC = () => {
   const { user, isLoggedIn, logout } = useAuth();
   const profileRef = useRef<HTMLDivElement>(null);
 
-  // Close profile dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
@@ -45,7 +44,6 @@ const Navbar: React.FC = () => {
     navigate('/');
   };
 
-  // Get initials for avatar
   const getInitials = () => {
     if (!user) return '?';
     return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
@@ -101,7 +99,6 @@ const Navbar: React.FC = () => {
 
           <div className="nav-actions">
             {isLoggedIn && user ? (
-              /* ── PROFILE DROPDOWN ─────────────────────────────── */
               <div className="nav-profile-wrapper" ref={profileRef}>
                 <button
                   className="nav-profile-btn"
@@ -125,9 +122,8 @@ const Navbar: React.FC = () => {
                   </svg>
                 </button>
 
-                {isProfileOpen && (
+                {isProfileOpen ? (
                   <div className="nav-profile-dropdown">
-                    {/* Profile Card Header */}
                     <div className="dropdown-profile-header" onClick={() => handleNavClick('/profile')} style={{ cursor: 'pointer' }}>
                       <div className="dropdown-avatar-lg">{getInitials()}</div>
                       <div>
@@ -138,22 +134,19 @@ const Navbar: React.FC = () => {
 
                     <div className="dropdown-divider"></div>
 
-                    {/* Menu Items */}
                     <button className="dropdown-item" onClick={() => handleNavClick('/profile')}>
                       <span>👤</span> My Profile &amp; Records
                     </button>
 
                     <div className="dropdown-divider"></div>
 
-                    {/* Logout */}
                     <button className="dropdown-item dropdown-logout" onClick={handleLogout}>
                       <span>🚪</span> Sign Out
                     </button>
                   </div>
-                )}
+                ) : null}
               </div>
             ) : (
-              /* ── LOGIN / REGISTER BUTTONS ─────────────────────── */
               <>
                 <button className="btn btn-outline" onClick={() => handleNavClick('/login')}>Login</button>
                 <button className="btn btn-primary" onClick={() => handleNavClick('/register')}>Register</button>

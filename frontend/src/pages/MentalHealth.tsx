@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, type AssessmentResultItem } from '../context/AuthContext';
 import { API_URL } from '../config';
 import './MentalHealth.css';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 interface QuestionOption {
   text: string;
   score: number;
@@ -30,7 +29,6 @@ interface Assessment {
   getResult: (score: number) => { level: string; color: string; advice: string; emoji: string };
 }
 
-// ─── Assessment Data (4 real clinical screeners) ──────────────────────────────
 const assessmentsData: Assessment[] = [
   {
     id: 'phq9',
@@ -510,14 +508,12 @@ const assessmentsData: Assessment[] = [
   },
 ];
 
-// ─── Component ────────────────────────────────────────────────────────────────
 type ModalStep = 'consent' | 'questions' | 'results';
 
 const MentalHealth: React.FC = () => {
   const navigate = useNavigate();
-  const { user, token, isLoggedIn } = useAuth();
+  const { user, token, isLoggedIn, recordAssessmentLocally, refreshUser } = useAuth();
 
-  // Prerequisite checks
   const [prereqs, setPrereqs] = useState({
     quietSpace: false,
     honestAnswers: false,
@@ -525,14 +521,32 @@ const MentalHealth: React.FC = () => {
   });
   const allPrereqsMet = isLoggedIn && prereqs.quietSpace && prereqs.honestAnswers && prereqs.crisisAwareness;
 
-  // Assessment modal state
+  const allAssessmentHistory: AssessmentResultItem[] = useMemo(() => {
+    const fromUser = user?.assessmentResults || [];
+    let fromLocal: AssessmentResultItem[] = [];
+    try {
+      const raw = localStorage.getItem('ss_assessment_history');
+      if (raw) fromLocal = JSON.parse(raw);
+    } catch {}
+
+    const map = new Map<string, AssessmentResultItem>();
+    [...fromUser, ...fromLocal].forEach((item) => {
+      const key = `${item.assessmentId || item.code}_${item.completedAt}`;
+      if (!map.has(key)) {
+        map.set(key, item);
+      }
+    });
+
+    return Array.from(map.values()).sort(
+      (a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()
+    );
+  }, [user?.assessmentResults]);
+
   const [activeAssessment, setActiveAssessment] = useState<Assessment | null>(null);
   const [modalStep, setModalStep] = useState<ModalStep>('consent');
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
-  const [isSaving, setIsSaving] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-  // Prevent background page scroll when modal is active
+
   useEffect(() => {
     if (activeAssessment) {
       document.body.style.overflow = 'hidden';
@@ -544,7 +558,6 @@ const MentalHealth: React.FC = () => {
     };
   }, [activeAssessment]);
 
-  // ── Handlers ──────────────────────────────────────────────────────────────
   const handleStartAssessment = (assessment: Assessment) => {
     if (!isLoggedIn) { navigate('/login'); return; }
     if (!allPrereqsMet) return;
@@ -552,7 +565,6 @@ const MentalHealth: React.FC = () => {
     setModalStep('consent');
     setCurrentQuestionIdx(0);
     setAnswers({});
-    setIsSaved(false);
   };
 
   const handleConsentAccept = () => setModalStep('questions');
@@ -564,47 +576,54 @@ const MentalHealth: React.FC = () => {
     if (currentQuestionIdx < activeAssessment.questions.length - 1) {
       setCurrentQuestionIdx(currentQuestionIdx + 1);
     } else {
+      const totalScore = Object.values(newAnswers).reduce((a, b) => a + b, 0);
+      const result = activeAssessment.getResult(totalScore);
+      const completedAt = new Date().toISOString();
+
+      const resultItem: AssessmentResultItem = {
+        assessmentId: activeAssessment.id,
+        code: activeAssessment.code,
+        title: activeAssessment.title,
+        score: totalScore,
+        severity: result.level,
+        completedAt,
+      };
+
+      recordAssessmentLocally(resultItem);
+
+      if (token) {
+        fetch(`${API_URL}/assessments/save`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify(resultItem),
+        })
+          .then(() => refreshUser())
+          .catch(() => {});
+      }
+
       setModalStep('results');
     }
   };
 
   const calculateTotalScore = () => Object.values(answers).reduce((a, b) => a + b, 0);
 
-  const handleSaveResult = async () => {
-    if (!activeAssessment || !token || isSaved) return;
-    setIsSaving(true);
-    const score = calculateTotalScore();
-    const result = activeAssessment.getResult(score);
-    try {
-      await fetch(`${API_URL}/assessments/save`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          assessmentId: activeAssessment.id,
-          code: activeAssessment.code,
-          title: activeAssessment.title,
-          score,
-          severity: result.level,
-          completedAt: new Date().toISOString(),
-        }),
-      });
-      setIsSaved(true);
-    } catch { /* silent fail — local state still records it */ }
-    setIsSaving(false);
-  };
-
   const handleCloseModal = () => {
     setActiveAssessment(null);
     setModalStep('consent');
     setCurrentQuestionIdx(0);
     setAnswers({});
-    setIsSaved(false);
   };
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  const getSeverityBadgeClass = (severity: string) => {
+    const s = severity?.toLowerCase() || '';
+    if (s.includes('minimal') || s.includes('none') || s.includes('high') || s.includes('average')) return 'badge-success';
+    if (s.includes('mild') || s.includes('subthreshold') || s.includes('below')) return 'badge-warning';
+    if (s.includes('moderate')) return 'badge-orange';
+    return 'badge-danger';
+  };
+
   return (
     <div className="mental-health-page">
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section className="mh-hero">
         <div className="mh-hero-bg-overlay"></div>
         <div className="container mh-hero-container">
@@ -770,57 +789,175 @@ const MentalHealth: React.FC = () => {
           </div>
 
           <div className="assessments-grid">
-            {assessmentsData.map((item) => (
-              <div
-                className={`assessment-card ${!isLoggedIn || !allPrereqsMet ? 'card-locked' : 'card-unlocked'}`}
-                key={item.id}
-                style={{ '--card-accent': item.color } as React.CSSProperties}
-              >
-                <div className="card-top-tags">
-                  <span className="tag-code" style={{ color: item.color, borderColor: item.color + '33', background: item.color + '11' }}>
-                    {item.code}
-                  </span>
-                  <span className="tag-badge">{item.badge}</span>
-                </div>
+            {assessmentsData.map((item) => {
+              const latestAttempt = allAssessmentHistory.find(
+                (h) => (h.assessmentId && h.assessmentId === item.id) || (h.code && h.code.toLowerCase() === item.code.toLowerCase())
+              );
+              const attemptsCount = allAssessmentHistory.filter(
+                (h) => (h.assessmentId && h.assessmentId === item.id) || (h.code && h.code.toLowerCase() === item.code.toLowerCase())
+              ).length;
 
-                <div className="card-icon-row">
-                  <span className="card-category">{item.category}</span>
-                </div>
-
-                <h3 className="card-title">{item.title}</h3>
-                <p className="card-description">{item.description}</p>
-
-                <div className="card-meta-row">
-                  <div className="meta-item">
-                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                    <span>{item.timeEstimate}</span>
-                  </div>
-                  <div className="meta-item">
-                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                      <polyline points="14 2 14 8 20 8"></polyline>
-                    </svg>
-                    <span>{item.questionsCount} Questions</span>
-                  </div>
-                </div>
-
-                <button
-                  className={`btn card-start-btn ${!isLoggedIn ? 'btn-login-unlock' : allPrereqsMet ? 'btn-accent' : 'btn-disabled'}`}
-                  style={allPrereqsMet ? { background: item.color } : {}}
-                  disabled={isLoggedIn && !allPrereqsMet}
-                  onClick={() => handleStartAssessment(item)}
+              return (
+                <div
+                  className={`assessment-card ${!isLoggedIn || !allPrereqsMet ? 'card-locked' : 'card-unlocked'}`}
+                  key={item.id}
+                  style={{ '--card-accent': item.color } as React.CSSProperties}
                 >
-                  {!isLoggedIn
-                    ? '🔒 Login to Unlock'
-                    : allPrereqsMet
-                    ? 'Begin Assessment →'
-                    : 'Complete Prerequisites First'}
+                  <div className="card-top-tags">
+                    <span className="tag-code" style={{ color: item.color, borderColor: item.color + '33', background: item.color + '11' }}>
+                      {item.code}
+                    </span>
+                    <span className="tag-badge">{item.badge}</span>
+                  </div>
+
+                  <div className="card-icon-row">
+                    <span className="card-category">{item.category}</span>
+                  </div>
+
+                  <h3 className="card-title">{item.title}</h3>
+                  <p className="card-description">{item.description}</p>
+
+                  {/* Previous Result / Completed Status Banner */}
+                  {latestAttempt && (
+                    <div className="card-tracked-status-banner" style={{ borderColor: item.color + '35', background: item.color + '0a' }}>
+                      <div className="card-tracked-top">
+                        <span className="card-tracked-badge" style={{ color: item.color }}>
+                          <span className="tracked-dot" style={{ background: item.color }}></span>
+                          Tracked: {latestAttempt.severity}
+                        </span>
+                        <span className="card-tracked-count">
+                          {attemptsCount > 1 ? `${attemptsCount} attempts` : '1st attempt'}
+                        </span>
+                      </div>
+                      <div className="card-tracked-score-row">
+                        <span className="card-tracked-score">
+                          Score: <strong>{latestAttempt.score}</strong>
+                        </span>
+                        <span className="card-tracked-date">
+                          {new Date(latestAttempt.completedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="card-meta-row">
+                    <div className="meta-item">
+                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                      </svg>
+                      <span>{item.timeEstimate}</span>
+                    </div>
+                    <div className="meta-item">
+                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                      </svg>
+                      <span>{item.questionsCount} Questions</span>
+                    </div>
+                  </div>
+
+                  <button
+                    className={`btn card-start-btn ${!isLoggedIn ? 'btn-login-unlock' : allPrereqsMet ? 'btn-accent' : 'btn-disabled'}`}
+                    style={allPrereqsMet ? { background: item.color } : {}}
+                    disabled={isLoggedIn && !allPrereqsMet}
+                    onClick={() => handleStartAssessment(item)}
+                  >
+                    {!isLoggedIn
+                      ? '🔒 Login to Unlock'
+                      : !allPrereqsMet
+                      ? 'Complete Prerequisites First'
+                      : latestAttempt
+                      ? 'Retake Assessment ↺'
+                      : 'Begin Assessment →'}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* ── Assessment History & Track Record Section ──────────────────────── */}
+          <div className="mh-history-container" id="assessment-history">
+            <div className="history-section-header">
+              <div className="history-header-titles">
+                <div className="history-badge-tag">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M12 8v4l3 3"></path>
+                    <circle cx="12" cy="12" r="9"></circle>
+                  </svg>
+                  <span>Persistent Track Record</span>
+                </div>
+                <h2 className="section-title" style={{ textAlign: 'left', margin: '8px 0 4px 0' }}>
+                  Your Assessment History
+                </h2>
+                <p className="section-subtitle-text">
+                  Every assessment you complete is automatically recorded and tracked over time.
+                </p>
+              </div>
+              <div className="history-header-actions">
+                <span className="history-count-pill">
+                  {allAssessmentHistory.length} {allAssessmentHistory.length === 1 ? 'Assessment' : 'Assessments'} Recorded
+                </span>
+                <button className="btn btn-outline btn-sm view-profile-btn" onClick={() => navigate('/profile')}>
+                  View in Profile Hub →
                 </button>
               </div>
-            ))}
+            </div>
+
+            {allAssessmentHistory.length === 0 ? (
+              <div className="empty-history-card">
+                <div className="empty-history-icon">📋</div>
+                <h3 className="empty-history-title">No Assessments Completed Yet</h3>
+                <p className="empty-history-text">
+                  Complete any clinical screener above — your score, severity classification, and date will be tracked here automatically.
+                </p>
+              </div>
+            ) : (
+              <div className="history-cards-list">
+                {allAssessmentHistory.map((entry, idx) => {
+                  const matchingData = assessmentsData.find(
+                    (a) => a.id === entry.assessmentId || a.code.toLowerCase() === entry.code?.toLowerCase()
+                  );
+                  const color = matchingData?.color || '#3b82f6';
+                  return (
+                    <div className="history-entry-card" key={idx} style={{ '--entry-accent': color } as React.CSSProperties}>
+                      <div className="history-entry-left">
+                        <span className="history-code-badge" style={{ color: color, background: color + '15', borderColor: color + '30' }}>
+                          {entry.code || 'TEST'}
+                        </span>
+                        <div className="history-entry-details">
+                          <h4 className="history-entry-title">{entry.title || matchingData?.title || 'Clinical Screener'}</h4>
+                          <div className="history-entry-meta">
+                            <span className="meta-date">
+                              📅 {new Date(entry.completedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="history-entry-right">
+                        <div className="history-score-box">
+                          <span className="score-num" style={{ color }}>{entry.score}</span>
+                          <span className="score-lbl">Score</span>
+                        </div>
+                        <span className={`history-severity-tag ${getSeverityBadgeClass(entry.severity)}`}>
+                          {entry.severity}
+                        </span>
+                        {matchingData && allPrereqsMet && (
+                          <button
+                            className="btn btn-sm history-retake-btn"
+                            style={{ background: color }}
+                            onClick={() => handleStartAssessment(matchingData)}
+                          >
+                            Retake ↺
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -945,31 +1082,25 @@ const MentalHealth: React.FC = () => {
                     <span className="result-meta-item">👤 {user?.firstName}</span>
                   </div>
 
-                  {isSaved && (
-                    <div className="saved-banner">
-                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#059669" strokeWidth="2.5">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                      </svg>
-                      Result saved to your profile!
-                    </div>
-                  )}
+                  <div className="saved-banner">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#059669" strokeWidth="2.5">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    <span>✓ Result automatically tracked & saved to your profile!</span>
+                  </div>
 
                   <div className="result-actions">
                     <button className="btn btn-outline" onClick={() => handleStartAssessment(activeAssessment)}>
-                      Retake
+                      Retake ↺
                     </button>
-                    {!isSaved && (
-                      <button
-                        className="btn save-btn"
-                        style={{ background: activeAssessment.color }}
-                        onClick={handleSaveResult}
-                        disabled={isSaving}
-                      >
-                        {isSaving ? 'Saving…' : '💾 Save to My Profile'}
-                      </button>
-                    )}
-                    <button className="btn btn-outline" onClick={handleCloseModal}>Done</button>
+                    <button
+                      className="btn save-btn"
+                      style={{ background: activeAssessment.color }}
+                      onClick={handleCloseModal}
+                    >
+                      Done & View History
+                    </button>
                   </div>
                 </div>
               );

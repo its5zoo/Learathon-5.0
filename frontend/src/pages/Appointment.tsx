@@ -6,7 +6,6 @@ import InvoiceModal from '../components/InvoiceModal/InvoiceModal';
 import './Appointment.css';
 
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 interface Doctor {
   id: string;
   name: string;
@@ -30,7 +29,6 @@ interface Doctor {
   email?: string;
 }
 
-// ─── Static Doctor Data (mirrors backend DOCTORS list) ────────────────────────
 const doctorsData: Doctor[] = [
   {
     id: 'doc-1',
@@ -45,7 +43,7 @@ const doctorsData: Doctor[] = [
     address: 'Plot 42, 100ft Road, Indiranagar, Bengaluru, Karnataka 560038',
     city: 'Bengaluru',
     modes: ['In-Clinic', 'Video Consultation'],
-    nextAvailable: 'Today, 4:30 PM',
+    nextAvailable: 'Today, 04:30 PM',
     fee: '₹1,200 / session',
     email: '25cse195.rakhilesh@giet.edu',
     image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
@@ -81,7 +79,7 @@ const doctorsData: Doctor[] = [
     address: 'E-14, South Extension Part 2, New Delhi, Delhi 110049',
     city: 'Delhi NCR',
     modes: ['In-Clinic', 'Video Consultation'],
-    nextAvailable: 'Today, 6:00 PM',
+    nextAvailable: 'Today, 05:30 PM',
     fee: '₹1,000 / session',
     email: '25cse169.grigariaannsunil@giet.edu',
     image: 'https://images.unsplash.com/photo-1594824813686-7a1a8c9b9173?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
@@ -99,7 +97,7 @@ const doctorsData: Doctor[] = [
     address: 'Road No. 36, Jubilee Hills, Hyderabad, Telangana 500033',
     city: 'Hyderabad',
     modes: ['In-Clinic', 'Video Consultation'],
-    nextAvailable: 'Tomorrow, 3:30 PM',
+    nextAvailable: 'Tomorrow, 04:30 PM',
     fee: '₹1,300 / session',
     email: 'dummy.doc4@soulspace.demo',
     image: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
@@ -117,7 +115,7 @@ const doctorsData: Doctor[] = [
     address: '34/B, Pali Mala Road, Bandra West, Mumbai, Maharashtra 400050',
     city: 'Mumbai',
     modes: ['In-Clinic', 'Video Consultation'],
-    nextAvailable: 'Today, 2:00 PM',
+    nextAvailable: 'Today, 10:30 AM',
     fee: '₹900 / session',
     email: 'dummy.doc5@soulspace.demo',
     image: 'https://images.unsplash.com/photo-1614608682850-e0d6ed316d47?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
@@ -135,16 +133,26 @@ const doctorsData: Doctor[] = [
     address: '12, Richmond Road, Near Clarence Public School, Bengaluru, Karnataka 560025',
     city: 'Bengaluru',
     modes: ['In-Clinic', 'Video Consultation'],
-    nextAvailable: 'Tomorrow, 9:00 AM',
+    nextAvailable: 'Tomorrow, 11:30 AM',
     fee: '₹1,800 / session',
     email: 'ashiafhalak786@gmail.com',
     image: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
   },
 ];
 
+const DATE_OPTIONS = [
+  { id: 'Today (Earliest)', label: 'Today', subtitle: 'Earliest Available', icon: '⚡' },
+  { id: 'Tomorrow', label: 'Tomorrow', subtitle: 'Next Day Slot', icon: '☀️' },
+  { id: 'This Weekend', label: 'This Weekend', subtitle: 'Sat / Sun', icon: '🏖️' },
+  { id: 'Next Monday', label: 'Next Monday', subtitle: 'Upcoming Week', icon: '🗓️' },
+];
 
-const timeSlots = [
-  '10:00 AM', '11:30 AM', '02:00 PM', '03:30 PM', '04:30 PM', '06:00 PM', '07:30 PM',
+const MORNING_TIME_SLOTS = [
+  '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM'
+];
+
+const EVENING_TIME_SLOTS = [
+  '04:00 PM', '04:30 PM', '05:00 PM', '05:30 PM'
 ];
 
 const AI_LOADING_STEPS = [
@@ -171,7 +179,6 @@ const loadRazorpayScript = (): Promise<boolean> => {
   });
 };
 
-// ─── Component ────────────────────────────────────────────────────────────────
 const Appointment: React.FC = () => {
   const navigate = useNavigate();
   const { isLoggedIn, user, token } = useAuth();
@@ -536,11 +543,8 @@ const Appointment: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // ─── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="appointment-page">
-
-      {/* ── Hero Header ──────────────────────────────────────────────────────── */}
       <section className="app-hero">
         <div className="container app-hero-container">
           <div className="app-hero-left">
@@ -590,7 +594,6 @@ const Appointment: React.FC = () => {
         </div>
       </section>
 
-      {/* ── 3-Step Stepper ───────────────────────────────────────────────────── */}
       {currentStep !== 'confirmed' && (
         <div className="container">
           <div className="booking-stepper">
@@ -617,11 +620,8 @@ const Appointment: React.FC = () => {
         </div>
       )}
 
-      {/* ── Main Content ─────────────────────────────────────────────────────── */}
       <section className="appointment-main-section">
         <div className="container">
-
-          {/* STEP 1: SELECT SPECIALIST */}
           {currentStep === 1 && (
             <div className="appointment-layout">
               {/* Left Sidebar Filters */}
@@ -802,23 +802,109 @@ const Appointment: React.FC = () => {
                 </div>
 
                 {/* Date Selection */}
-                <h3 className="schedule-card-title" style={{ marginTop: '24px' }}>Preferred Date</h3>
+                <div className="booking-section-header" style={{ marginTop: '24px' }}>
+                  <div className="section-title-with-badge">
+                    <h3 className="schedule-card-title">Preferred Date</h3>
+                    <span className="selection-badge">
+                      📅 {selectedDate}
+                    </span>
+                  </div>
+                  <p className="section-hint">Select a day that fits your schedule for this clinical consultation.</p>
+                </div>
                 <div className="date-options-row">
-                  {['Today (Earliest)', 'Tomorrow', 'This Weekend', 'Next Monday'].map(d => (
-                    <button key={d} className={`date-chip ${selectedDate === d ? 'active' : ''}`} onClick={() => setSelectedDate(d)}>
-                      {d}
-                    </button>
-                  ))}
+                  {DATE_OPTIONS.map(d => {
+                    const isSelected = selectedDate === d.id;
+                    return (
+                      <button
+                        type="button"
+                        key={d.id}
+                        className={`date-chip ${isSelected ? 'active' : ''}`}
+                        onClick={() => setSelectedDate(d.id)}
+                      >
+                        <span className="date-chip-icon">{d.icon}</span>
+                        <div className="date-chip-info">
+                          <span className="date-chip-label">{d.label}</span>
+                          <span className="date-chip-sub">{d.subtitle}</span>
+                        </div>
+                        {isSelected && <span className="date-chip-check">✓</span>}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 {/* Time Selection */}
-                <h3 className="schedule-card-title" style={{ marginTop: '24px' }}>Preferred Time Slot</h3>
-                <div className="time-slot-grid">
-                  {timeSlots.map(t => (
-                    <button key={t} className={`time-chip ${selectedTime === t ? 'active' : ''}`} onClick={() => setSelectedTime(t)}>
-                      {t}
-                    </button>
-                  ))}
+                <div className="booking-section-header" style={{ marginTop: '28px' }}>
+                  <div className="section-title-with-badge">
+                    <h3 className="schedule-card-title">Preferred Time Slot</h3>
+                    <span className="selection-badge">
+                      🕒 {selectedTime}
+                    </span>
+                  </div>
+                  <p className="section-hint">Consultations are scheduled strictly during active clinical shifts: Morning (10:00 AM – 12:00 PM) and Evening (04:00 PM – 06:00 PM).</p>
+                </div>
+
+                <div className="time-shifts-wrapper">
+                  {/* Morning Shift */}
+                  <div className="time-shift-card">
+                    <div className="time-shift-head">
+                      <div className="time-shift-head-left">
+                        <span className="shift-emoji">🌅</span>
+                        <div>
+                          <strong className="shift-name">Morning Clinical Hours</strong>
+                          <span className="shift-timing">10:00 AM — 12:00 PM</span>
+                        </div>
+                      </div>
+                      <span className="shift-pill morning-pill">Morning Shift</span>
+                    </div>
+                    <div className="time-slot-grid">
+                      {MORNING_TIME_SLOTS.map(t => {
+                        const isSelected = selectedTime === t;
+                        return (
+                          <button
+                            type="button"
+                            key={t}
+                            className={`time-chip ${isSelected ? 'active' : ''}`}
+                            onClick={() => setSelectedTime(t)}
+                          >
+                            <span className="time-chip-clock">🕒</span>
+                            <span className="time-chip-text">{t}</span>
+                            {isSelected && <span className="time-chip-check">✓</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Evening Shift */}
+                  <div className="time-shift-card">
+                    <div className="time-shift-head">
+                      <div className="time-shift-head-left">
+                        <span className="shift-emoji">🌆</span>
+                        <div>
+                          <strong className="shift-name">Evening Consultation Hours</strong>
+                          <span className="shift-timing">04:00 PM — 06:00 PM</span>
+                        </div>
+                      </div>
+                      <span className="shift-pill evening-pill">Evening Shift</span>
+                    </div>
+                    <div className="time-slot-grid">
+                      {EVENING_TIME_SLOTS.map(t => {
+                        const isSelected = selectedTime === t;
+                        return (
+                          <button
+                            type="button"
+                            key={t}
+                            className={`time-chip ${isSelected ? 'active' : ''}`}
+                            onClick={() => setSelectedTime(t)}
+                          >
+                            <span className="time-chip-clock">🕒</span>
+                            <span className="time-chip-text">{t}</span>
+                            {isSelected && <span className="time-chip-check">✓</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Patient Info */}

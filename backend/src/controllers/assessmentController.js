@@ -1,7 +1,5 @@
 import User from '../models/User.js';
 
-// ── Save Assessment Result ───────────────────────────────────────────────────
-// POST /api/assessments/save
 export const saveAssessment = async (req, res) => {
   try {
     const { assessmentId, code, title, score, severity, completedAt } = req.body;
@@ -34,16 +32,14 @@ export const saveAssessment = async (req, res) => {
       result,
     });
   } catch (err) {
-    console.error('[assessmentController] saveAssessment error:', err);
+    console.error('saveAssessment error:', err);
     return res.status(500).json({
       success: false,
-      message: 'Failed to save assessment. Please try again.',
+      message: 'Failed to save assessment',
     });
   }
 };
 
-// ── Get Assessment History ────────────────────────────────────────────────────
-// GET /api/assessments/history
 export const getAssessmentHistory = async (req, res) => {
   try {
     const user = await User.findById(req.userId).select('assessmentResults firstName lastName');
@@ -56,10 +52,10 @@ export const getAssessmentHistory = async (req, res) => {
       history: user.assessmentResults || [],
     });
   } catch (err) {
-    console.error('[assessmentController] getAssessmentHistory error:', err);
+    console.error('getAssessmentHistory error:', err);
     return res.status(500).json({
       success: false,
-      message: 'Failed to retrieve assessment history.',
+      message: 'Failed to retrieve assessment history',
     });
   }
 };

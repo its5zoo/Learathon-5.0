@@ -1161,3 +1161,324 @@
   margin-top: 8px;
 }
 
+/* ==========================================================================
+   Card Tracked Status Banner (Previous Completion on Card)
+   ========================================================================== */
+.card-tracked-status-banner {
+  margin: 12px 0 16px 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  animation: fadeIn 0.3s ease;
+}
+
+.card-tracked-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-tracked-badge {
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: -0.2px;
+}
+
+.tracked-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.card-tracked-count {
+  font-size: 11px;
+  color: #64748b;
+  background: #ffffff;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-weight: 600;
+  border: 1px solid #e2e8f0;
+}
+
+.card-tracked-score-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #334155;
+}
+
+.card-tracked-score strong {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.card-tracked-date {
+  color: #64748b;
+  font-size: 11px;
+}
+
+/* ==========================================================================
+   Persistent Assessment History Section
+   ========================================================================== */
+.mh-history-container {
+  margin-top: 60px;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 36px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+  border: 1px solid #e2e8f0;
+}
+
+.history-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 24px;
+}
+
+.history-header-titles {
+  max-width: 650px;
+}
+
+.history-badge-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: #eff6ff;
+  color: #2563eb;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.history-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.history-count-pill {
+  padding: 8px 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.view-profile-btn {
+  font-size: 13px;
+  padding: 8px 16px;
+  border-radius: 99px;
+  color: #0f172a;
+  border-color: #cbd5e1;
+  font-weight: 600;
+}
+
+.view-profile-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+/* Empty History State */
+.empty-history-card {
+  text-align: center;
+  padding: 48px 24px;
+  background: #f8fafc;
+  border-radius: 16px;
+  border: 1.5px dashed #cbd5e1;
+}
+
+.empty-history-icon {
+  font-size: 42px;
+  margin-bottom: 12px;
+}
+
+.empty-history-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 6px;
+}
+
+.empty-history-text {
+  font-size: 14px;
+  color: #64748b;
+  max-width: 480px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+/* History Cards List */
+.history-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.history-entry-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 22px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  transition: all 0.2s ease;
+}
+
+.history-entry-card:hover {
+  background: #ffffff;
+  border-color: var(--entry-accent, #3b82f6);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
+}
+
+.history-entry-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  min-width: 0;
+}
+
+.history-code-badge {
+  font-size: 13px;
+  font-weight: 800;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.history-entry-details {
+  min-width: 0;
+}
+
+.history-entry-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-entry-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.history-entry-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.history-score-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 50px;
+}
+
+.history-score-box .score-num {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.history-score-box .score-lbl {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.history-severity-tag {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+
+.history-retake-btn {
+  color: #ffffff;
+  border: none;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.history-retake-btn:hover {
+  opacity: 0.9;
+}
+
+/* Badge Severity Color Classes */
+.badge-success {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.badge-warning {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+
+.badge-orange {
+  background: #fff7ed;
+  color: #ea580c;
+  border: 1px solid #fed7aa;
+}
+
+.badge-danger {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+@media (max-width: 768px) {
+  .history-entry-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .history-entry-right {
+    width: 100%;
+    justify-content: space-between;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+  }
+}
+
+

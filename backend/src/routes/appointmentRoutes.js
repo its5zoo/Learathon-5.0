@@ -10,13 +10,12 @@ import {
 
 const router = express.Router();
 
-// All routes protected (user must be logged in)
 router.use(protect);
 
-router.post('/recommend',          getAIRecommendations);   // AI match top 3
-router.post('/book',               bookAppointment);         // book + send email
-router.post('/:id/simulate-reply', simulateClinicReply);     // demo: simulate clinic reply
-router.get('/:id/status',          getAppointmentStatus);    // live status poll
-router.get('/my',                  getMyAppointments);       // user's appointments
+router.post('/recommend', getAIRecommendations);
+router.post('/book', bookAppointment);
+router.post('/:id/simulate-reply', simulateClinicReply);
+router.get('/:id/status', getAppointmentStatus);
+router.get('/my', getMyAppointments);
 
 export default router;

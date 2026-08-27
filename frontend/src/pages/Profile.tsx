@@ -31,10 +31,8 @@ const Profile: React.FC = () => {
   const [appointments, setAppointments] = useState<AppointmentRecord[]>([]);
   const [isLoadingAppointments, setIsLoadingAppointments] = useState(false);
 
-  // Clinical Report Modal State
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
-  // Edit Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editFirstName, setEditFirstName] = useState('');
   const [editLastName, setEditLastName] = useState('');
@@ -48,19 +46,16 @@ const Profile: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [copiedHandle, setCopiedHandle] = useState(false);
 
-  // Appointment notification from localStorage
   const [latestAppt, setLatestAppt] = useState<any>(null);
   const [showApptNotif, setShowApptNotif] = useState(false);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [selectedInvoiceData, setSelectedInvoiceData] = useState<any>(null);
-
 
   useEffect(() => {
     try {
       const stored = localStorage.getItem('ss_latest_appointment');
       if (stored) {
         const parsed = JSON.parse(stored);
-        // Show banner only if booked in last 24h
         const bookedAt = new Date(parsed.bookedAt).getTime();
         const now = Date.now();
         if (now - bookedAt < 24 * 60 * 60 * 1000) {
@@ -71,14 +66,12 @@ const Profile: React.FC = () => {
     } catch {}
   }, []);
 
-  // Redirect if not logged in
   useEffect(() => {
     if (!isLoggedIn) {
       navigate('/login');
     }
   }, [isLoggedIn, navigate]);
 
-  // Refresh user data & fetch appointments
   useEffect(() => {
     if (isLoggedIn) {
       refreshUser();
@@ -86,7 +79,6 @@ const Profile: React.FC = () => {
     }
   }, [isLoggedIn]);
 
-  // Sync edit form with user data
   useEffect(() => {
     if (user) {
       setEditFirstName(user.firstName || '');
@@ -100,7 +92,6 @@ const Profile: React.FC = () => {
     }
   }, [user]);
 
-  // Fetch appointments from API
   const fetchUserAppointments = async () => {
     setIsLoadingAppointments(true);
     try {
@@ -177,17 +168,27 @@ const Profile: React.FC = () => {
   const initials = `${user.firstName?.[0] || 'S'}${user.lastName?.[0] || 'S'}`.toUpperCase();
   const userHandle = user.username ? `@${user.username}` : `@${user.email.split('@')[0]}`;
 
-  // Gather assessment list from user profile or fallback
-  const assessments = user.assessmentResults && user.assessmentResults.length > 0
-    ? user.assessmentResults
-    : (() => {
-        try {
-          const local = localStorage.getItem('ss_assessment_history');
-          return local ? JSON.parse(local) : [];
-        } catch {
-          return [];
-        }
-      })();
+  // Gather assessment list from user profile AND local storage (merged & sorted)
+  const assessments = (() => {
+    const fromUser = user.assessmentResults || [];
+    let fromLocal: any[] = [];
+    try {
+      const local = localStorage.getItem('ss_assessment_history');
+      if (local) fromLocal = JSON.parse(local);
+    } catch {}
+
+    const map = new Map<string, any>();
+    [...fromUser, ...fromLocal].forEach((item) => {
+      const key = `${item.assessmentId || item.code}_${item.completedAt}`;
+      if (!map.has(key)) {
+        map.set(key, item);
+      }
+    });
+
+    return Array.from(map.values()).sort(
+      (a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()
+    );
+  })();
 
   // Gather mood logs from user profile or fallback
   const moodLogs = user.moodLogs && user.moodLogs.length > 0
