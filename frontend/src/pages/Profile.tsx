@@ -416,31 +416,6 @@ const Profile: React.FC = () => {
                 Update Contact →
               </button>
             </div>
-
-            {/* 24/7 Helplines Box */}
-            <div className="profile-side-box helpline-side-box">
-              <div className="side-box-header">
-                <span className="side-box-icon">🆘</span>
-                <div>
-                  <h4>24/7 Crisis Helplines</h4>
-                  <p>Free confidential support</p>
-                </div>
-              </div>
-              <div className="helpline-compact-list">
-                <div className="helpline-compact-item">
-                  <span>iCall (TISS):</span>
-                  <a href="tel:9152987821">9152987821</a>
-                </div>
-                <div className="helpline-compact-item">
-                  <span>Vandrevala:</span>
-                  <a href="tel:18602662345">1860-2662-345</a>
-                </div>
-                <div className="helpline-compact-item">
-                  <span>NIMHANS:</span>
-                  <a href="tel:08046110007">080-46110007</a>
-                </div>
-              </div>
-            </div>
           </aside>
 
           {/* ──────────────────────────────────────────────────────────────
