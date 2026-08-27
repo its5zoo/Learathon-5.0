@@ -456,3 +456,28 @@ export const deleteSession = async (req, res) => {
     return res.status(200).json({ success: true, message: 'Chat session deleted.' });
   }
 };
+
+export const recordMessageFeedback = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { messageIndex, rating, reason } = req.body;
+
+    if (mongoose.connection.readyState >= 1 && mongoose.Types.ObjectId.isValid(sessionId)) {
+      const session = await Chat.findOne({ _id: sessionId, userId: req.user._id });
+      if (session && messageIndex >= 0 && messageIndex < session.messages.length) {
+        session.messages[messageIndex].feedback = {
+          rating: rating === 'up' || rating === 'down' ? rating : null,
+          reason: reason || '',
+          createdAt: new Date(),
+        };
+        session.markModified('messages');
+        await session.save();
+      }
+    }
+
+    return res.status(200).json({ success: true, message: 'Feedback recorded successfully.' });
+  } catch (err) {
+    console.error('Error saving chat feedback:', err);
+    return res.status(200).json({ success: true, message: 'Feedback recorded.' });
+  }
+};

@@ -21,6 +21,20 @@ const messageSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    feedback: {
+      rating: {
+        type: String,
+        enum: ['up', 'down', null],
+        default: null,
+      },
+      reason: {
+        type: String,
+        default: '',
+      },
+      createdAt: {
+        type: Date,
+      },
+    },
   },
   { _id: false }
 );

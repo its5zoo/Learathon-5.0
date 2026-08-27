@@ -739,6 +739,126 @@
   padding: 2px 8px;
 }
 
+/* ── Chat Message Feedback Action Strip ─────────────────────────────────── */
+.chat-msg-feedback-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 6px;
+}
+
+.chat-feedback-btn-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 2px 4px;
+}
+
+.chat-feedback-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 20px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s ease;
+}
+
+.chat-feedback-btn:hover {
+  background: #ffffff;
+  color: #334155;
+}
+
+.chat-feedback-btn.active-up {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.chat-feedback-btn.active-down {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.feedback-status-pill {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+
+.feedback-status-pill.success {
+  color: #15803d;
+  background: #f0fdf4;
+}
+
+.feedback-status-pill.noted {
+  color: #b91c1c;
+  background: #fef2f2;
+}
+
+.chat-feedback-reasons-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+  padding: 6px 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  animation: feedbackSlideDown 0.2s ease;
+}
+
+@keyframes feedbackSlideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.reasons-label {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.reasons-pills {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.reason-pill {
+  font-size: 11px;
+  padding: 2px 8px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  color: #475569;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.reason-pill:hover {
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.reason-pill.selected {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #991b1b;
+  font-weight: 600;
+}
+
 /* ── Typing Dots ────────────────────────────────────────────────────────── */
 .typing-dot {
   width: 7px;

@@ -4,12 +4,18 @@ import { useAuth } from '../context/AuthContext';
 import { API_URL as API } from '../config';
 import './AiSupport.css';
 
+interface MessageFeedback {
+  rating: 'up' | 'down' | null;
+  reason?: string;
+}
+
 interface Message {
   role: 'user' | 'assistant';
   content: string;
   emotion: string;
   timestamp: string;
   model?: string;
+  feedback?: MessageFeedback;
 }
 
 interface ChatSession {
@@ -182,6 +188,8 @@ const AiSupport: React.FC = () => {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [feedbackMap, setFeedbackMap] = useState<Record<number, { rating: 'up' | 'down'; reason?: string }>>({});
+  const [activeDownReasonIdx, setActiveDownReasonIdx] = useState<number | null>(null);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -210,6 +218,57 @@ const AiSupport: React.FC = () => {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${token}`,
   }), [token]);
+
+  const handleMessageFeedback = async (
+    msgIdx: number,
+    rating: 'up' | 'down',
+    reason?: string
+  ) => {
+    const currentEntry = feedbackMap[msgIdx];
+    const isTogglingOff = currentEntry?.rating === rating && !reason;
+    const newRating = isTogglingOff ? null : rating;
+
+    const nextFeedback = { ...feedbackMap };
+    if (!newRating) {
+      delete nextFeedback[msgIdx];
+      setActiveDownReasonIdx(null);
+    } else {
+      nextFeedback[msgIdx] = {
+        rating: newRating,
+        reason: reason !== undefined ? reason : (currentEntry?.reason || ''),
+      };
+      if (newRating === 'down' && !reason) {
+        setActiveDownReasonIdx(msgIdx);
+      } else {
+        setActiveDownReasonIdx(null);
+      }
+    }
+    setFeedbackMap(nextFeedback);
+
+    // Local Storage Persistence
+    if (activeSessionId) {
+      try {
+        localStorage.setItem(`ss_chat_feedback_${activeSessionId}`, JSON.stringify(nextFeedback));
+      } catch (e) {}
+    }
+
+    // Backend Telemetry Sync
+    if (activeSessionId && token && newRating) {
+      try {
+        await fetch(`${API}/chat/session/${activeSessionId}/feedback`, {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({
+            messageIndex: msgIdx,
+            rating: newRating,
+            reason: reason || '',
+          }),
+        });
+      } catch (e) {
+        console.warn('Feedback API sync error:', e);
+      }
+    }
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -257,11 +316,27 @@ const AiSupport: React.FC = () => {
     if (!sessionId || sessionId === 'null') return;
     setLoadingSession(true);
     setActiveSessionId(sessionId);
+    setActiveDownReasonIdx(null);
     try {
       const res = await fetch(`${API}/chat/session/${sessionId}`, { headers: authHeaders() });
       const data = await res.json();
       if (data.success && data.session?.messages) {
         setMessages(data.session.messages);
+
+        // Restore feedback map
+        const initialMap: Record<number, { rating: 'up' | 'down'; reason?: string }> = {};
+        data.session.messages.forEach((m: Message, i: number) => {
+          if (m.feedback && m.feedback.rating) {
+            initialMap[i] = { rating: m.feedback.rating, reason: m.feedback.reason };
+          }
+        });
+        try {
+          const stored = localStorage.getItem(`ss_chat_feedback_${sessionId}`);
+          if (stored) {
+            Object.assign(initialMap, JSON.parse(stored));
+          }
+        } catch (e) {}
+        setFeedbackMap(initialMap);
       }
     } catch (e) {
       console.error('loadSession error', e);
@@ -271,6 +346,8 @@ const AiSupport: React.FC = () => {
   };
 
   const createNewSession = async () => {
+    setFeedbackMap({});
+    setActiveDownReasonIdx(null);
     try {
       const res = await fetch(`${API}/chat/session`, {
         method: 'POST',
@@ -614,7 +691,60 @@ const AiSupport: React.FC = () => {
                         {emotionMeta.emoji} {emotionMeta.label}
                       </span>
                     ) : null}
+
+                    {msg.role === 'assistant' && !isCrisisMsg ? (
+                      <div className="chat-msg-feedback-wrap">
+                        <div className="chat-feedback-btn-group">
+                          <button
+                            type="button"
+                            className={`chat-feedback-btn ${feedbackMap[idx]?.rating === 'up' ? 'active-up' : ''}`}
+                            onClick={() => handleMessageFeedback(idx, 'up')}
+                            title="Helpful & caring response"
+                            aria-label="Thumbs Up"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill={feedbackMap[idx]?.rating === 'up' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            className={`chat-feedback-btn ${feedbackMap[idx]?.rating === 'down' ? 'active-down' : ''}`}
+                            onClick={() => handleMessageFeedback(idx, 'down')}
+                            title="Needs improvement"
+                            aria-label="Thumbs Down"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill={feedbackMap[idx]?.rating === 'down' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3" />
+                            </svg>
+                          </button>
+                        </div>
+                        {feedbackMap[idx]?.rating === 'up' ? (
+                          <span className="feedback-status-pill success">Helpful</span>
+                        ) : null}
+                        {feedbackMap[idx]?.rating === 'down' ? (
+                          <span className="feedback-status-pill noted">Noted</span>
+                        ) : null}
+                      </div>
+                    ) : null}
                   </div>
+
+                  {msg.role === 'assistant' && activeDownReasonIdx === idx ? (
+                    <div className="chat-feedback-reasons-row">
+                      <span className="reasons-label">How can we improve?</span>
+                      <div className="reasons-pills">
+                        {['Too generic', 'Not empathetic', 'Too long', 'Incorrect advice', 'Other'].map((reason) => (
+                          <button
+                            key={reason}
+                            type="button"
+                            className={`reason-pill ${feedbackMap[idx]?.reason === reason ? 'selected' : ''}`}
+                            onClick={() => handleMessageFeedback(idx, 'down', reason)}
+                          >
+                            {reason}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
 
                   {shouldShowBreathingWidget(idx, messages, isBreathingDismissed) ? (
                     <div className="inline-breathing-card">
