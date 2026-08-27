@@ -217,6 +217,35 @@
   }
 }
 
+/* ── Daily Streak Badge Button (Humanized & Clean) ─────────────────────── */
+.nav-streak-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  padding: 5px 12px;
+  border-radius: 50px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.nav-streak-pill-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+.nav-streak-val {
+  letter-spacing: -0.1px;
+}
+
 /* ==========================================================================
    PROFILE BUTTON & DROPDOWN
    ========================================================================== */

@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar/Navbar';
 import Footer from './components/Footer/Footer';
 import WaterSurface from './components/WaterEffect/WaterSurface';
+import DailyCheckinModal from './components/DailyCheckin/DailyCheckinModal';
 import Home from './pages/Home';
 import MentalHealth from './pages/MentalHealth';
 import Appointment from './pages/Appointment';
@@ -20,6 +21,7 @@ function AppContent() {
   return (
     <div className="app">
       <WaterSurface />
+      <DailyCheckinModal />
       <Navbar />
       <main>
         <Routes>

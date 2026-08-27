@@ -193,10 +193,9 @@ const WaterSurface: React.FC = () => {
       if (isHoveringRef.current && mouse.x > 0 && mouse.y > 0) {
         const lensRadius = 85 + Math.min(mouse.speed * 1.5, 30);
         const grad = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, lensRadius);
-        grad.addColorStop(0, 'rgba(56, 189, 248, 0.22)');
-        grad.addColorStop(0.45, 'rgba(14, 165, 233, 0.12)');
-        grad.addColorStop(0.8, 'rgba(56, 189, 248, 0.04)');
-        grad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+        grad.addColorStop(0, 'rgba(63, 114, 175, 0.08)');
+        grad.addColorStop(0.5, 'rgba(63, 114, 175, 0.03)');
+        grad.addColorStop(1, 'rgba(63, 114, 175, 0)');
 
         ctx.save();
         ctx.beginPath();
@@ -204,11 +203,11 @@ const WaterSurface: React.FC = () => {
         ctx.fillStyle = grad;
         ctx.fill();
 
-        // Inner glowing water droplet center
+        // Inner subtle water droplet center
         const coreGrad = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 22);
-        coreGrad.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
-        coreGrad.addColorStop(0.5, 'rgba(56, 189, 248, 0.25)');
-        coreGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+        coreGrad.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+        coreGrad.addColorStop(0.6, 'rgba(63, 114, 175, 0.06)');
+        coreGrad.addColorStop(1, 'rgba(63, 114, 175, 0)');
         ctx.beginPath();
         ctx.arc(mouse.x, mouse.y, 22, 0, Math.PI * 2);
         ctx.fillStyle = coreGrad;
@@ -228,7 +227,7 @@ const WaterSurface: React.FC = () => {
           ctx.save();
           ctx.beginPath();
           ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2);
-          ctx.strokeStyle = `hsla(${r.hue}, 88%, 62%, ${r.alpha})`;
+          ctx.strokeStyle = `rgba(63, 114, 175, ${r.alpha * 0.45})`;
           ctx.lineWidth = r.lineWidth * (1 - progress * 0.5);
           ctx.stroke();
 
@@ -236,8 +235,8 @@ const WaterSurface: React.FC = () => {
           if (r.r > 8) {
             ctx.beginPath();
             ctx.arc(r.x, r.y, r.r * 0.72, 0, Math.PI * 2);
-            ctx.strokeStyle = `hsla(${r.hue + 12}, 92%, 78%, ${r.alpha * 0.4})`;
-            ctx.lineWidth = r.lineWidth * 0.55;
+            ctx.strokeStyle = `rgba(63, 114, 175, ${r.alpha * 0.2})`;
+            ctx.lineWidth = r.lineWidth * 0.5;
             ctx.stroke();
           }
 
@@ -263,9 +262,7 @@ const WaterSurface: React.FC = () => {
           ctx.save();
           ctx.beginPath();
           ctx.arc(d.x, d.y, d.size * (1 - lifeRatio * 0.25), 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(56, 189, 248, ${alpha})`;
-          ctx.shadowColor = 'rgba(56, 189, 248, 0.6)';
-          ctx.shadowBlur = 4;
+          ctx.fillStyle = `rgba(63, 114, 175, ${alpha * 0.3})`;
           ctx.fill();
           ctx.restore();
           nextDrops.push(d);

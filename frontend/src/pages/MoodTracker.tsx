@@ -156,18 +156,6 @@ const MoodTracker: React.FC = () => {
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
 
-  const [hoveredPoint, setHoveredPoint] = useState<{
-    day: string;
-    x: number;
-    y: number;
-    level: number;
-    mood: string;
-    emoji: string;
-    color: string;
-    time: string;
-    note: string;
-  } | null>(null);
-
   useEffect(() => {
     let isMounted = true;
     const initMediaPipe = async () => {
@@ -568,6 +556,21 @@ const MoodTracker: React.FC = () => {
     setTimeout(() => setShowSuccessToast(false), 4000);
   };
 
+  const [timeframe, setTimeframe] = useState<'days' | 'weeks' | 'months' | 'year'>('days');
+
+  const [hoveredPoint, setHoveredPoint] = useState<{
+    label: string;
+    subLabel: string;
+    x: number;
+    y: number;
+    level: number;
+    mood: string;
+    emoji: string;
+    color: string;
+    time: string;
+    note: string;
+  } | null>(null);
+
   const handleDeleteEntry = (id: string) => {
     setMoodEntries((prev) => prev.filter((item) => item.id !== id));
     setToastMessage('🗑️ Mood log removed.');
@@ -575,45 +578,158 @@ const MoodTracker: React.FC = () => {
     setTimeout(() => setShowSuccessToast(false), 2500);
   };
 
-  // ── Dynamic 7-Day Chart Point Calculations ──────────────────────────────────
-  const past7Days = useMemo(() => {
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const today = new Date();
-    const result: string[] = [];
-    for (let i = 6; i >= 1; i--) {
-      const d = new Date(today);
-      d.setDate(today.getDate() - i);
-      result.push(days[d.getDay()]);
-    }
-    result.push('Today');
-    return result;
-  }, []);
+  // ── Dynamic Multi-Timeframe Chart Point Calculations ─────────────────────────
+  const chartPoints = useMemo(() => {
+    if (timeframe === 'days') {
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const today = new Date();
+      const daySlots: { label: string; fullDate: string; key: string }[] = [];
+      for (let i = 6; i >= 1; i--) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        const dayName = days[d.getDay()];
+        daySlots.push({ label: dayName, fullDate: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), key: dayName });
+      }
+      daySlots.push({ label: 'Today', fullDate: 'Today', key: 'Today' });
 
-  const chartPoints = past7Days.map((day, i) => {
-    const x = 50 + i * 100;
-    let entry: MoodEntry | undefined;
-    if (day === 'Today') {
-      entry = [...moodEntries].reverse().find((e) => e.date === 'Today') || moodEntries[moodEntries.length - 1];
+      const totalSlots = daySlots.length;
+      return daySlots.map((slot, i) => {
+        const x = 50 + (i * (600 / (totalSlots - 1)));
+        let entry: MoodEntry | undefined;
+        if (slot.key === 'Today') {
+          entry = [...moodEntries].reverse().find((e) => e.date === 'Today') || moodEntries[moodEntries.length - 1];
+        } else {
+          entry = moodEntries.find((e) => e.date === slot.key || e.date.includes(slot.label));
+        }
+
+        const defaultLevels = [4, 3, 4, 6, 5, 6, 6];
+        const level = entry ? entry.level : defaultLevels[i] || 4;
+        const matchingLevel = Y_AXIS_LEVELS.find((l) => l.level === Math.round(level)) || Y_AXIS_LEVELS[3];
+        const continuousY = Math.max(20, Math.min(260, 260 - (level - 1) * 40));
+
+        return {
+          label: slot.label,
+          subLabel: slot.fullDate,
+          x,
+          y: continuousY,
+          level: typeof level === 'number' ? Number(level.toFixed(1)) : 4,
+          mood: entry?.mood || matchingLevel.mood,
+          emoji: entry?.emoji || matchingLevel.emoji,
+          color: matchingLevel.color,
+          time: entry?.time || 'Baseline Log',
+          note: entry?.note || `${matchingLevel.mood} emotional trend baseline for ${slot.label}.`,
+        };
+      });
+    } else if (timeframe === 'weeks') {
+      const weekSlots = [
+        { label: '3 Wks Ago', sub: 'Week 1', baseLevel: 4.2 },
+        { label: '2 Wks Ago', sub: 'Week 2', baseLevel: 3.8 },
+        { label: 'Last Week', sub: 'Week 3', baseLevel: 5.2 },
+        { label: 'This Week', sub: 'Current', baseLevel: 5.8 },
+      ];
+      return weekSlots.map((slot, i) => {
+        const x = 70 + (i * (560 / (weekSlots.length - 1)));
+        let level = slot.baseLevel;
+        if (i === weekSlots.length - 1 && moodEntries.length > 0) {
+          const recentSlice = moodEntries.slice(-5);
+          level = Number((recentSlice.reduce((s, e) => s + e.level, 0) / recentSlice.length).toFixed(1));
+        }
+        const roundedLevel = Math.round(level);
+        const matchingLevel = Y_AXIS_LEVELS.find((l) => l.level === roundedLevel) || Y_AXIS_LEVELS[3];
+        const continuousY = Math.max(20, Math.min(260, 260 - (level - 1) * 40));
+
+        return {
+          label: slot.label,
+          subLabel: slot.sub,
+          x,
+          y: continuousY,
+          level,
+          mood: matchingLevel.mood,
+          emoji: matchingLevel.emoji,
+          color: matchingLevel.color,
+          time: slot.sub,
+          note: `Weekly aggregate mood stability: ${level}/7.0 (${matchingLevel.mood}).`,
+        };
+      });
+    } else if (timeframe === 'months') {
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const now = new Date();
+      const monthSlots: { label: string; sub: string; baseLevel: number }[] = [];
+      for (let i = 5; i >= 0; i--) {
+        const m = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const name = monthNames[m.getMonth()];
+        const isCurr = i === 0;
+        monthSlots.push({
+          label: isCurr ? 'This Mo' : name,
+          sub: m.getFullYear().toString(),
+          baseLevel: [4.0, 4.5, 4.2, 5.0, 5.4, 5.7][5 - i] || 4.5,
+        });
+      }
+
+      return monthSlots.map((slot, i) => {
+        const x = 50 + (i * (600 / (monthSlots.length - 1)));
+        let level = slot.baseLevel;
+        if (i === monthSlots.length - 1 && moodEntries.length > 0) {
+          const recentSlice = moodEntries.slice(-7);
+          level = Number((recentSlice.reduce((s, e) => s + e.level, 0) / recentSlice.length).toFixed(1));
+        }
+        const roundedLevel = Math.round(level);
+        const matchingLevel = Y_AXIS_LEVELS.find((l) => l.level === roundedLevel) || Y_AXIS_LEVELS[3];
+        const continuousY = Math.max(20, Math.min(260, 260 - (level - 1) * 40));
+
+        return {
+          label: slot.label,
+          subLabel: slot.sub,
+          x,
+          y: continuousY,
+          level,
+          mood: matchingLevel.mood,
+          emoji: matchingLevel.emoji,
+          color: matchingLevel.color,
+          time: `${slot.label} ${slot.sub}`,
+          note: `Monthly emotional trajectory: ${level}/7.0 (${matchingLevel.mood}).`,
+        };
+      });
     } else {
-      entry = moodEntries.find((e) => e.date === day);
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const now = new Date();
+      const yearSlots: { label: string; sub: string; baseLevel: number }[] = [];
+      for (let i = 11; i >= 0; i--) {
+        const m = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const name = monthNames[m.getMonth()];
+        yearSlots.push({
+          label: name,
+          sub: `${m.getFullYear()}`,
+          baseLevel: [3.8, 4.1, 4.4, 4.2, 4.8, 5.1, 5.0, 4.7, 5.2, 5.5, 5.4, 5.8][11 - i] || 4.5,
+        });
+      }
+
+      return yearSlots.map((slot, i) => {
+        const x = 30 + (i * (640 / (yearSlots.length - 1)));
+        let level = slot.baseLevel;
+        if (i === yearSlots.length - 1 && moodEntries.length > 0) {
+          const recentSlice = moodEntries.slice(-7);
+          level = Number((recentSlice.reduce((s, e) => s + e.level, 0) / recentSlice.length).toFixed(1));
+        }
+        const roundedLevel = Math.round(level);
+        const matchingLevel = Y_AXIS_LEVELS.find((l) => l.level === roundedLevel) || Y_AXIS_LEVELS[3];
+        const continuousY = Math.max(20, Math.min(260, 260 - (level - 1) * 40));
+
+        return {
+          label: slot.label,
+          subLabel: slot.sub,
+          x,
+          y: continuousY,
+          level,
+          mood: matchingLevel.mood,
+          emoji: matchingLevel.emoji,
+          color: matchingLevel.color,
+          time: `${slot.label} ${slot.sub}`,
+          note: `Annual emotional wellness overview: ${level}/7.0 (${matchingLevel.mood}).`,
+        };
+      });
     }
-
-    const defaultLevels = [4, 3, 4, 6, 5, 6, 6];
-    const level = entry ? entry.level : defaultLevels[i];
-    const matchingLevel = Y_AXIS_LEVELS.find((l) => l.level === level) || Y_AXIS_LEVELS[3];
-
-    return {
-      day,
-      x,
-      y: matchingLevel.y,
-      level,
-      mood: entry?.mood || matchingLevel.mood,
-      emoji: entry?.emoji || matchingLevel.emoji,
-      color: matchingLevel.color,
-      time: entry?.time || 'Recorded',
-      note: entry?.note || `${matchingLevel.mood} mood baseline for ${day}.`,
-    };
-  });
+  }, [timeframe, moodEntries]);
 
   const smoothLinePath = generateSmoothPath(chartPoints);
   const areaFillPath = chartPoints.length > 0
@@ -816,14 +932,57 @@ const MoodTracker: React.FC = () => {
 
           <div className="mood-analytics-grid">
 
-            {/* Left: 7-Day Interactive Mood Trend Chart */}
+            {/* Left: Interactive Multi-Timeframe Mood Trend Chart */}
             <div className="analytics-card mood-history-chart-card mood-trend-chart-card">
               <div className="card-header-flex">
                 <div>
-                  <h2 className="card-title">7-Day Emotional Trend Chart</h2>
-                  <p className="card-subtitle">Visual tracking of your mood stability, energy patterns & triggers.</p>
+                  <h2 className="card-title">
+                    {timeframe === 'days' && '7-Day Emotional Trend Chart'}
+                    {timeframe === 'weeks' && '4-Week Emotional Trajectory'}
+                    {timeframe === 'months' && '6-Month Mood Distribution'}
+                    {timeframe === 'year' && '1-Year Psychological Trend'}
+                  </h2>
+                  <p className="card-subtitle">
+                    {timeframe === 'days' && 'Visual tracking of your mood stability, daily energy patterns & triggers.'}
+                    {timeframe === 'weeks' && 'Weekly average emotional progression and coping stability.'}
+                    {timeframe === 'months' && 'Longitudinal mood tracking across months to detect seasonal trends.'}
+                    {timeframe === 'year' && 'Full 12-month psychological resilience and annual stability overview.'}
+                  </p>
                 </div>
+
                 <div className="chart-actions-row">
+                  {/* Dynamic Timeframe Selector */}
+                  <div className="timeframe-pill-selector" role="tablist" aria-label="Select Chart Timeframe">
+                    <button
+                      type="button"
+                      className={`timeframe-pill-btn ${timeframe === 'days' ? 'active' : ''}`}
+                      onClick={() => setTimeframe('days')}
+                    >
+                      📅 7 Days
+                    </button>
+                    <button
+                      type="button"
+                      className={`timeframe-pill-btn ${timeframe === 'weeks' ? 'active' : ''}`}
+                      onClick={() => setTimeframe('weeks')}
+                    >
+                      📊 4 Weeks
+                    </button>
+                    <button
+                      type="button"
+                      className={`timeframe-pill-btn ${timeframe === 'months' ? 'active' : ''}`}
+                      onClick={() => setTimeframe('months')}
+                    >
+                      📈 6 Months
+                    </button>
+                    <button
+                      type="button"
+                      className={`timeframe-pill-btn ${timeframe === 'year' ? 'active' : ''}`}
+                      onClick={() => setTimeframe('year')}
+                    >
+                      🗓️ 1 Year
+                    </button>
+                  </div>
+
                   <button
                     type="button"
                     className={`btn-guide-toggle ${showGraphGuide ? 'active' : ''}`}
@@ -831,13 +990,14 @@ const MoodTracker: React.FC = () => {
                   >
                     ℹ️ {showGraphGuide ? 'Hide Guide' : 'How to Read Graph'}
                   </button>
-                  <div className="chart-legend-row">
-                    <span className="legend-dot dot-happy">😄 Happy (6)</span>
-                    <span className="legend-dot dot-calm">😌 Calm (5)</span>
-                    <span className="legend-dot dot-neutral">😐 Neutral (4)</span>
-                    <span className="legend-dot dot-sad">😢 Sad (3)</span>
-                  </div>
                 </div>
+              </div>
+
+              <div className="chart-legend-row">
+                <span className="legend-dot dot-happy">😄 Happy (6)</span>
+                <span className="legend-dot dot-calm">😌 Calm (5)</span>
+                <span className="legend-dot dot-neutral">😐 Neutral (4)</span>
+                <span className="legend-dot dot-sad">😢 Sad (3)</span>
               </div>
 
               {/* Informative How to Read Guide Drawer */}
@@ -909,7 +1069,7 @@ const MoodTracker: React.FC = () => {
                         />
                       ))}
 
-                      {/* Vertical Grid Guidelines for each of the 7 days */}
+                      {/* Vertical Grid Guidelines for each interval */}
                       {chartPoints.map((pt, i) => (
                         <line
                           key={i}
@@ -953,9 +1113,9 @@ const MoodTracker: React.FC = () => {
                           <circle
                             cx={pt.x}
                             cy={pt.y}
-                            r={hoveredPoint?.day === pt.day ? 14 : 9}
+                            r={hoveredPoint?.label === pt.label ? 14 : 9}
                             fill={pt.color}
-                            opacity={hoveredPoint?.day === pt.day ? 0.45 : 0.2}
+                            opacity={hoveredPoint?.label === pt.label ? 0.45 : 0.2}
                             className="point-halo"
                           />
 
@@ -963,7 +1123,7 @@ const MoodTracker: React.FC = () => {
                           <circle
                             cx={pt.x}
                             cy={pt.y}
-                            r={hoveredPoint?.day === pt.day ? 7.5 : 6}
+                            r={hoveredPoint?.label === pt.label ? 7.5 : 6}
                             fill={pt.color}
                             stroke="#ffffff"
                             strokeWidth="2.5"
@@ -988,7 +1148,7 @@ const MoodTracker: React.FC = () => {
                           <span className="tooltip-level">Lvl {hoveredPoint.level}</span>
                         </div>
                         <div className="tooltip-body">
-                          <span className="tooltip-date">{hoveredPoint.day} • {hoveredPoint.time}</span>
+                          <span className="tooltip-date">{hoveredPoint.label} ({hoveredPoint.subLabel}) • {hoveredPoint.time}</span>
                           <span className="tooltip-note">{hoveredPoint.note}</span>
                         </div>
                       </div>
@@ -997,20 +1157,20 @@ const MoodTracker: React.FC = () => {
                 </div>
 
                 {/* Clearly aligned X-Axis Row */}
-                <div className="trend-x-axis-row" aria-label="X-Axis: Timeline of Last 7 Days">
+                <div className="trend-x-axis-row" aria-label="X-Axis: Selected Timeline">
                   <div className="x-axis-spacer"></div>
                   <div className="x-axis-track">
                     {chartPoints.map((pt, i) => (
                       <div
                         key={i}
-                        className={`x-axis-day-slot ${pt.day === 'Today' ? 'is-today' : ''} ${hoveredPoint?.day === pt.day ? 'is-hovered' : ''}`}
+                        className={`x-axis-day-slot ${pt.label === 'Today' || pt.label === 'This Week' || pt.label === 'This Mo' ? 'is-today' : ''} ${hoveredPoint?.label === pt.label ? 'is-hovered' : ''}`}
                         style={{ left: `${(pt.x / 700) * 100}%` }}
                         onMouseEnter={() => setHoveredPoint(pt)}
                         onMouseLeave={() => setHoveredPoint(null)}
                       >
                         <div className="x-tick-mark"></div>
-                        <span className="x-day-name">{pt.day}</span>
-                        <span className="x-day-emoji-badge" title={`${pt.day}: ${pt.mood} ${pt.emoji}`}>
+                        <span className="x-day-name">{pt.label}</span>
+                        <span className="x-day-emoji-badge" title={`${pt.label}: ${pt.mood} ${pt.emoji}`}>
                           {pt.emoji}
                         </span>
                       </div>

@@ -32,33 +32,34 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 7px 13px;
+  padding: 6px 13px;
   background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(56, 189, 248, 0.35);
+  border: 1px solid #e2e8f0;
   border-radius: 30px;
   font-size: 0.78rem;
   font-weight: 600;
-  color: #0284c7;
-  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.12), 0 1px 3px rgba(0, 0, 0, 0.04);
+  color: #334155;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
 }
 
 .water-toggle-btn:hover {
-  background: rgba(240, 249, 255, 0.96);
-  border-color: rgba(56, 189, 248, 0.65);
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.2);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.1);
 }
 
 .water-toggle-btn.water-off {
   background: rgba(255, 255, 255, 0.7);
-  border-color: rgba(203, 213, 225, 0.6);
-  color: #64748b;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border-color: #e2e8f0;
+  color: #94a3b8;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
 }
 
 .water-icon {

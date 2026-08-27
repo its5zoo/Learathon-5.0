@@ -1,0 +1,531 @@
+/* ─── Daily Check-in Modal Overlay ─────────────────────────────────────── */
+.daily-checkin-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  animation: fadeInOverlay 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.daily-checkin-modal-container {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  max-width: 540px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(255, 255, 255, 0.6);
+  overflow: hidden;
+  animation: modalPopUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalPopUp {
+  from { opacity: 0; transform: scale(0.96) translateY(12px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ─── Modal Header ──────────────────────────────────────────────────────── */
+.checkin-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 22px;
+  background: #f8fafc;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.checkin-date-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 4px 11px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.checkin-close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.checkin-close-btn:hover {
+  background: #edf2f7;
+  color: #1e293b;
+}
+
+/* ─── Body Content ──────────────────────────────────────────────────────── */
+.checkin-body-content {
+  padding: 24px 26px 28px;
+  overflow-y: auto;
+}
+
+.checkin-hero-intro {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.checkin-kicker {
+  font-size: 11px;
+  font-weight: 700;
+  color: #3b82f6;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.checkin-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.3px;
+  margin-bottom: 6px;
+}
+
+.checkin-sub {
+  font-size: 13.5px;
+  color: #64748b;
+  line-height: 1.5;
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+/* ─── Choice Grid ───────────────────────────────────────────────────────── */
+.checkin-choice-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.checkin-choice-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s ease,
+              box-shadow 0.3s ease;
+  font-family: inherit;
+}
+
+.checkin-choice-card:hover {
+  transform: translateY(-2px);
+  border-color: #93c5fd;
+  box-shadow: 0 10px 24px -4px rgba(59, 130, 246, 0.08);
+}
+
+.choice-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #eff6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid #dbeafe;
+}
+
+.icon-somatic {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+}
+
+.choice-text-col {
+  flex: 1;
+}
+
+.choice-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.choice-title-row h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.choice-pill-time {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+
+.choice-meta {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #0284c7;
+  display: block;
+  margin-bottom: 3px;
+}
+
+.choice-text-col p {
+  font-size: 12.5px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.choice-arrow-icon {
+  color: #94a3b8;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.checkin-choice-card:hover .choice-arrow-icon {
+  transform: translateX(3px);
+  color: #2563eb;
+}
+
+/* ─── Streak Banner ─────────────────────────────────────────────────────── */
+.checkin-streak-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fafaf9;
+  border: 1px solid #e7e5e4;
+  border-radius: 10px;
+  padding: 9px 13px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #57534e;
+}
+
+/* ─── Questions Flow ────────────────────────────────────────────────────── */
+.question-progress-track {
+  width: 100%;
+  height: 4px;
+  background: #f1f5f9;
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.question-progress-bar {
+  height: 100%;
+  background: #3b82f6;
+  border-radius: 99px;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.question-header-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.q-step-badge {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #2563eb;
+  background: #eff6ff;
+  padding: 3px 9px;
+  border-radius: 12px;
+}
+
+.q-theme-tag {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.q-prompt-text {
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
+
+.q-options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-bottom: 20px;
+}
+
+.q-option-pill-btn {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.q-option-pill-btn:hover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  color: #1e40af;
+  transform: translateX(3px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
+}
+
+.q-opt-select-indicator {
+  color: #94a3b8;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.q-option-pill-btn:hover .q-opt-select-indicator {
+  opacity: 1;
+  color: #2563eb;
+  transform: translateX(2px);
+}
+
+.checkin-back-row {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.btn-checkin-back {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-checkin-back:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+/* ─── Somatic Micro-Task Flow ───────────────────────────────────────────── */
+.physical-task-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.task-kicker {
+  font-size: 11px;
+  font-weight: 800;
+  color: #059669;
+  letter-spacing: 0.5px;
+}
+
+.task-duration-badge {
+  font-size: 11.5px;
+  font-weight: 700;
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.physical-task-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 14px;
+}
+
+.physical-task-instructions-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 20px;
+}
+
+.task-instruction-paragraph {
+  font-size: 14px;
+  color: #334155;
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.task-benefit-banner {
+  font-size: 12.5px;
+  color: #0369a1;
+  background: #f0f9ff;
+  border-left: 3px solid #0284c7;
+  padding: 8px 12px;
+  border-radius: 0 6px 6px 0;
+  line-height: 1.45;
+}
+
+.physical-task-action-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn-complete-physical-action {
+  background: #059669;
+  color: #ffffff;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.25);
+  transition: all 0.2s ease;
+}
+
+.btn-complete-physical-action:hover {
+  background: #047857;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(5, 150, 105, 0.35);
+}
+
+/* ─── Completed View ────────────────────────────────────────────────────── */
+.checkin-completed-view {
+  text-align: center;
+}
+
+.streak-celebration-hero {
+  margin-bottom: 20px;
+}
+
+.streak-badge-premium {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  padding: 7px 18px;
+  border-radius: 24px;
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.1);
+  margin-bottom: 12px;
+}
+
+.streak-count-value {
+  font-size: 18px;
+  font-weight: 800;
+  color: #ea580c;
+}
+
+.streak-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.streak-sub {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.daily-improvement-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.improvement-card-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: #0369a1;
+  margin-bottom: 6px;
+}
+
+.improvement-text {
+  font-size: 13px;
+  color: #334155;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.completed-action-row .btn-checkin-done-primary {
+  width: 100%;
+  padding: 12px;
+  background: #3f72af;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(63, 114, 175, 0.25);
+  transition: all 0.2s ease;
+}
+
+.completed-action-row .btn-checkin-done-primary:hover {
+  background: #315b8c;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(63, 114, 175, 0.35);
+}
+
+@media (max-width: 480px) {
+  .daily-checkin-modal-container {
+    border-radius: 16px;
+  }
+
+  .checkin-body-content {
+    padding: 18px 16px;
+  }
+
+  .checkin-title {
+    font-size: 20px;
+  }
+
+  .q-prompt-text {
+    font-size: 15.5px;
+  }
+}

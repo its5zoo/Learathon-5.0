@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ClinicalReportModal from '../components/ClinicalReport/ClinicalReportModal';
 import InvoiceModal from '../components/InvoiceModal/InvoiceModal';
+import DailyCheckinModal, { type DailyCheckinRecord } from '../components/DailyCheckin/DailyCheckinModal';
 import { API_URL } from '../config';
 import './Profile.css';
 
@@ -27,11 +28,12 @@ const Profile: React.FC = () => {
   const { user, isLoggedIn, updateProfile, refreshUser } = useAuth();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState<'assessments' | 'mood' | 'appointments' | 'settings'>('assessments');
+  const [activeTab, setActiveTab] = useState<'assessments' | 'mood' | 'streaks' | 'appointments' | 'settings'>('assessments');
   const [appointments, setAppointments] = useState<AppointmentRecord[]>([]);
   const [isLoadingAppointments, setIsLoadingAppointments] = useState(false);
 
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isDailyCheckinModalOpen, setIsDailyCheckinModalOpen] = useState(false);
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editFirstName, setEditFirstName] = useState('');
@@ -50,6 +52,17 @@ const Profile: React.FC = () => {
   const [showApptNotif, setShowApptNotif] = useState(false);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [selectedInvoiceData, setSelectedInvoiceData] = useState<any>(null);
+
+  const streakCount = user ? parseInt(localStorage.getItem(`ss_streak_count_${user._id}`) || '1', 10) : 1;
+  const dailyHistory: DailyCheckinRecord[] = user
+    ? (() => {
+        try {
+          return JSON.parse(localStorage.getItem(`ss_daily_history_${user._id}`) || '[]');
+        } catch {
+          return [];
+        }
+      })()
+    : [];
 
   useEffect(() => {
     try {
@@ -441,6 +454,18 @@ const Profile: React.FC = () => {
                 </div>
               </div>
 
+              <div className="stat-box" onClick={() => setIsDailyCheckinModalOpen(true)} style={{ cursor: 'pointer' }} title="Click to view daily check-in">
+                <div className="stat-box-icon icon-orange">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ea580c" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
+                  </svg>
+                </div>
+                <div className="stat-box-content">
+                  <span className="stat-box-val">{streakCount}d</span>
+                  <span className="stat-box-label">Mindful Streak</span>
+                </div>
+              </div>
+
               <div className="stat-box">
                 <div className="stat-box-icon icon-purple">🩺</div>
                 <div className="stat-box-content">
@@ -479,6 +504,14 @@ const Profile: React.FC = () => {
                   <span>🎭</span> Mood Track Record <span className="tab-badge">{moodLogs.length}</span>
                 </button>
                 
+                <button
+                  type="button"
+                  className={`tab-btn-pill ${activeTab === 'streaks' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('streaks')}
+                >
+                  <span>☀️</span> Daily Streaks <span className="tab-badge">{dailyHistory.length}</span>
+                </button>
+
                 <button
                   type="button"
                   className={`tab-btn-pill ${activeTab === 'appointments' ? 'active' : ''}`}
@@ -616,7 +649,71 @@ const Profile: React.FC = () => {
                   </div>
                 )}
 
-                {/* TAB 3: DOCTOR CONSULTATIONS */}
+                {/* TAB 3: DAILY MINDFUL STREAKS & HABITS */}
+                {activeTab === 'streaks' && (
+                  <div className="tab-pane">
+                    <div className="tab-pane-header">
+                      <div>
+                        <h3>Daily Mindful Streaks &amp; Habits</h3>
+                        <p>Your daily pulse check-ins, physical micro-actions, and clinical improvement insights.</p>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                        onClick={() => setIsDailyCheckinModalOpen(true)}
+                      >
+                        ✨ Daily Check-in
+                      </button>
+                    </div>
+
+                    {dailyHistory.length === 0 ? (
+                      <div className="empty-state-box">
+                        <span className="empty-icon">☀️</span>
+                        <h4>No Daily Check-ins Recorded Yet</h4>
+                        <p>Complete your 60-second daily pulse check-in to build a continuous wellness streak and receive personalized guidance.</p>
+                        <button className="btn btn-primary" onClick={() => setIsDailyCheckinModalOpen(true)}>
+                          Start Daily Check-in →
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="records-box-list">
+                        {dailyHistory.map((item, idx) => (
+                          <div key={idx} className="record-card-box checkin-history-card">
+                            <div className="record-card-main">
+                              <div className="record-pill-tag tag-streak">
+                                🔥 {item.streak}d Streak
+                              </div>
+                              <div className="record-info-col">
+                                <h4>
+                                  {item.type === 'questions' ? '🌟 3 Mindful Questions Completed' : `🧘 Micro-Action: ${item.taskTitle || 'Physical Task'}`}
+                                </h4>
+                                <div className="record-meta-line">
+                                  <span>📅 {item.date}</span>
+                                  <span className="type-badge">{item.type === 'questions' ? 'Reflective Questions' : 'Physical Somatic Action'}</span>
+                                </div>
+                                {item.answers && item.answers.length > 0 && (
+                                  <div className="checkin-answers-preview">
+                                    {item.answers.map((ans, aIdx) => (
+                                      <div key={aIdx} className="answer-pill-item">
+                                        <strong>Q:</strong> {ans.question} → <span className="ans-tag">{ans.answer}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                <div className="checkin-insight-box">
+                                  <span className="insight-sparkle-sm">💡</span>
+                                  <span>{item.insight}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* TAB 4: DOCTOR CONSULTATIONS */}
                 {activeTab === 'appointments' && (
                   <div className="tab-pane">
                     <div className="tab-pane-header">
@@ -871,6 +968,14 @@ const Profile: React.FC = () => {
           isOpen={isInvoiceModalOpen}
           onClose={() => setIsInvoiceModalOpen(false)}
           data={selectedInvoiceData}
+        />
+      )}
+
+      {/* Daily Check-in Modal */}
+      {isDailyCheckinModalOpen && (
+        <DailyCheckinModal
+          forceOpen={true}
+          onCloseManual={() => setIsDailyCheckinModalOpen(false)}
         />
       )}
     </div>

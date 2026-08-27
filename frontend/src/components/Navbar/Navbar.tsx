@@ -1,14 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import DailyCheckinModal from '../DailyCheckin/DailyCheckinModal';
 import './Navbar.css';
 
 const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isDailyCheckinManualOpen, setIsDailyCheckinManualOpen] = useState(false);
   const navigate = useNavigate();
   const { user, isLoggedIn, logout } = useAuth();
   const profileRef = useRef<HTMLDivElement>(null);
+
+  const streakCount = user ? parseInt(localStorage.getItem(`ss_streak_count_${user._id}`) || '1', 10) : 1;
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -50,112 +54,139 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="navbar">
-      <div className="container navbar-container">
-        <Link to="/" className="logo" onClick={() => handleNavClick('/')}>
-          <img src="/logo_main.png" alt="SoulSpace Logo" className="logo-icon-img" />
-          <span className="logo-text">SoulSpace</span>
-        </Link>
+    <>
+      <nav className="navbar">
+        <div className="container navbar-container">
+          <Link to="/" className="logo" onClick={() => handleNavClick('/')}>
+            <img src="/logo_main.png" alt="SoulSpace Logo" className="logo-icon-img" />
+            <span className="logo-text">SoulSpace</span>
+          </Link>
 
-        <div className="hamburger" onClick={toggleMenu}>
-          <span className={`bar ${isMenuOpen ? 'open' : ''}`}></span>
-          <span className={`bar ${isMenuOpen ? 'open' : ''}`}></span>
-          <span className={`bar ${isMenuOpen ? 'open' : ''}`}></span>
-        </div>
+          <div className="hamburger" onClick={toggleMenu}>
+            <span className={`bar ${isMenuOpen ? 'open' : ''}`}></span>
+            <span className={`bar ${isMenuOpen ? 'open' : ''}`}></span>
+            <span className={`bar ${isMenuOpen ? 'open' : ''}`}></span>
+          </div>
 
-        <div className={`nav-content ${isMenuOpen ? 'active' : ''}`}>
-          <ul className="nav-links">
-            <li>
-              <NavLink to="/" end className={({ isActive }) => (isActive ? 'active' : '')} onClick={() => handleNavClick('/')}>
-                Home
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/ai-support" className={({ isActive }) => `nav-ai-highlight ${isActive ? 'active' : ''}`} onClick={() => handleNavClick('/ai-support')}>
-                AI-Support
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/mental-health" className={({ isActive }) => (isActive ? 'active' : '')} onClick={() => handleNavClick('/mental-health')}>
-                Mental Health
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/appointment" className={({ isActive }) => (isActive ? 'active' : '')} onClick={() => handleNavClick('/appointment')}>
-                Appointment
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/mood-tracker" className={({ isActive }) => (isActive ? 'active' : '')} onClick={() => handleNavClick('/mood-tracker')}>
-                Mood Tracker
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/resources" className={({ isActive }) => (isActive ? 'active' : '')} onClick={() => handleNavClick('/resources')}>
-                Resources
-              </NavLink>
-            </li>
-          </ul>
+          <div className={`nav-content ${isMenuOpen ? 'active' : ''}`}>
+            <ul className="nav-links">
+              <li>
+                <NavLink to="/" end className={({ isActive }) => (isActive ? 'active' : '')} onClick={() => handleNavClick('/')}>
+                  Home
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/ai-support" className={({ isActive }) => `nav-ai-highlight ${isActive ? 'active' : ''}`} onClick={() => handleNavClick('/ai-support')}>
+                  AI-Support
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/mental-health" className={({ isActive }) => (isActive ? 'active' : '')} onClick={() => handleNavClick('/mental-health')}>
+                  Mental Health
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/appointment" className={({ isActive }) => (isActive ? 'active' : '')} onClick={() => handleNavClick('/appointment')}>
+                  Appointment
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/mood-tracker" className={({ isActive }) => (isActive ? 'active' : '')} onClick={() => handleNavClick('/mood-tracker')}>
+                  Mood Tracker
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/resources" className={({ isActive }) => (isActive ? 'active' : '')} onClick={() => handleNavClick('/resources')}>
+                  Resources
+                </NavLink>
+              </li>
+            </ul>
 
-          <div className="nav-actions">
-            {isLoggedIn && user ? (
-              <div className="nav-profile-wrapper" ref={profileRef}>
-                <button
-                  className="nav-profile-btn"
-                  onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  aria-label="Profile menu"
-                >
-                  <div className="nav-avatar">
-                    {getInitials()}
-                  </div>
-                  <div className="nav-profile-info">
-                    <span className="nav-profile-name">
-                      {user.firstName} {user.lastName}
-                    </span>
-                  </div>
-                  <svg
-                    className={`nav-chevron ${isProfileOpen ? 'rotated' : ''}`}
-                    viewBox="0 0 24 24" width="14" height="14"
-                    fill="none" stroke="currentColor" strokeWidth="2.5"
+            <div className="nav-actions">
+              {isLoggedIn && user ? (
+                <>
+                  <button
+                    type="button"
+                    className="nav-streak-pill-btn"
+                    onClick={() => setIsDailyCheckinManualOpen(true)}
+                    title="Daily Mindful Check-in & Streak"
                   >
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                </button>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ea580c" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
+                    </svg>
+                    <span className="nav-streak-val">{streakCount}d streak</span>
+                  </button>
 
-                {isProfileOpen ? (
-                  <div className="nav-profile-dropdown">
-                    <div className="dropdown-profile-header" onClick={() => handleNavClick('/profile')} style={{ cursor: 'pointer' }}>
-                      <div className="dropdown-avatar-lg">{getInitials()}</div>
-                      <div>
-                        <div className="dropdown-name">{user.firstName} {user.lastName}</div>
-                        <div className="dropdown-email">{user.email}</div>
+                  <div className="nav-profile-wrapper" ref={profileRef}>
+                    <button
+                      className="nav-profile-btn"
+                      onClick={() => setIsProfileOpen(!isProfileOpen)}
+                      aria-label="Profile menu"
+                    >
+                      <div className="nav-avatar">
+                        {getInitials()}
                       </div>
-                    </div>
-
-                    <div className="dropdown-divider"></div>
-
-                    <button className="dropdown-item" onClick={() => handleNavClick('/profile')}>
-                      <span>👤</span> My Profile &amp; Records
+                      <div className="nav-profile-info">
+                        <span className="nav-profile-name">
+                          {user.firstName} {user.lastName}
+                        </span>
+                      </div>
+                      <svg
+                        className={`nav-chevron ${isProfileOpen ? 'rotated' : ''}`}
+                        viewBox="0 0 24 24" width="14" height="14"
+                        fill="none" stroke="currentColor" strokeWidth="2.5"
+                      >
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
                     </button>
 
-                    <div className="dropdown-divider"></div>
+                    {isProfileOpen ? (
+                      <div className="nav-profile-dropdown">
+                        <div className="dropdown-profile-header" onClick={() => handleNavClick('/profile')} style={{ cursor: 'pointer' }}>
+                          <div className="dropdown-avatar-lg">{getInitials()}</div>
+                          <div>
+                            <div className="dropdown-name">{user.firstName} {user.lastName}</div>
+                            <div className="dropdown-email">{user.email}</div>
+                          </div>
+                        </div>
 
-                    <button className="dropdown-item dropdown-logout" onClick={handleLogout}>
-                      <span>🚪</span> Sign Out
-                    </button>
+                        <div className="dropdown-divider"></div>
+
+                        <button className="dropdown-item" onClick={() => handleNavClick('/profile')}>
+                          <span>👤</span> My Profile &amp; Records
+                        </button>
+
+                        <button className="dropdown-item" onClick={() => { setIsProfileOpen(false); setIsDailyCheckinManualOpen(true); }}>
+                          <span>☀️</span> Daily Mindful Check-in
+                        </button>
+
+                        <div className="dropdown-divider"></div>
+
+                        <button className="dropdown-item dropdown-logout" onClick={handleLogout}>
+                          <span>🚪</span> Sign Out
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
-                ) : null}
-              </div>
-            ) : (
-              <>
-                <button className="btn btn-outline" onClick={() => handleNavClick('/login')}>Login</button>
-                <button className="btn btn-primary" onClick={() => handleNavClick('/register')}>Register</button>
-              </>
-            )}
+                </>
+              ) : (
+                <>
+                  <button className="btn btn-outline" onClick={() => handleNavClick('/login')}>Login</button>
+                  <button className="btn btn-primary" onClick={() => handleNavClick('/register')}>Register</button>
+                </>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+
+      {isDailyCheckinManualOpen && (
+        <DailyCheckinModal
+          forceOpen={true}
+          onCloseManual={() => setIsDailyCheckinManualOpen(false)}
+        />
+      )}
+    </>
   );
 };
 
