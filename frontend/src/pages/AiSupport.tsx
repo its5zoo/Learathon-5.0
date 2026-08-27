@@ -205,14 +205,7 @@ const AiSupport: React.FC = () => {
   const [loadingSession, setLoadingSession] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [dismissCrisisBanner, setDismissCrisisBanner] = useState(false);
 
-  const activeSession = sessions.find((s) => s._id === activeSessionId);
-  const isCrisisActive = Boolean(
-    activeSession?.isCrisisSession ||
-    messages.some((m) => m.emotion === 'crisis') ||
-    messages.some((m) => isCrisisText(m.content))
-  );
   // Breathing tool
   const [isBreathingActive, setIsBreathingActive] = useState(false);
   const [isBreathingDismissed, setIsBreathingDismissed] = useState(false);
@@ -388,7 +381,6 @@ const AiSupport: React.FC = () => {
     setIsBreathingDismissed(false);
     setIsBreathingActive(false);
     setErrorMsg(null);
-    if (userIsCrisis) setDismissCrisisBanner(false);
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
@@ -404,7 +396,6 @@ const AiSupport: React.FC = () => {
 
       if (data.success) {
         const isCrisisResponse = Boolean(data.crisisDetected || data.message?.emotion === 'crisis' || userIsCrisis);
-        if (isCrisisResponse) setDismissCrisisBanner(false);
 
         setMessages((prev) => {
           const updated = [...prev];
@@ -572,22 +563,6 @@ const AiSupport: React.FC = () => {
 
         </div>
 
-        {/* ── Emergency Crisis Alert Banner ────────────────────────────────────── */}
-        {(isCrisisActive || messages.some((m) => isCrisisText(m.content))) && !dismissCrisisBanner && (
-          <div className="crisis-banner">
-            <span className="crisis-banner-icon">🆘</span>
-            <div className="crisis-banner-text">
-              <strong>Emergency Crisis Support:</strong> If you are in distress or feel like you can't go on, you are not alone. Free, confidential help is available right now:
-              <span className="crisis-numbers">
-                <a href="tel:14416" className="crisis-banner-pill-btn">📞 Tele-MANAS (14416)</a>
-                <a href="https://wa.me/919152987821" target="_blank" rel="noopener noreferrer" className="crisis-banner-pill-btn whatsapp">💬 iCall WhatsApp</a>
-                <a href="tel:18005990019" className="crisis-banner-pill-btn">📞 KIRAN (1800-599-0019)</a>
-                <a href="tel:112" className="crisis-banner-pill-btn emergency">🚨 112</a>
-              </span>
-            </div>
-            <button className="crisis-dismiss" onClick={() => setDismissCrisisBanner(true)} title="Dismiss banner">✕</button>
-          </div>
-        )}
 
         {/* Error message */}
         {errorMsg && (

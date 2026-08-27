@@ -458,116 +458,6 @@
   opacity: 0.9;
 }
 
-/* ── Crisis Banner ──────────────────────────────────────────────────────── */
-.crisis-banner {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-  border-bottom: 2px solid #ef4444;
-  flex-shrink: 0;
-  animation: slideDown 0.3s ease;
-  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.12);
-  z-index: 10;
-}
-
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.crisis-banner-icon {
-  font-size: 24px;
-  flex-shrink: 0;
-  animation: crisisPulse 1.5s ease-in-out infinite;
-}
-
-@keyframes crisisPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.15); }
-}
-
-.crisis-banner-text {
-  flex: 1;
-  font-size: 13.5px;
-  color: #7f1d1d;
-  line-height: 1.5;
-}
-
-.crisis-banner-text strong {
-  font-weight: 800;
-  color: #991b1b;
-  margin-right: 4px;
-}
-
-.crisis-numbers {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: 8px;
-  flex-wrap: wrap;
-}
-
-.crisis-banner-pill-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: #dc2626;
-  color: #ffffff !important;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 700;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);
-}
-
-.crisis-banner-pill-btn:hover {
-  background: #b91c1c;
-  transform: translateY(-1px);
-}
-
-.crisis-banner-pill-btn.whatsapp {
-  background: #16a34a;
-  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.25);
-}
-
-.crisis-banner-pill-btn.whatsapp:hover {
-  background: #15803d;
-}
-
-.crisis-banner-pill-btn.emergency {
-  background: #112d4e;
-  box-shadow: 0 2px 6px rgba(17, 45, 78, 0.25);
-}
-
-.crisis-banner-pill-btn.emergency:hover {
-  background: #1e3a8a;
-}
-
-.crisis-dismiss {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  color: #991b1b;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 700;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: all 0.2s ease;
-}
-
-.crisis-dismiss:hover {
-  background: rgba(239, 68, 68, 0.2);
-}
-
 /* ── Error Bar ──────────────────────────────────────────────────────────── */
 .chat-error-bar {
   display: flex;
@@ -1293,74 +1183,75 @@
 }
 
 .crisis-avatar {
-  background: #7f1d1d !important;
-  border: 1.5px solid #ef4444 !important;
+  background: #dc2626 !important;
+  border: 2px solid #ffffff !important;
   color: #ffffff !important;
   font-size: 14px !important;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25) !important;
 }
 
 .msg-bubble.crisis-msg-bubble {
-  background: linear-gradient(180deg, #fff1f2 0%, #ffe4e6 100%) !important;
-  border: 2px solid #e11d48 !important;
-  box-shadow: 0 8px 24px rgba(225, 29, 72, 0.16) !important;
-  color: #881337 !important;
+  background: #ffffff !important;
+  border: 1.5px solid #dc2626 !important;
+  box-shadow: 0 4px 20px rgba(220, 38, 38, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+  color: #1e293b !important;
   border-radius: 16px !important;
-  padding: 14px 18px !important;
+  padding: 16px 20px !important;
 }
 
 .crisis-msg-header-pill {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, #881337 0%, #9f1239 100%);
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: #ffffff;
   padding: 5px 12px;
   border-radius: 6px;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.5px;
-  margin-bottom: 10px;
-  box-shadow: 0 2px 6px rgba(136, 19, 55, 0.25);
+  margin-bottom: 12px;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);
 }
 
 .pulse-dot-red {
   width: 8px;
   height: 8px;
-  background: #f43f5e;
+  background: #ffffff;
   border-radius: 50%;
-  box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.7);
+  box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
   animation: pulseDotRed 1.5s infinite;
 }
 
 @keyframes pulseDotRed {
-  0%   { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.7); }
-  70%  { transform: scale(1.1);  box-shadow: 0 0 0 6px rgba(244, 63, 94, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
+  0%   { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+  70%  { transform: scale(1.1);  box-shadow: 0 0 0 6px rgba(255, 255, 255, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
 }
 
 .msg-bubble.crisis-msg-bubble .msg-text p {
-  color: #4c0519;
+  color: #1e293b;
   font-size: 14.5px;
   line-height: 1.65;
 }
 
 .msg-bubble.crisis-msg-bubble .msg-text strong {
-  color: #881337;
+  color: #dc2626;
   font-weight: 700;
 }
 
 .msg-bubble.crisis-msg-bubble .msg-bullet {
-  color: #4c0519;
-  margin: 3px 0;
+  color: #334155;
+  margin: 4px 0;
 }
 
-/* ── Dark Red Crisis Badge Pill ─────────────────────────────────────────── */
+/* ── Vibrant Clinical Red Crisis Badge Pill ────────────────────────────── */
 .msg-emotion-tag.crisis-badge-dark {
-  background: #881337 !important;
+  background: #dc2626 !important;
   color: #ffffff !important;
   font-weight: 800 !important;
-  border: 1px solid #be123c !important;
-  box-shadow: 0 2px 6px rgba(136, 19, 55, 0.2) !important;
+  border: 1px solid #b91c1c !important;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.2) !important;
   padding: 3px 10px !important;
 }
 
