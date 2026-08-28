@@ -595,7 +595,9 @@ const GamesPage: React.FC = () => {
                 >
                   <div className="match-card-inner">
                     <div className="card-front">
-                      <span className="card-lotus-icon">🌸</span>
+                      <div className="card-logo-wrapper">
+                        <img src="/logo_main.png" alt="SoulSpace Logo" className="card-logo-img" />
+                      </div>
                       <span className="card-hint-text">SoulSpace</span>
                     </div>
                     <div className="card-back">

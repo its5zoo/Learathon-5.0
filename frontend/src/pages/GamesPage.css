@@ -509,9 +509,27 @@
   box-shadow: 0 4px 10px rgba(17, 45, 78, 0.15);
 }
 
-.card-lotus-icon {
-  font-size: 32px;
-  margin-bottom: 6px;
+.card-logo-wrapper {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+}
+
+.card-logo-img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+.match-card-wrapper:hover .card-logo-wrapper {
+  transform: scale(1.08);
 }
 
 .card-hint-text {
