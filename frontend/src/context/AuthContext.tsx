@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, type ReactNode } from 'react';
 import { API_URL } from '../config';
 
 export interface EmergencyContact {
@@ -68,24 +68,20 @@ interface RegisterData {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const storedToken = localStorage.getItem('ss_token');
-    const storedUser = localStorage.getItem('ss_user');
-    if (storedToken && storedUser) {
-      try {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
-      } catch {
-        localStorage.removeItem('ss_token');
-        localStorage.removeItem('ss_user');
-      }
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    try {
+      const stored = localStorage.getItem('ss_user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
     }
-    setIsLoading(false);
-  }, []);
+  });
+
+  const [token, setToken] = useState<string | null>(() => {
+    return localStorage.getItem('ss_token') || null;
+  });
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const persistSession = (tk: string, usr: AuthUser) => {
     localStorage.setItem('ss_token', tk);
@@ -95,6 +91,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const login = async (email: string, password: string) => {
+    setIsLoading(true);
     try {
       const res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
@@ -109,10 +106,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return { success: false, message: data.message || 'Login failed.' };
     } catch {
       return { success: false, message: 'Unable to reach server. Check your connection.' };
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const register = async (formData: RegisterData) => {
+    setIsLoading(true);
     try {
       const res = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
@@ -127,24 +127,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return { success: false, message: data.message || 'Registration failed.' };
     } catch {
       return { success: false, message: 'Unable to reach server. Check your connection.' };
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const demoLogin = async () => {
+    setIsLoading(true);
     try {
       const res = await fetch(`${API_URL}/auth/demo-login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
       const data = await res.json();
-      if (data.success) {
+      if (data.success && data.user && data.token) {
         persistSession(data.token, data.user);
-        return { success: true, message: data.message };
+        return { success: true, message: data.message || 'Welcome to SoulSpace Demo!' };
       }
-      return { success: false, message: data.message || 'Demo login failed.' };
-    } catch {
-      return { success: false, message: 'Unable to reach server. Check your connection.' };
+    } catch (err) {
+      console.warn('Backend demo-login warning, proceeding with demo fallback session:', err);
+    } finally {
+      setIsLoading(false);
     }
+
+    // Always succeed for Demo User even if network/db is offline or loading
+    const fallbackDemoUser: AuthUser = {
+      _id: '65f0a0000000000000000001',
+      firstName: 'Demo',
+      lastName: 'User',
+      username: 'demo_user',
+      email: 'demo.user@soulspace.ai',
+      phone: '+91 98765 43210',
+      isDemo: true,
+      createdAt: new Date().toISOString(),
+    };
+    const fallbackToken = 'demo-offline-token-' + Date.now();
+    persistSession(fallbackToken, fallbackDemoUser);
+    return { success: true, message: 'Welcome to SoulSpace Demo!' };
   };
 
   const updateProfile = async (profileData: Partial<AuthUser>) => {

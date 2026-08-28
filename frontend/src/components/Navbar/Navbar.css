@@ -109,6 +109,18 @@
   color: #112d4e;
 }
 
+/* Games Nav Link Highlight */
+.nav-links a.nav-games-btn {
+  color: var(--text-dark);
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.nav-links a.nav-games-btn:hover,
+.nav-links a.nav-games-btn.active {
+  color: var(--primary-color);
+}
+
 .nav-actions {
   display: flex;
   gap: 12px;

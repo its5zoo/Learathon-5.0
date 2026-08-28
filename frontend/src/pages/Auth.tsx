@@ -9,10 +9,11 @@ const Auth: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { login, register, demoLogin, isLoggedIn } = useAuth();
+  const redirectTarget = new URLSearchParams(location.search).get('redirect') || '/';
 
   useEffect(() => {
-    if (isLoggedIn) navigate('/', { replace: true });
-  }, [isLoggedIn, navigate]);
+    if (isLoggedIn) navigate(redirectTarget, { replace: true });
+  }, [isLoggedIn, navigate, redirectTarget]);
 
   const getModeFromPath = (): AuthMode => {
     if (location.pathname === '/register' || location.search.includes('mode=signup')) return 'signup';
@@ -73,7 +74,7 @@ const Auth: React.FC = () => {
 
     if (result.success) {
       showToast(`✨ ${result.message}`);
-      setTimeout(() => navigate('/'), 800);
+      setTimeout(() => navigate(redirectTarget), 500);
     } else {
       setErrorMessage(result.message);
     }
@@ -87,7 +88,7 @@ const Auth: React.FC = () => {
 
     if (result.success) {
       showToast(`${result.message}`);
-      setTimeout(() => navigate('/'), 800);
+      setTimeout(() => navigate(redirectTarget), 500);
     } else {
       setErrorMessage(result.message);
     }

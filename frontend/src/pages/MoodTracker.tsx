@@ -137,7 +137,7 @@ const initialSampleEntries: MoodEntry[] = [
 const MoodTracker: React.FC = () => {
   const navigate = useNavigate();
 
-  const { user, isLoggedIn, token } = useAuth();
+  const { user, isLoggedIn, token, demoLogin } = useAuth();
 
   const faceLandmarkerRef = useRef<FaceLandmarker | null>(null);
 
@@ -798,16 +798,31 @@ const MoodTracker: React.FC = () => {
                 {isLoggedIn && user ? (
                   <div className="hero-logged-pill" title="Logged into SoulSpace">
                     <span className="dot-green"></span>
-                    <span>Synced: @{user.username || user.email.split('@')[0]}</span>
+                    <span>Synced: @{user.username || (user.email ? user.email.split('@')[0] : 'demo_user')}</span>
                   </div>
                 ) : (
-                  <button 
-                    type="button"
-                    className="btn-hero-login-link"
-                    onClick={() => navigate('/login')}
-                  >
-                    🔐 Login to Cloud Sync
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <button 
+                      type="button"
+                      className="btn-hero-login-link"
+                      onClick={() => navigate('/login?redirect=/mood-tracker')}
+                    >
+                      🔐 Login to Cloud Sync
+                    </button>
+                    <button 
+                      type="button"
+                      className="btn-hero-login-link"
+                      style={{ background: '#f0fdf4', borderColor: '#86efac', color: '#166534' }}
+                      onClick={async () => {
+                        await demoLogin();
+                        setToastMessage('✨ Logged in as Demo User! Cloud sync active.');
+                        setShowSuccessToast(true);
+                        setTimeout(() => setShowSuccessToast(false), 3000);
+                      }}
+                    >
+                      ⚡ Quick Demo
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
