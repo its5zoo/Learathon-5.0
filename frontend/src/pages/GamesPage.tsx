@@ -397,10 +397,6 @@ const GamesPage: React.FC = () => {
       {/* ── Top Hero Header ────────────────────────────────────────────── */}
       <section className="games-hero-section">
         <div className="games-hero-content">
-          <div className="games-badge-pill">
-            <span className="sparkle-icon">✨</span>
-            <span>SoulSpace Zen & Mind Games</span>
-          </div>
           <h1 className="games-hero-title">
             Take a Gentle Mental Micro-Break
           </h1>
