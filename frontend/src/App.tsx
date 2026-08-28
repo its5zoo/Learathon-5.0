@@ -9,6 +9,7 @@ import AiSupport from './pages/AiSupport';
 import MoodTracker from './pages/MoodTracker';
 import Auth from './pages/Auth';
 import ResourcesPage from './pages/ResourcesPage';
+import GamesPage from './pages/GamesPage';
 
 function AppContent() {
   const location = useLocation();
@@ -26,6 +27,7 @@ function AppContent() {
           <Route path="/ai-support" element={<AiSupport />} />
           <Route path="/mood-tracker" element={<MoodTracker />} />
           <Route path="/resources" element={<ResourcesPage />} />
+          <Route path="/games" element={<GamesPage />} />
           <Route path="/login" element={<Auth />} />
           <Route path="/register" element={<Auth />} />
           <Route path="/forgot-password" element={<Auth />} />
