@@ -503,10 +503,10 @@
 }
 
 .card-front {
-  background: linear-gradient(135deg, #112d4e 0%, #1e3a8a 100%);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   color: #ffffff;
-  border: 2px solid #3b82f6;
-  box-shadow: 0 4px 10px rgba(17, 45, 78, 0.15);
+  border: 2px solid #fdba74;
+  box-shadow: 0 6px 18px rgba(234, 88, 12, 0.22);
 }
 
 .card-logo-wrapper {
@@ -518,7 +518,7 @@
   align-items: center;
   justify-content: center;
   margin-bottom: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(194, 65, 12, 0.22);
   transition: transform 0.2s ease;
 }
 
@@ -534,18 +534,24 @@
 
 .card-hint-text {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  color: #93c5fd;
+  letter-spacing: 1.2px;
+  color: #ffffff;
 }
 
 .card-back {
   background: #ffffff;
-  border: 2px solid #10b981;
+  border: 2px solid #fed7aa;
   color: #0f172a;
   transform: rotateY(180deg);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.1);
+}
+
+.match-card-wrapper.matched .card-back {
+  background: #fff7ed;
+  border-color: #ea580c;
+  box-shadow: 0 0 16px rgba(234, 88, 12, 0.3);
 }
 
 .card-back-emoji {
