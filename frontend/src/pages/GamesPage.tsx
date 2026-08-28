@@ -482,8 +482,6 @@ const GamesPage: React.FC = () => {
             {activeTab === 'scramble' && <span className="tab-active-dot" />}
           </button>
         </div>
-
-        <div className="nav-baseline-track" />
       </div>
 
       {/* ── Active Game Arena ─────────────────────────────────────────── */}
