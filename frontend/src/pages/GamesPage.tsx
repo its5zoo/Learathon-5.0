@@ -434,43 +434,56 @@ const GamesPage: React.FC = () => {
         </div>
       </section>
 
-      {/* ── Navigation Tabs ────────────────────────────────────────────── */}
+      {/* ── Navigation Tabs Dock (Reference: Floating Pill Dock) ─── */}
       <div className="games-nav-tabs">
-        <button
-          className={`game-tab-btn ${activeTab === 'bubbles' ? 'active' : ''}`}
-          onClick={() => setActiveTab('bubbles')}
-        >
-          <span className="tab-icon">🫧</span>
-          <span className="tab-label">Bubble Pop</span>
-        </button>
-        <button
-          className={`game-tab-btn ${activeTab === 'lotus' ? 'active' : ''}`}
-          onClick={() => setActiveTab('lotus')}
-        >
-          <span className="tab-icon">🌸</span>
-          <span className="tab-label">Zen Lotus Breath</span>
-        </button>
-        <button
-          className={`game-tab-btn ${activeTab === 'match' ? 'active' : ''}`}
-          onClick={() => setActiveTab('match')}
-        >
-          <span className="tab-icon">🧩</span>
-          <span className="tab-label">Affirmation Match</span>
-        </button>
-        <button
-          className={`game-tab-btn ${activeTab === 'ripple' ? 'active' : ''}`}
-          onClick={() => setActiveTab('ripple')}
-        >
-          <span className="tab-icon">🌊</span>
-          <span className="tab-label">Water Ripples</span>
-        </button>
-        <button
-          className={`game-tab-btn ${activeTab === 'scramble' ? 'active' : ''}`}
-          onClick={() => setActiveTab('scramble')}
-        >
-          <span className="tab-icon">✍️</span>
-          <span className="tab-label">Mind Word Scramble</span>
-        </button>
+        <div className="games-nav-emblem" title="SoulSpace Zen Games">
+          <img src="/logo_main.png" alt="SoulSpace" className="nav-emblem-icon" />
+        </div>
+
+        <div className="games-nav-items">
+          <button
+            className={`game-tab-btn ${activeTab === 'bubbles' ? 'active' : ''}`}
+            onClick={() => setActiveTab('bubbles')}
+          >
+            <span className="tab-icon">🫧</span>
+            <span className="tab-label">Bubble Pop</span>
+            {activeTab === 'bubbles' && <span className="tab-active-dot" />}
+          </button>
+          <button
+            className={`game-tab-btn ${activeTab === 'lotus' ? 'active' : ''}`}
+            onClick={() => setActiveTab('lotus')}
+          >
+            <span className="tab-icon">🌸</span>
+            <span className="tab-label">Zen Lotus Breath</span>
+            {activeTab === 'lotus' && <span className="tab-active-dot" />}
+          </button>
+          <button
+            className={`game-tab-btn ${activeTab === 'match' ? 'active' : ''}`}
+            onClick={() => setActiveTab('match')}
+          >
+            <span className="tab-icon">🧩</span>
+            <span className="tab-label">Affirmation Match</span>
+            {activeTab === 'match' && <span className="tab-active-dot" />}
+          </button>
+          <button
+            className={`game-tab-btn ${activeTab === 'ripple' ? 'active' : ''}`}
+            onClick={() => setActiveTab('ripple')}
+          >
+            <span className="tab-icon">🌊</span>
+            <span className="tab-label">Water Ripples</span>
+            {activeTab === 'ripple' && <span className="tab-active-dot" />}
+          </button>
+          <button
+            className={`game-tab-btn ${activeTab === 'scramble' ? 'active' : ''}`}
+            onClick={() => setActiveTab('scramble')}
+          >
+            <span className="tab-icon">✍️</span>
+            <span className="tab-label">Mind Word Scramble</span>
+            {activeTab === 'scramble' && <span className="tab-active-dot" />}
+          </button>
+        </div>
+
+        <div className="nav-baseline-track" />
       </div>
 
       {/* ── Active Game Arena ─────────────────────────────────────────── */}
